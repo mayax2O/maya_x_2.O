@@ -1,0 +1,760 @@
+<title>MAYA_X_2.0 — Design System</title>
+<style>
+  :root {
+    --ink: #12141c;
+    --ink-soft: #1c1f29;
+    --ink-softer: #262a37;
+    --porcelain: #f3f4f6;
+    --porcelain-soft: #e8e9ed;
+    --paper: #ffffff;
+    --brass: #b8894a;
+    --brass-deep: #8f6934;
+    --brass-tint: #e9d9bd;
+    --slate: #5b6472;
+    --slate-soft: #8991a0;
+    --text: #1a1c23;
+    --text-soft: #5b6472;
+    --border: #dcdee3;
+    --success: #2f7d54;
+    --warning: #a6741c;
+    --danger: #a63a2e;
+    --info: #3b6fa0;
+    --success-bg: #e5f3ea;
+    --warning-bg: #f7ecd9;
+    --danger-bg: #f6e4e1;
+    --info-bg: #e4eef7;
+    --shadow: 0 1px 2px rgba(18,20,28,0.06), 0 4px 16px rgba(18,20,28,0.06);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 14px;
+    --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --font-body: -apple-system, "Segoe UI", "SF Pro Text", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: var(--ink-soft);
+      --porcelain: var(--ink);
+      --porcelain-soft: var(--ink-softer);
+      --text: #eceef2;
+      --text-soft: #a7adb8;
+      --border: #333846;
+      --brass-tint: #3a3020;
+      --success-bg: #16281f;
+      --warning-bg: #2c2413;
+      --danger-bg: #2c1917;
+      --info-bg: #17222d;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: var(--ink-soft);
+    --porcelain: var(--ink);
+    --porcelain-soft: var(--ink-softer);
+    --text: #eceef2;
+    --text-soft: #a7adb8;
+    --border: #333846;
+    --brass-tint: #3a3020;
+    --success-bg: #16281f;
+    --warning-bg: #2c2413;
+    --danger-bg: #2c1917;
+    --info-bg: #17222d;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"] {
+    --paper: #ffffff;
+    --porcelain: #f3f4f6;
+    --porcelain-soft: #e8e9ed;
+    --text: #1a1c23;
+    --text-soft: #5b6472;
+    --border: #dcdee3;
+    --brass-tint: #e9d9bd;
+    --success-bg: #e5f3ea;
+    --warning-bg: #f7ecd9;
+    --danger-bg: #f6e4e1;
+    --info-bg: #e4eef7;
+    --shadow: 0 1px 2px rgba(18,20,28,0.06), 0 4px 16px rgba(18,20,28,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--porcelain); color: var(--text);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  }
+  a { color: var(--brass-deep); }
+  h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; margin: 0 0 0.4em; color: var(--text); }
+  code, .mono { font-family: var(--font-mono); }
+
+  .shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+  @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } }
+
+  .sidebar {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    background: var(--paper); border-right: 1px solid var(--border);
+    padding: 28px 20px 40px;
+  }
+  .brandmark { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .brandmark .m { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+  .brandmark .x { color: var(--brass-deep); font-family: var(--font-display); font-size: 26px; font-style: italic; }
+  .sidebar .tag { font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-soft); margin-bottom: 28px; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar nav a {
+    text-decoration: none; color: var(--text-soft); font-size: 13.5px; padding: 6px 10px; border-radius: var(--radius-sm);
+  }
+  .sidebar nav a:hover { background: var(--porcelain); color: var(--text); }
+  .sidebar nav .grp { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--slate-soft); margin: 16px 0 4px; padding: 0 10px; }
+
+  main { padding: 56px 48px 120px; max-width: 1180px; }
+  @media (max-width: 640px) { main { padding: 40px 20px 100px; } }
+
+  .hero { margin-bottom: 64px; }
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--brass-deep); font-weight: 600; margin-bottom: 14px; }
+  .hero h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.08; max-width: 16ch; }
+  .hero p { max-width: 62ch; color: var(--text-soft); font-size: 18px; }
+
+  section.block { margin-bottom: 72px; scroll-margin-top: 24px; }
+  section.block > h2 { font-size: 28px; display: flex; align-items: baseline; gap: 12px; }
+  section.block > h2 .num { font-family: var(--font-mono); font-size: 15px; color: var(--brass-deep); font-weight: 600; }
+  section.block > .intro { color: var(--text-soft); max-width: 68ch; margin-bottom: 28px; }
+
+  .card { background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+  .pad { padding: 24px; }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 760px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+  .swatch { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+  .swatch .fill { height: 74px; }
+  .swatch .label { padding: 10px 12px; background: var(--paper); }
+  .swatch .label .name { font-size: 13px; font-weight: 600; }
+  .swatch .label .hex { font-family: var(--font-mono); font-size: 12px; color: var(--text-soft); }
+
+  .type-row { display: flex; align-items: baseline; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-soft); width: 150px; flex-shrink: 0; }
+
+  .space-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; }
+  .space-row .bar { background: var(--brass); height: 14px; border-radius: 3px; }
+  .space-row .lbl { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-soft); width: 90px; }
+
+  .btn {
+    font-family: var(--font-body); font-weight: 600; font-size: 14.5px; border-radius: var(--radius-md);
+    padding: 10px 20px; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--brass-deep); color: #fff; }
+  .btn-primary:hover { background: var(--brass); }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--slate-soft); }
+  .btn-ghost { background: transparent; color: var(--brass-deep); }
+  .btn-ghost:hover { background: var(--brass-tint); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { filter: brightness(1.08); }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:focus-visible { outline: 2px solid var(--brass-deep); outline-offset: 2px; }
+
+  .talent-card { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); background: var(--paper); box-shadow: var(--shadow); }
+  .talent-card .img { height: 150px; background: linear-gradient(135deg, var(--brass-tint), var(--porcelain-soft)); display: flex; align-items: center; justify-content: center; color: var(--brass-deep); font-family: var(--font-display); font-size: 14px; }
+  .talent-card .body { padding: 16px; }
+  .talent-card h4 { font-size: 17px; margin-bottom: 2px; }
+  .talent-card .cat { font-size: 12.5px; color: var(--text-soft); margin-bottom: 12px; }
+  .talent-card .row { display: flex; justify-content: space-between; align-items: center; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .field label { font-size: 13.5px; font-weight: 600; }
+  .field .hint { font-size: 12.5px; color: var(--text-soft); }
+  .field input, .field select, .field textarea {
+    font-family: var(--font-body); font-size: 15px; padding: 10px 12px; border-radius: var(--radius-md);
+    border: 1px solid var(--border); background: var(--paper); color: var(--text);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--brass-deep); outline-offset: 1px; border-color: var(--brass-deep); }
+  .field.error input { border-color: var(--danger); }
+  .field .error-msg { font-size: 12.5px; color: var(--danger); }
+  .field.success input { border-color: var(--success); }
+
+  .topnav { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-radius: var(--radius-lg); background: var(--paper); border: 1px solid var(--border); }
+  .topnav .links { display: flex; gap: 22px; font-size: 14px; }
+  .topnav .links a { color: var(--text-soft); text-decoration: none; }
+  .topnav .links a.active { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--brass); padding-bottom: 4px; }
+
+  .adminnav { display: flex; flex-direction: column; gap: 2px; width: 210px; background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; }
+  .adminnav a { text-decoration: none; color: var(--text-soft); font-size: 14px; padding: 9px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; }
+  .adminnav a.active { background: var(--brass-tint); color: var(--brass-deep); font-weight: 600; }
+
+  table.dtable { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.dtable th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  table.dtable td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  table.dtable tr:last-child td { border-bottom: none; }
+  table.dtable tr:hover td { background: var(--porcelain); }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge-submitted { background: var(--info-bg); color: var(--info); }
+  .badge-review { background: var(--warning-bg); color: var(--warning); }
+  .badge-contacted { background: var(--brass-tint); color: var(--brass-deep); }
+  .badge-confirmed { background: var(--success-bg); color: var(--success); }
+  .badge-declined { background: var(--danger-bg); color: var(--danger); }
+  .badge-expired { background: var(--porcelain-soft); color: var(--text-soft); }
+
+  .modal-demo { background: var(--porcelain-soft); border-radius: var(--radius-lg); padding: 40px 20px; display: flex; justify-content: center; }
+  .modal { width: 100%; max-width: 380px; background: var(--paper); border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(0,0,0,0.25); border: 1px solid var(--border); }
+  .modal .mhead { padding: 20px 22px 0; }
+  .modal .mbody { padding: 12px 22px 20px; color: var(--text-soft); font-size: 14.5px; }
+  .modal .mfoot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+  .alert { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); font-size: 14px; align-items: flex-start; }
+  .alert .ic { flex-shrink: 0; width: 20px; height: 20px; }
+  .alert-info { background: var(--info-bg); color: var(--info); }
+  .alert-success { background: var(--success-bg); color: var(--success); }
+  .alert-warning { background: var(--warning-bg); color: var(--warning); }
+  .alert-danger { background: var(--danger-bg); color: var(--danger); }
+
+  .icon-row { display: flex; gap: 28px; flex-wrap: wrap; }
+  .icon-item { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12px; color: var(--text-soft); }
+  .icon-item svg { width: 24px; height: 24px; stroke: var(--text); fill: none; stroke-width: 1.6; }
+
+  .anim-box { width: 64px; height: 64px; border-radius: var(--radius-md); background: var(--brass-deep); }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-demo:hover .anim-box.hoverlift { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.18); }
+  .anim-box.hoverlift { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+  .anim-box.pulse { animation: riseIn 0.5s ease; }
+  @media (prefers-reduced-motion: reduce) { .anim-box, .btn { transition: none !important; animation: none !important; } }
+
+  .device-frame { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--paper); }
+  .device-frame .bar { height: 26px; background: var(--porcelain-soft); display: flex; align-items: center; padding: 0 10px; gap: 5px; }
+  .device-frame .bar span { width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+  .device-frame .content { padding: 16px; font-size: 12.5px; color: var(--text-soft); }
+
+  .a11y-list li { margin-bottom: 10px; }
+
+  .mermaid-wrap { background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; overflow-x: auto; }
+
+  footer.doc-end { margin-top: 100px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-soft); font-size: 13px; }
+
+  ::selection { background: var(--brass-tint); }
+</style>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brandmark"><span class="m">MAYA</span><span class="x">X</span></div>
+    <div class="tag">Design System · v1.0 Draft</div>
+    <nav>
+      <div class="grp">Foundations</div>
+      <a href="#brand">Brand Identity</a>
+      <a href="#color">Color Palette</a>
+      <a href="#type">Typography</a>
+      <a href="#spacing">Spacing System</a>
+      <a href="#grid">Grid System</a>
+      <a href="#icons">Icons</a>
+      <div class="grp">Components</div>
+      <a href="#buttons">Buttons</a>
+      <a href="#cards">Cards</a>
+      <a href="#forms">Forms</a>
+      <a href="#navigation">Navigation</a>
+      <a href="#tables">Tables</a>
+      <a href="#badges">Badges</a>
+      <a href="#modals">Modals</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#animation">Animations</a>
+      <div class="grp">Responsive</div>
+      <a href="#mobile">Mobile</a>
+      <a href="#tablet">Tablet</a>
+      <a href="#desktop">Desktop</a>
+      <div class="grp">Standards</div>
+      <a href="#a11y">Accessibility</a>
+      <a href="#sitemap">Sitemap</a>
+      <a href="#flows">User Flows</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">Proposed Visual Identity — for approval</div>
+      <h1>The design language of a curated talent agency.</h1>
+      <p>This system is a new proposal — the SRS and PRD specified tone (premium, mobile-first, trustworthy) but no colors, type, or components. Everything below is a concrete design direction for MAYA_X_2.0 to review, not an extraction from existing brand assets. Built to be at home in Next.js + Tailwind CSS + Framer Motion, per the confirmed technology stack.</p>
+    </div>
+
+    <!-- 1. BRAND IDENTITY -->
+    <section class="block" id="brand">
+      <h2><span class="num">01</span> Brand Identity</h2>
+      <p class="intro">MAYA_X reads as a confident, unhurried agency — the kind that vets every talent personally and never leaves a client guessing. The identity leans on warm brass rather than loud color, and an editorial serif for moments that need presence, kept next to a plain-spoken sans for everything operational.</p>
+      <div class="grid grid-2">
+        <div class="card pad">
+          <h4 style="font-size:16px;margin-bottom:10px;">Personality</h4>
+          <div class="grid" style="gap:10px;">
+            <div><strong>Curated</strong> — <span style="color:var(--text-soft)">every talent is vetted; the platform never feels like an open marketplace</span></div>
+            <div><strong>Composed</strong> — <span style="color:var(--text-soft)">generous whitespace, unhurried pacing, no urgency gimmicks</span></div>
+            <div><strong>Discreet</strong> — <span style="color:var(--text-soft)">the agency mediates; the UI never rushes a customer toward talent contact</span></div>
+            <div><strong>Warm, not cold-corporate</strong> — <span style="color:var(--text-soft)">brass and porcelain over blue-and-white SaaS default</span></div>
+          </div>
+        </div>
+        <div class="card pad">
+          <h4 style="font-size:16px;margin-bottom:10px;">Voice &amp; Tone</h4>
+          <div class="grid" style="gap:10px;">
+            <div>Plain and specific — <em>"Your request is with our team"</em>, never <em>"processing…"</em></div>
+            <div>Confident, not salesy — no exclamation marks, no "amazing"</div>
+            <div>Always names the agency as the actor: <em>"We'll call you within one business day"</em></div>
+            <div>Errors state what happened and what to do next — never apologize excessively</div>
+          </div>
+        </div>
+      </div>
+      <div class="card pad" style="margin-top:16px;">
+        <h4 style="font-size:16px;margin-bottom:10px;">Wordmark concept</h4>
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div class="brandmark" style="transform:scale(1.6);transform-origin:left;"><span class="m">MAYA</span><span class="x">X</span></div>
+          <p style="color:var(--text-soft);max-width:52ch;margin:0;">Serif "MAYA" for editorial warmth, italic brass "X" as the platform's mark — the multiplier standing for the agency's curation layer between customer and talent. Reversible on dark or light grounds; the "X" is the only element permitted in the accent color.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. COLOR PALETTE -->
+    <section class="block" id="color">
+      <h2><span class="num">02</span> Color Palette</h2>
+      <p class="intro">Six named tokens plus semantic status colors. Brass is reserved for primary actions and the single accent moment per screen — it never appears as a background wash.</p>
+      <div class="grid grid-4">
+        <div class="swatch"><div class="fill" style="background:#12141c"></div><div class="label"><div class="name">Ink</div><div class="hex">#12141C</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#f3f4f6"></div><div class="label"><div class="name">Porcelain</div><div class="hex">#F3F4F6</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#b8894a"></div><div class="label"><div class="name">Brass</div><div class="hex">#B8894A</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#8f6934"></div><div class="label"><div class="name">Brass Deep</div><div class="hex">#8F6934</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#5b6472"></div><div class="label"><div class="name">Slate</div><div class="hex">#5B6472</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#e9d9bd"></div><div class="label"><div class="name">Brass Tint</div><div class="hex">#E9D9BD</div></div></div>
+      </div>
+      <h4 style="font-size:15px;margin:28px 0 12px;">Semantic (status) — separate from the brass accent</h4>
+      <div class="grid grid-4">
+        <div class="swatch"><div class="fill" style="background:#2f7d54"></div><div class="label"><div class="name">Success</div><div class="hex">#2F7D54</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#a6741c"></div><div class="label"><div class="name">Warning</div><div class="hex">#A6741C</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#a63a2e"></div><div class="label"><div class="name">Danger</div><div class="hex">#A63A2E</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#3b6fa0"></div><div class="label"><div class="name">Info</div><div class="hex">#3B6FA0</div></div></div>
+      </div>
+      <p style="margin-top:16px;color:var(--text-soft);font-size:14px;">All text/background pairs above meet WCAG AA (4.5:1) for body text; light and dark themes redefine the same token names rather than inverting colors naively — see the theme toggle in this artifact's viewer.</p>
+    </section>
+
+    <!-- 3. TYPOGRAPHY -->
+    <section class="block" id="type">
+      <h2><span class="num">03</span> Typography</h2>
+      <p class="intro">Display serif for brand moments and page titles; a plain system sans for everything read at length or operated (forms, tables, admin UI). No webfont dependency — both stacks resolve to high-quality faces already on the device, keeping load fast per the platform's performance NFRs.</p>
+      <div class="card pad">
+        <div class="type-row"><div class="meta">Display / 52·600<br>var(--font-display)</div><div style="font-family:var(--font-display);font-size:44px;font-weight:600;">Discover verified talent</div></div>
+        <div class="type-row"><div class="meta">H2 / 32·600</div><div style="font-family:var(--font-display);font-size:32px;font-weight:600;">Booking Requests</div></div>
+        <div class="type-row"><div class="meta">H3 / 22·600</div><div style="font-family:var(--font-display);font-size:22px;font-weight:600;">Membership Plans</div></div>
+        <div class="type-row"><div class="meta">Body / 16·400<br>var(--font-body)</div><div style="font-size:16px;">The agency reviews every request personally before any talent is contacted.</div></div>
+        <div class="type-row"><div class="meta">Small / 14·400</div><div style="font-size:14px;color:var(--text-soft);">Submitted 2 hours ago · Reference #BR-10234</div></div>
+        <div class="type-row"><div class="meta">Label / 12·600<br>uppercase</div><div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-soft);">Event Details</div></div>
+        <div class="type-row"><div class="meta">Mono / 13<br>var(--font-mono)</div><div class="mono" style="font-size:13px;">BR-10234 · razorpay_order_id</div></div>
+      </div>
+    </section>
+
+    <!-- 4. SPACING -->
+    <section class="block" id="spacing">
+      <h2><span class="num">04</span> Spacing System</h2>
+      <p class="intro">8px base unit. Component-internal spacing uses the smaller steps; layout rhythm (section gaps, card padding) uses 24 and up.</p>
+      <div class="card pad">
+        <div class="space-row"><div class="lbl">4 · xs</div><div class="bar" style="width:4px;"></div></div>
+        <div class="space-row"><div class="lbl">8 · sm</div><div class="bar" style="width:8px;"></div></div>
+        <div class="space-row"><div class="lbl">12 · md</div><div class="bar" style="width:12px;"></div></div>
+        <div class="space-row"><div class="lbl">16 · base</div><div class="bar" style="width:16px;"></div></div>
+        <div class="space-row"><div class="lbl">24 · lg</div><div class="bar" style="width:24px;"></div></div>
+        <div class="space-row"><div class="lbl">32 · xl</div><div class="bar" style="width:32px;"></div></div>
+        <div class="space-row"><div class="lbl">48 · 2xl</div><div class="bar" style="width:48px;"></div></div>
+        <div class="space-row"><div class="lbl">64 · 3xl</div><div class="bar" style="width:64px;"></div></div>
+        <div class="space-row"><div class="lbl">96 · 4xl</div><div class="bar" style="width:96px;"></div></div>
+      </div>
+    </section>
+
+    <!-- 5. GRID -->
+    <section class="block" id="grid">
+      <h2><span class="num">05</span> Grid System</h2>
+      <p class="intro">12-column grid at desktop, collapsing to 4 at tablet and a single column at mobile. Gutter fixed at 24px desktop/tablet, 16px mobile.</p>
+      <div class="card pad">
+        <div class="grid" style="grid-template-columns:repeat(12,1fr);gap:8px;margin-bottom:14px;">
+          <div style="grid-column:span 12;background:var(--brass-tint);border-radius:4px;height:28px;"></div>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(12,1fr);gap:8px;">
+          <div style="grid-column:span 8;background:var(--porcelain-soft);border-radius:4px;height:60px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-soft);">span 8 — primary content</div>
+          <div style="grid-column:span 4;background:var(--porcelain-soft);border-radius:4px;height:60px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-soft);">span 4 — sidebar</div>
+        </div>
+      </div>
+      <table class="dtable" style="margin-top:16px;">
+        <tr><th>Breakpoint</th><th>Range</th><th>Columns</th><th>Gutter</th><th>Margin</th></tr>
+        <tr><td>Mobile</td><td>&lt; 640px</td><td>1</td><td>16px</td><td>16px</td></tr>
+        <tr><td>Tablet</td><td>640–1023px</td><td>4</td><td>24px</td><td>32px</td></tr>
+        <tr><td>Desktop</td><td>1024–1439px</td><td>12</td><td>24px</td><td>48px</td></tr>
+        <tr><td>Wide</td><td>≥ 1440px</td><td>12 (max content 1280px, centered)</td><td>24px</td><td>auto</td></tr>
+      </table>
+    </section>
+
+    <!-- 6. ICONS -->
+    <section class="block" id="icons">
+      <h2><span class="num">06</span> Icons</h2>
+      <p class="intro">1.5px stroke, 24×24 base grid, rounded joins, no fill — a quiet linear set that doesn't compete with the brass accent. Used at 20px in dense UI (tables, badges) and 24px elsewhere.</p>
+      <div class="card pad">
+        <div class="icon-row">
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>Account</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.6-9.3-9C1 8 3 4.5 6.8 4.5c2 0 3.4 1.1 5.2 3 1.8-1.9 3.2-3 5.2-3C21 4.5 23 8 21.3 12 19 16.4 12 21 12 21z"/></svg>Wishlist</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>Booking</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z"/></svg>Membership</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 14h4"/></svg>Payment</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a1 1 0 0 1 1-1h9l6 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M14 4v6h6"/></svg>Media</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h10M4 19h16"/></svg>Filter</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>Search</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Add</div>
+          <div class="icon-item"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Confirmed</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. BUTTONS -->
+    <section class="block" id="buttons">
+      <h2><span class="num">07</span> Buttons</h2>
+      <p class="intro">One primary action per view. Ghost is used for tertiary/inline actions inside cards and tables.</p>
+      <div class="card pad">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">
+          <button class="btn btn-primary">Submit Booking Request</button>
+          <button class="btn btn-secondary">View Profile</button>
+          <button class="btn btn-ghost">Add to Wishlist</button>
+          <button class="btn btn-danger">Decline Request</button>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">
+          <button class="btn btn-primary btn-sm">Confirm</button>
+          <button class="btn btn-secondary btn-sm">Cancel</button>
+          <button class="btn btn-primary" disabled>Processing…</button>
+        </div>
+        <p style="font-size:13px;color:var(--text-soft);margin:0;">Focus state (tab to a button): visible 2px brass outline, offset 2px — meets WCAG 2.4.7.</p>
+      </div>
+    </section>
+
+    <!-- 8. CARDS -->
+    <section class="block" id="cards">
+      <h2><span class="num">08</span> Cards</h2>
+      <p class="intro">The talent card is the platform's signature surface — used identically in the gallery, wishlist, and admin roster.</p>
+      <div class="grid grid-3">
+        <div class="talent-card">
+          <div class="img">Portrait media</div>
+          <div class="body">
+            <h4>Ananya Rao</h4>
+            <div class="cat">Event Host · Presenter</div>
+            <div class="row"><span class="badge badge-confirmed"><span class="dot"></span>Available</span><button class="btn btn-ghost btn-sm">Save</button></div>
+          </div>
+        </div>
+        <div class="talent-card">
+          <div class="img">Portrait media</div>
+          <div class="body">
+            <h4>Karan Bhatt</h4>
+            <div class="cat">Brand Ambassador</div>
+            <div class="row"><span class="badge badge-confirmed"><span class="dot"></span>Available</span><button class="btn btn-ghost btn-sm">Save</button></div>
+          </div>
+        </div>
+        <div class="card pad">
+          <h4 style="font-size:16px;">Premium Membership</h4>
+          <p style="color:var(--text-soft);font-size:14px;">Priority review on every booking request.</p>
+          <div style="font-family:var(--font-display);font-size:28px;margin:10px 0;">₹4,999<span style="font-size:14px;color:var(--text-soft);"> /year</span></div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;">Subscribe</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. FORMS -->
+    <section class="block" id="forms">
+      <h2><span class="num">09</span> Forms</h2>
+      <p class="intro">Labels always visible (never placeholder-only), inline validation on blur, error copy states what to fix.</p>
+      <div class="card pad" style="max-width:480px;">
+        <div class="field">
+          <label for="ds-name">Full name</label>
+          <input id="ds-name" type="text" value="Priya Sharma">
+        </div>
+        <div class="field error">
+          <label for="ds-email">Email address</label>
+          <input id="ds-email" type="text" value="priya@brand">
+          <div class="error-msg">Enter a complete email address, like name@company.com</div>
+        </div>
+        <div class="field success">
+          <label for="ds-phone">Phone number</label>
+          <input id="ds-phone" type="text" value="+91 98765 43210">
+        </div>
+        <div class="field">
+          <label for="ds-cat">Talent category</label>
+          <select id="ds-cat"><option>Event Host</option><option>Brand Ambassador</option></select>
+          <div class="hint">You can request more than one category per event.</div>
+        </div>
+        <div class="field">
+          <label for="ds-details">Event details</label>
+          <textarea id="ds-details" rows="3">Corporate product launch, 120 guests, evening event.</textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;">Submit Request</button>
+      </div>
+    </section>
+
+    <!-- 10. NAVIGATION -->
+    <section class="block" id="navigation">
+      <h2><span class="num">10</span> Navigation</h2>
+      <p class="intro">Two distinct nav languages by design: a quiet top bar for the public/customer surface, a persistent left rail for the Admin Panel — signaling "you are in an operational tool," not the storefront.</p>
+      <div class="grid grid-2">
+        <div>
+          <div class="topnav">
+            <div class="brandmark" style="transform:scale(1.05);"><span class="m">MAYA</span><span class="x">X</span></div>
+            <div class="links"><a href="#" class="active">Talent</a><a href="#">Memberships</a><a href="#">My Bookings</a><a href="#">Account</a></div>
+          </div>
+          <p style="font-size:12.5px;color:var(--text-soft);margin-top:8px;">Public / customer top navigation</p>
+        </div>
+        <div>
+          <div class="adminnav">
+            <a class="active">Dashboard</a>
+            <a>Talent Management</a>
+            <a>Booking Management</a>
+            <a>Memberships</a>
+            <a>Payments</a>
+            <a>Coupons</a>
+            <a>Reports</a>
+            <a>Media Library</a>
+          </div>
+          <p style="font-size:12.5px;color:var(--text-soft);margin-top:8px;">Admin Panel left rail</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. TABLES -->
+    <section class="block" id="tables">
+      <h2><span class="num">11</span> Tables</h2>
+      <p class="intro">The Admin Booking Management queue is the reference table pattern: status as a badge (never plain text), row hover, right-aligned numeric/date columns.</p>
+      <div class="card pad">
+        <table class="dtable">
+          <tr><th>Customer</th><th>Talent</th><th>Event Date</th><th>Status</th><th></th></tr>
+          <tr><td>Priya Sharma</td><td>Ananya Rao</td><td>Aug 14, 2026</td><td><span class="badge badge-review"><span class="dot"></span>Under Review</span></td><td><button class="btn btn-ghost btn-sm">Open</button></td></tr>
+          <tr><td>Arjun Mehta</td><td>Karan Bhatt</td><td>Sep 2, 2026</td><td><span class="badge badge-confirmed"><span class="dot"></span>Confirmed</span></td><td><button class="btn btn-ghost btn-sm">Open</button></td></tr>
+          <tr><td>Sana Fernandes</td><td>Ravi Iyer</td><td>Jul 30, 2026</td><td><span class="badge badge-submitted"><span class="dot"></span>Submitted</span></td><td><button class="btn btn-ghost btn-sm">Open</button></td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- 12. BADGES -->
+    <section class="block" id="badges">
+      <h2><span class="num">12</span> Badges</h2>
+      <p class="intro">Maps 1:1 to the booking_status enum in the production schema — never invent a status color not in this list.</p>
+      <div class="card pad" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <span class="badge badge-submitted"><span class="dot"></span>Submitted</span>
+        <span class="badge badge-review"><span class="dot"></span>Under Review</span>
+        <span class="badge badge-contacted"><span class="dot"></span>Contacted</span>
+        <span class="badge badge-confirmed"><span class="dot"></span>Confirmed</span>
+        <span class="badge badge-declined"><span class="dot"></span>Declined</span>
+        <span class="badge badge-expired"><span class="dot"></span>Expired</span>
+      </div>
+    </section>
+
+    <!-- 13. MODALS -->
+    <section class="block" id="modals">
+      <h2><span class="num">13</span> Modals</h2>
+      <p class="intro">Reserved for irreversible or high-consequence actions (declining a booking, cancelling a subscription) — never for content that could be an inline panel.</p>
+      <div class="modal-demo">
+        <div class="modal">
+          <div class="mhead"><h4 style="font-size:18px;">Decline this booking request?</h4></div>
+          <div class="mbody">Ananya Rao — Aug 14, 2026. The customer will be notified automatically. This can't be undone.</div>
+          <div class="mfoot"><button class="btn btn-secondary btn-sm">Cancel</button><button class="btn btn-danger btn-sm">Decline Request</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. ALERTS -->
+    <section class="block" id="alerts">
+      <h2><span class="num">14</span> Alerts</h2>
+      <p class="intro">Inline, page-level banners — not toasts, which are reserved for transient confirmations (see Animations).</p>
+      <div class="grid" style="gap:12px;">
+        <div class="alert alert-info"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M12 11v5"/></svg>Your booking request has been received and is queued for agency review.</div>
+        <div class="alert alert-success"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12l5 5L20 7"/></svg>Membership activated — benefits apply immediately.</div>
+        <div class="alert alert-warning"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.01"/></svg>Your membership renews in 3 days — update your payment method to avoid a lapse.</div>
+        <div class="alert alert-danger"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Payment failed. No membership was activated — try again or use a different method.</div>
+      </div>
+    </section>
+
+    <!-- 15. ANIMATIONS -->
+    <section class="block" id="animation">
+      <h2><span class="num">15</span> Animations</h2>
+      <p class="intro">Framer Motion, per the confirmed stack. Motion confirms state changes and adds polish — it never gates the user from acting. All durations respect prefers-reduced-motion.</p>
+      <div class="grid grid-3">
+        <div class="card pad anim-demo">
+          <div class="anim-box hoverlift"></div>
+          <p style="font-size:13px;color:var(--text-soft);margin:10px 0 0;">Hover lift — cards &amp; buttons<br><span class="mono">180ms · ease-out</span></p>
+        </div>
+        <div class="card pad">
+          <div class="anim-box pulse"></div>
+          <p style="font-size:13px;color:var(--text-soft);margin:10px 0 0;">Entrance (page/section load)<br><span class="mono">500ms · ease · +8px→0 rise</span></p>
+        </div>
+        <div class="card pad">
+          <table class="dtable" style="font-size:12.5px;"><tr><th>Token</th><th>Value</th></tr>
+          <tr><td>duration-fast</td><td class="mono">120ms</td></tr>
+          <tr><td>duration-base</td><td class="mono">180–250ms</td></tr>
+          <tr><td>duration-entrance</td><td class="mono">400–600ms</td></tr>
+          <tr><td>easing</td><td class="mono">cubic-bezier(.2,.7,.3,1)</td></tr></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16. MOBILE -->
+    <section class="block" id="mobile">
+      <h2><span class="num">16</span> Mobile Design</h2>
+      <p class="intro">Designed first, per the platform's mobile-first NFR — not shrunk down from desktop after the fact.</p>
+      <div class="grid grid-3">
+        <div class="device-frame"><div class="bar"><span></span><span></span><span></span></div>
+          <div class="content">
+            <strong style="color:var(--text);">Single column</strong><br>Full-width talent cards, 16px margin.<br><br>
+            <strong style="color:var(--text);">Bottom-anchored primary action</strong><br>Booking CTA pinned above the safe area.<br><br>
+            <strong style="color:var(--text);">Nav collapses to a sheet</strong><br>Top bar reduces to logo + menu icon.
+          </div>
+        </div>
+        <div class="device-frame"><div class="bar"><span></span><span></span><span></span></div>
+          <div class="content">
+            <strong style="color:var(--text);">Touch targets ≥ 44×44px</strong><br>All buttons, badges-as-filters, and form controls.<br><br>
+            <strong style="color:var(--text);">Filters as a full-screen sheet</strong><br>Not a cramped dropdown.
+          </div>
+        </div>
+        <div class="device-frame"><div class="bar"><span></span><span></span><span></span></div>
+          <div class="content">
+            <strong style="color:var(--text);">Admin Panel is desktop-optimized</strong><br>Booking queue/Reports remain usable on tablet but are not designed mobile-first — Admin work happens at a desk (ASSUMPTION, confirm with Agency ops).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17. TABLET -->
+    <section class="block" id="tablet">
+      <h2><span class="num">17</span> Tablet Design</h2>
+      <p class="intro">640–1023px. The 4-column grid lets the talent gallery move from 1 to 2 cards per row; the Admin queue table gains its full column set (mobile hides secondary columns behind a row expand).</p>
+      <div class="card pad">
+        <div class="grid grid-2">
+          <div class="talent-card"><div class="img" style="height:110px;">Portrait media</div><div class="body"><h4 style="font-size:15px;">Ananya Rao</h4><div class="cat">Event Host</div></div></div>
+          <div class="talent-card"><div class="img" style="height:110px;">Portrait media</div><div class="body"><h4 style="font-size:15px;">Karan Bhatt</h4><div class="cat">Brand Ambassador</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 18. DESKTOP -->
+    <section class="block" id="desktop">
+      <h2><span class="num">18</span> Desktop Design</h2>
+      <p class="intro">≥1024px. Talent gallery runs 3–4 per row; Admin Panel shows the full left-rail nav permanently (never collapsed); modals and side-panels are used instead of full-screen sheets.</p>
+      <div class="card pad">
+        <div class="grid grid-4">
+          <div class="talent-card"><div class="img" style="height:90px;"></div><div class="body"><h4 style="font-size:14px;">Ananya Rao</h4></div></div>
+          <div class="talent-card"><div class="img" style="height:90px;"></div><div class="body"><h4 style="font-size:14px;">Karan Bhatt</h4></div></div>
+          <div class="talent-card"><div class="img" style="height:90px;"></div><div class="body"><h4 style="font-size:14px;">Ravi Iyer</h4></div></div>
+          <div class="talent-card"><div class="img" style="height:90px;"></div><div class="body"><h4 style="font-size:14px;">Meera Nair</h4></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 19. ACCESSIBILITY -->
+    <section class="block" id="a11y">
+      <h2><span class="num">19</span> Accessibility Guidelines</h2>
+      <p class="intro">Proposed baseline (WCAG 2.1 AA) — flagged in the SRS as not client-specified; treat as a recommendation pending confirmation.</p>
+      <div class="card pad">
+        <ul class="a11y-list" style="margin:0;padding-left:20px;">
+          <li><strong>Contrast:</strong> all token pairs in §2 hold 4.5:1 for body text, 3:1 for large text/icons, in both themes.</li>
+          <li><strong>Focus states:</strong> every interactive element gets a visible 2px brass outline on keyboard focus (never <code>outline: none</code> without a replacement).</li>
+          <li><strong>Touch targets:</strong> minimum 44×44px on mobile, per §16.</li>
+          <li><strong>Forms:</strong> every input has a visible, programmatically associated <code>&lt;label&gt;</code> — never placeholder-only; errors are announced via <code>aria-describedby</code>.</li>
+          <li><strong>Status is never color-only:</strong> every badge pairs color with a text label and a dot glyph (§12), so status is legible without color perception.</li>
+          <li><strong>Motion:</strong> all transitions respect <code>prefers-reduced-motion</code> (§15).</li>
+          <li><strong>Reading order:</strong> DOM order matches visual order at every breakpoint — no CSS-only reordering that breaks screen-reader flow.</li>
+          <li><strong>Modals:</strong> trap focus while open, return focus to the triggering element on close, dismissible via <kbd>Esc</kbd>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 20. SITEMAP -->
+    <section class="block" id="sitemap">
+      <h2><span class="num">20</span> Sitemap</h2>
+      <p class="intro">Public/customer surface and Admin Panel are drawn as separate trees — they share components (§1–§19) but never share navigation or routing, per the platform's agency-mediated model.</p>
+      <div class="mermaid-wrap">
+        <pre class="mermaid">
+flowchart TD
+  Home["Home / Landing"] --> Gallery["Talent Gallery (by category)"]
+  Home --> About["About the Agency"]
+  Gallery --> Profile["Talent Profile"]
+  Profile --> BookingForm["Booking Request Form"]
+  Gallery --> Search["Search / Filter Results"]
+  Home --> Membership["Membership Plans"]
+  Membership --> Checkout["Membership Checkout (Razorpay)"]
+  Home --> Login["Login / Register"]
+  Login --> Account["My Account"]
+  Account --> MyBookings["My Bookings"]
+  Account --> Wishlist["My Wishlist"]
+  Account --> MySubscription["My Membership"]
+  Account --> Notifications["Notifications"]
+  BookingForm --> Confirmation["Submission Confirmation"]
+
+  AdminLogin["Admin Login"] --> Dashboard["Admin Dashboard"]
+  Dashboard --> TalentMgmt["Talent Management"]
+  TalentMgmt --> MediaLib["Media Library"]
+  Dashboard --> BookingMgmt["Booking Management Queue"]
+  BookingMgmt --> BookingDetail["Booking Detail / Status"]
+  Dashboard --> MembershipMgmt["Membership Plan Management"]
+  Dashboard --> PaymentsAdmin["Payments"]
+  Dashboard --> Coupons["Coupons"]
+  Dashboard --> Reports["Reports"]
+  Dashboard --> AnalyticsAdmin["Analytics"]
+  Dashboard --> NotificationsAdmin["Notifications"]
+        </pre>
+      </div>
+    </section>
+
+    <!-- 21. USER FLOWS -->
+    <section class="block" id="flows">
+      <h2><span class="num">21</span> User Flow Diagrams</h2>
+      <p class="intro">The three flows confirmed by the SRS/PRD: Guest/Member booking, Membership purchase, and Agency booking review.</p>
+
+      <h4 style="font-size:17px;margin:0 0 10px;">Booking flow (Guest or Member)</h4>
+      <div class="mermaid-wrap" style="margin-bottom:28px;">
+        <pre class="mermaid">
+flowchart LR
+  A[Browse Talent Gallery] --> B[View Talent Profile]
+  B --> C{Logged in?}
+  C -- Yes --> D[Submit Booking Request as Member]
+  C -- No --> E[Submit Booking Request as Guest\nwith contact details]
+  D --> F[Confirmation shown]
+  E --> F
+  F --> G[Agency reviews in Admin queue]
+  G --> H[Agency contacts customer directly]
+  H --> I{Outcome}
+  I -- Confirmed --> J[Status: Confirmed + notification]
+  I -- Declined --> K[Status: Declined + notification]
+        </pre>
+      </div>
+
+      <h4 style="font-size:17px;margin:0 0 10px;">Membership purchase flow</h4>
+      <div class="mermaid-wrap" style="margin-bottom:28px;">
+        <pre class="mermaid">
+flowchart LR
+  A[View Membership Plans] --> B[Select Plan]
+  B --> C[Apply coupon - optional]
+  C --> D[Create Razorpay order]
+  D --> E[Razorpay checkout]
+  E --> F{Payment result}
+  F -- Success --> G[Webhook confirms payment]
+  G --> H[Subscription activated]
+  H --> I[Confirmation + notification]
+  F -- Failure --> J[Retry / failure message shown]
+        </pre>
+      </div>
+
+      <h4 style="font-size:17px;margin:0 0 10px;">Agency booking review flow (Admin)</h4>
+      <div class="mermaid-wrap">
+        <pre class="mermaid">
+flowchart LR
+  A[New request in queue] --> B[Admin opens request]
+  B --> C[Mark Under Review]
+  C --> D[Contact customer offline]
+  D --> E[Log contact outcome]
+  E --> F{Decision}
+  F -- Proceed --> G[Mark Confirmed]
+  F -- Cannot proceed --> H[Mark Declined]
+  G --> I[Customer notified]
+  H --> I
+        </pre>
+      </div>
+    </section>
+
+    <footer class="doc-end">MAYA_X_2.0 Design System — v1.0 Draft · Companion to the approved SRS, PRD, Enterprise Architecture, Database Design, and REST API Specification.</footer>
+  </main>
+</div>
