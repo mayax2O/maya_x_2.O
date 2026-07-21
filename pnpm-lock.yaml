@@ -89,24 +89,45 @@ importers:
       "@nestjs/core":
         specifier: ^10.4.15
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      "@nestjs/jwt":
+        specifier: ^10.2.0
+        version: 10.2.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       "@nestjs/mapped-types":
         specifier: ^2.1.1
         version: 2.1.1(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
+      "@nestjs/passport":
+        specifier: ^10.0.3
+        version: 10.0.3(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
       "@nestjs/platform-express":
         specifier: ^10.4.15
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
+      "@nestjs/throttler":
+        specifier: ^6.2.1
+        version: 6.5.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(reflect-metadata@0.2.2)
       "@prisma/client":
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
+      argon2:
+        specifier: ^0.41.1
+        version: 0.41.1
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
       class-validator:
         specifier: ^0.14.1
         version: 0.14.4
+      cookie-parser:
+        specifier: ^1.4.7
+        version: 1.4.7
+      helmet:
+        specifier: ^8.0.0
+        version: 8.3.0
+      passport:
+        specifier: ^0.7.0
+        version: 0.7.0
+      passport-jwt:
+        specifier: ^4.0.1
+        version: 4.0.1
       pg:
         specifier: ^8.13.1
         version: 8.22.0
@@ -132,15 +153,21 @@ importers:
       "@nestjs/testing":
         specifier: ^10.4.15
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/platform-express@10.4.22)
-      "@types/bcrypt":
-        specifier: ^6.0.0
-        version: 6.0.0
+      "@types/cookie-parser":
+        specifier: ^1.4.8
+        version: 1.4.10(@types/express@5.0.6)
+      "@types/express":
+        specifier: ^5.0.0
+        version: 5.0.6
       "@types/jest":
         specifier: ^29.5.14
         version: 29.5.14
       "@types/node":
         specifier: ^22.10.5
         version: 22.20.1
+      "@types/passport-jwt":
+        specifier: ^4.0.1
+        version: 4.0.1
       "@types/pg":
         specifier: ^8.11.10
         version: 8.20.0
@@ -1276,6 +1303,14 @@ packages:
       "@nestjs/websockets":
         optional: true
 
+  "@nestjs/jwt@10.2.0":
+    resolution:
+      {
+        integrity: sha512-x8cG90SURkEiLOehNaN2aRlotxT0KZESUliOPKKnjWiyJOcWurkF3w345WOX0P4MgFzUjGoZ1Sy0aZnxeihT0g==,
+      }
+    peerDependencies:
+      "@nestjs/common": ^8.0.0 || ^9.0.0 || ^10.0.0
+
   "@nestjs/mapped-types@2.1.1":
     resolution:
       {
@@ -1291,6 +1326,15 @@ packages:
         optional: true
       class-validator:
         optional: true
+
+  "@nestjs/passport@10.0.3":
+    resolution:
+      {
+        integrity: sha512-znJ9Y4S8ZDVY+j4doWAJ8EuuVO7SkQN3yOBmzxbGaXbvcSwFDAdGJ+OMCg52NdzIO4tQoN4pYKx8W6M0ArfFRQ==,
+      }
+    peerDependencies:
+      "@nestjs/common": ^8.0.0 || ^9.0.0 || ^10.0.0
+      passport: ^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0
 
   "@nestjs/platform-express@10.4.22":
     resolution:
@@ -1324,6 +1368,16 @@ packages:
         optional: true
       "@nestjs/platform-express":
         optional: true
+
+  "@nestjs/throttler@6.5.0":
+    resolution:
+      {
+        integrity: sha512-9j0ZRfH0QE1qyrj9JjIRDz5gQLPqq9yVC2nHsrosDVAfI5HHw08/aUAWx9DZLSdQf4HDkmhTTEGLrRFHENvchQ==,
+      }
+    peerDependencies:
+      "@nestjs/common": ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
+      "@nestjs/core": ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
+      reflect-metadata: ^0.1.13 || ^0.2.0
 
   "@next/env@15.5.20":
     resolution:
@@ -1457,6 +1511,13 @@ packages:
       {
         integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==,
       }
+
+  "@phc/format@1.0.0":
+    resolution:
+      {
+        integrity: sha512-m7X9U6BG2+J+R1lSOdCiITLLrxm+cWlNI3HUFA92oLO77ObGNzaKdh8pMLqdZcshtkKuV84olNNXDfMc4FezBQ==,
+      }
+    engines: { node: ">=10" }
 
   "@pkgjs/parseargs@0.11.0":
     resolution:
@@ -1610,10 +1671,16 @@ packages:
         integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==,
       }
 
-  "@types/bcrypt@6.0.0":
+  "@types/body-parser@1.19.6":
     resolution:
       {
-        integrity: sha512-/oJGukuH3D2+D+3H4JWLaAsJ/ji86dhRidzZ/Od7H/i8g+aCmvkeCc6Ni/f9uxGLSQVCRZkX2/lqEFG2BvWtlQ==,
+        integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==,
+      }
+
+  "@types/connect@3.4.38":
+    resolution:
+      {
+        integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==,
       }
 
   "@types/conventional-commits-parser@5.0.2":
@@ -1621,6 +1688,14 @@ packages:
       {
         integrity: sha512-BgT2szDXnVypgpNxOK8aL5SGjUdaQbC++WZNjF1Qge3Og2+zhHj+RWhmehLhYyvQwqAmvezruVfOf8+3m74W+g==,
       }
+
+  "@types/cookie-parser@1.4.10":
+    resolution:
+      {
+        integrity: sha512-B4xqkqfZ8Wek+rCOeRxsjMS9OgvzebEzzLYw7NHYuvzb7IdxOkI0ZHGgeEBX4PUM7QGVvNSK60T3OvWj3YfBRg==,
+      }
+    peerDependencies:
+      "@types/express": "*"
 
   "@types/cookiejar@2.1.5":
     resolution:
@@ -1646,10 +1721,28 @@ packages:
         integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==,
       }
 
+  "@types/express-serve-static-core@5.1.2":
+    resolution:
+      {
+        integrity: sha512-d3KvEXBSo/lOAMc2u6fkyDHBvetBHeqD7wm/AcXfLpSOQwlmG9D/aQ0SFswVjv05p7ullQS7Mjohj6/VdbZuTg==,
+      }
+
+  "@types/express@5.0.6":
+    resolution:
+      {
+        integrity: sha512-sKYVuV7Sv9fbPIt/442koC7+IIwK5olP1KWeD88e/idgoJqDm3JV/YUiPwkoKK92ylff2MGxSz1CSjsXelx0YA==,
+      }
+
   "@types/graceful-fs@4.1.9":
     resolution:
       {
         integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==,
+      }
+
+  "@types/http-errors@2.0.5":
+    resolution:
+      {
+        integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==,
       }
 
   "@types/istanbul-lib-coverage@2.0.6":
@@ -1688,16 +1781,52 @@ packages:
         integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==,
       }
 
+  "@types/jsonwebtoken@9.0.10":
+    resolution:
+      {
+        integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==,
+      }
+
+  "@types/jsonwebtoken@9.0.5":
+    resolution:
+      {
+        integrity: sha512-VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==,
+      }
+
   "@types/methods@1.1.4":
     resolution:
       {
         integrity: sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==,
       }
 
+  "@types/ms@2.1.0":
+    resolution:
+      {
+        integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==,
+      }
+
   "@types/node@22.20.1":
     resolution:
       {
         integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==,
+      }
+
+  "@types/passport-jwt@4.0.1":
+    resolution:
+      {
+        integrity: sha512-Y0Ykz6nWP4jpxgEUYq8NoVZeCQPo1ZndJLfapI249g1jHChvRfZRO/LS3tqu26YgAS/laI1qx98sYGz0IalRXQ==,
+      }
+
+  "@types/passport-strategy@0.2.38":
+    resolution:
+      {
+        integrity: sha512-GC6eMqqojOooq993Tmnmp7AUTbbQSgilyvpCYQjT+H6JfG/g6RGc7nXEniZlp0zyKJ0WUdOiZWLBZft9Yug1uA==,
+      }
+
+  "@types/passport@1.0.17":
+    resolution:
+      {
+        integrity: sha512-aciLyx+wDwT2t2/kJGJR2AEeBz0nJU4WuRX04Wu9Dqc5lSUtwu0WERPHYsLhF9PtseiAMPBGNUOtFjxZ56prsg==,
       }
 
   "@types/pg@8.20.0":
@@ -1712,6 +1841,18 @@ packages:
         integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==,
       }
 
+  "@types/qs@6.15.1":
+    resolution:
+      {
+        integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==,
+      }
+
+  "@types/range-parser@1.2.7":
+    resolution:
+      {
+        integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==,
+      }
+
   "@types/react-dom@18.3.7":
     resolution:
       {
@@ -1724,6 +1865,18 @@ packages:
     resolution:
       {
         integrity: sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw==,
+      }
+
+  "@types/send@1.2.1":
+    resolution:
+      {
+        integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==,
+      }
+
+  "@types/serve-static@2.2.0":
+    resolution:
+      {
+        integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==,
       }
 
   "@types/stack-utils@2.0.3":
@@ -2304,6 +2457,13 @@ packages:
         integrity: sha512-PYjyFOLKQ9y57JvQ6QLo8dAgNqswh8M1RMJYdQduT6xbWSgK36P/Z/v+p888pM69jMMfS8Xd8F6I1kQ/I9HUGg==,
       }
 
+  argon2@0.41.1:
+    resolution:
+      {
+        integrity: sha512-dqCW8kJXke8Ik+McUcMDltrbuAWETPyU6iq+4AhxqKphWi7pChB/Zgd/Tp/o8xRLbg8ksMj46F/vph9wnxpTzQ==,
+      }
+    engines: { node: ">=16.17.0" }
+
   argparse@1.0.10:
     resolution:
       {
@@ -2520,13 +2680,6 @@ packages:
     engines: { node: ">=6.0.0" }
     hasBin: true
 
-  bcrypt@6.0.0:
-    resolution:
-      {
-        integrity: sha512-cU8v/EGSrnH+HnxV2z0J7/blxH8gq7Xh2JFT6Aroax7UohdmiJJlxApMxtKfuI7z68NvvVcmR78k2LbT6efhRg==,
-      }
-    engines: { node: ">= 18" }
-
   binary-extensions@2.3.0:
     resolution:
       {
@@ -2592,6 +2745,12 @@ packages:
     resolution:
       {
         integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==,
+      }
+
+  buffer-equal-constant-time@1.0.1:
+    resolution:
+      {
+        integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==,
       }
 
   buffer-from@1.1.2:
@@ -2949,6 +3108,19 @@ packages:
         integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==,
       }
 
+  cookie-parser@1.4.7:
+    resolution:
+      {
+        integrity: sha512-nGUvgXnotP3BsjiLX2ypbQnWoGUPIIfHQNZkkC668ntrzGWEZVW70HDEB1qnNGMicPje6EttlIgzo51YSwNQGw==,
+      }
+    engines: { node: ">= 0.8.0" }
+
+  cookie-signature@1.0.6:
+    resolution:
+      {
+        integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==,
+      }
+
   cookie-signature@1.0.7:
     resolution:
       {
@@ -3283,6 +3455,12 @@ packages:
     resolution:
       {
         integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==,
+      }
+
+  ecdsa-sig-formatter@1.0.11:
+    resolution:
+      {
+        integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==,
       }
 
   ee-first@1.1.1:
@@ -4185,6 +4363,13 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
+  helmet@8.3.0:
+    resolution:
+      {
+        integrity: sha512-Qgpiaws3Sm30Av8Eah6sjMCZZwjlBu+E68rhpCWBshY1lb09HtLwj5GviX0OyQIn+ulUS0iX0AxN5n3tLZzz1w==,
+      }
+    engines: { node: ">=18.0.0" }
+
   html-escaper@2.0.2:
     resolution:
       {
@@ -5001,12 +5186,50 @@ packages:
       }
     engines: { "0": node >= 0.2.0 }
 
+  jsonwebtoken@9.0.2:
+    resolution:
+      {
+        integrity: sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ==,
+      }
+    engines: { node: ">=12", npm: ">=6" }
+
+  jsonwebtoken@9.0.3:
+    resolution:
+      {
+        integrity: sha512-MT/xP0CrubFRNLNKvxJ2BYfy53Zkm++5bX9dtuPbqAeQpTVe0MQTFhao8+Cp//EmJp244xt6Drw/GVEGCUj40g==,
+      }
+    engines: { node: ">=12", npm: ">=6" }
+
   jsx-ast-utils@3.3.5:
     resolution:
       {
         integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==,
       }
     engines: { node: ">=4.0" }
+
+  jwa@1.4.2:
+    resolution:
+      {
+        integrity: sha512-eeH5JO+21J78qMvTIDdBXidBd6nG2kZjg5Ohz/1fpa28Z4CcsWUzJ1ZZyFq/3z3N17aZy+ZuBoHljASbL1WfOw==,
+      }
+
+  jwa@2.0.1:
+    resolution:
+      {
+        integrity: sha512-hRF04fqJIP8Abbkq5NKGN0Bbr3JxlQ+qhZufXVr0DvujKy93ZCbXZMHDL4EOtodSbCWxOqR8MS1tXA5hwqCXDg==,
+      }
+
+  jws@3.2.3:
+    resolution:
+      {
+        integrity: sha512-byiJ0FLRdLdSVSReO/U4E7RoEyOCKnEnEPMjq3HxWtvzLsV08/i5RQKsFVNkCldrCaPr2vDNAOMsfs8T/Hze7g==,
+      }
+
+  jws@4.0.1:
+    resolution:
+      {
+        integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==,
+      }
 
   keyv@4.5.4:
     resolution:
@@ -5116,10 +5339,40 @@ packages:
         integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==,
       }
 
+  lodash.includes@4.3.0:
+    resolution:
+      {
+        integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==,
+      }
+
+  lodash.isboolean@3.0.3:
+    resolution:
+      {
+        integrity: sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg==,
+      }
+
+  lodash.isinteger@4.0.4:
+    resolution:
+      {
+        integrity: sha512-DBwtEWN2caHQ9/imiNeEA5ys1JoRtRfY3d7V9wkqtbycnAmTvRRmbHKDV4a0EYc678/dia0jrte4tjYwVBaZUA==,
+      }
+
+  lodash.isnumber@3.0.3:
+    resolution:
+      {
+        integrity: sha512-QYqzpfwO3/CWf3XP+Z+tkQsfaLL/EnUlXWVkIk5FUPc4sBdTehEqZONuyRt2P67PXAk+NXmTBcc97zw9t1FQrw==,
+      }
+
   lodash.isplainobject@4.0.6:
     resolution:
       {
         integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==,
+      }
+
+  lodash.isstring@4.0.1:
+    resolution:
+      {
+        integrity: sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==,
       }
 
   lodash.kebabcase@4.1.1:
@@ -5144,6 +5397,12 @@ packages:
     resolution:
       {
         integrity: sha512-GK3g5RPZWTRSeLSpgP8Xhra+pnjBC56q9FZYe1d5RN3TJ35dbkGy3YqBSMbyCrlbi+CM9Z3Jk5yTL7RCsqboyQ==,
+      }
+
+  lodash.once@4.1.1:
+    resolution:
+      {
+        integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==,
       }
 
   lodash.snakecase@4.1.1:
@@ -5770,6 +6029,26 @@ packages:
       }
     engines: { node: ">= 0.8" }
 
+  passport-jwt@4.0.1:
+    resolution:
+      {
+        integrity: sha512-UCKMDYhNuGOBE9/9Ycuoyh7vP6jpeTp/+sfMJl7nLff/t6dps+iaeE0hhNkKN8/HZHcJ7lCdOyDxHdDoxoSvdQ==,
+      }
+
+  passport-strategy@1.0.0:
+    resolution:
+      {
+        integrity: sha512-CB97UUvDKJde2V0KDWWB3lyf6PC3FaZP7YxZ2G8OAtn9p4HI9j9JLP9qjOGZFvyl8uwNT8qM+hGnz/n16NI7oA==,
+      }
+    engines: { node: ">= 0.4.0" }
+
+  passport@0.7.0:
+    resolution:
+      {
+        integrity: sha512-cPLl+qZpSc+ireUvt+IzqbED1cHHkDoVYMo30jbJIdOOjQ1MQYZBPiNvmi8UM6lJuOpTPXJGZQk0DtC4y61MYQ==,
+      }
+    engines: { node: ">= 0.4.0" }
+
   path-exists@4.0.0:
     resolution:
       {
@@ -5836,6 +6115,12 @@ packages:
         integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==,
       }
     engines: { node: ">=8" }
+
+  pause@0.0.1:
+    resolution:
+      {
+        integrity: sha512-KG8UEiEVkR3wGEb4m5yZkVCzigAD+cVEJck2CzYZO37ZGJfctvVptVO192MwrtPhzONn6go8ylnOdMhKqi4nfg==,
+      }
 
   pg-cloudflare@1.4.0:
     resolution:
@@ -8341,6 +8626,12 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  "@nestjs/jwt@10.2.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))":
+    dependencies:
+      "@nestjs/common": 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      "@types/jsonwebtoken": 9.0.5
+      jsonwebtoken: 9.0.2
+
   "@nestjs/mapped-types@2.1.1(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)":
     dependencies:
       "@nestjs/common": 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -8348,6 +8639,11 @@ snapshots:
     optionalDependencies:
       class-transformer: 0.5.1
       class-validator: 0.14.4
+
+  "@nestjs/passport@10.0.3(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)":
+    dependencies:
+      "@nestjs/common": 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      passport: 0.7.0
 
   "@nestjs/platform-express@10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)":
     dependencies:
@@ -8390,6 +8686,12 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       "@nestjs/platform-express": 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
+
+  "@nestjs/throttler@6.5.0(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(reflect-metadata@0.2.2)":
+    dependencies:
+      "@nestjs/common": 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      "@nestjs/core": 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      reflect-metadata: 0.2.2
 
   "@next/env@15.5.20": {}
 
@@ -8448,6 +8750,8 @@ snapshots:
   "@paralleldrive/cuid2@2.3.1":
     dependencies:
       "@noble/hashes": 1.8.0
+
+  "@phc/format@1.0.0": {}
 
   "@pkgjs/parseargs@0.11.0":
     optional: true
@@ -8540,13 +8844,22 @@ snapshots:
     dependencies:
       "@babel/types": 7.29.7
 
-  "@types/bcrypt@6.0.0":
+  "@types/body-parser@1.19.6":
+    dependencies:
+      "@types/connect": 3.4.38
+      "@types/node": 22.20.1
+
+  "@types/connect@3.4.38":
     dependencies:
       "@types/node": 22.20.1
 
   "@types/conventional-commits-parser@5.0.2":
     dependencies:
       "@types/node": 22.20.1
+
+  "@types/cookie-parser@1.4.10(@types/express@5.0.6)":
+    dependencies:
+      "@types/express": 5.0.6
 
   "@types/cookiejar@2.1.5": {}
 
@@ -8562,9 +8875,24 @@ snapshots:
 
   "@types/estree@1.0.9": {}
 
+  "@types/express-serve-static-core@5.1.2":
+    dependencies:
+      "@types/node": 22.20.1
+      "@types/qs": 6.15.1
+      "@types/range-parser": 1.2.7
+      "@types/send": 1.2.1
+
+  "@types/express@5.0.6":
+    dependencies:
+      "@types/body-parser": 1.19.6
+      "@types/express-serve-static-core": 5.1.2
+      "@types/serve-static": 2.2.0
+
   "@types/graceful-fs@4.1.9":
     dependencies:
       "@types/node": 22.20.1
+
+  "@types/http-errors@2.0.5": {}
 
   "@types/istanbul-lib-coverage@2.0.6": {}
 
@@ -8585,11 +8913,36 @@ snapshots:
 
   "@types/json5@0.0.29": {}
 
+  "@types/jsonwebtoken@9.0.10":
+    dependencies:
+      "@types/ms": 2.1.0
+      "@types/node": 22.20.1
+
+  "@types/jsonwebtoken@9.0.5":
+    dependencies:
+      "@types/node": 22.20.1
+
   "@types/methods@1.1.4": {}
+
+  "@types/ms@2.1.0": {}
 
   "@types/node@22.20.1":
     dependencies:
       undici-types: 6.21.0
+
+  "@types/passport-jwt@4.0.1":
+    dependencies:
+      "@types/jsonwebtoken": 9.0.10
+      "@types/passport-strategy": 0.2.38
+
+  "@types/passport-strategy@0.2.38":
+    dependencies:
+      "@types/express": 5.0.6
+      "@types/passport": 1.0.17
+
+  "@types/passport@1.0.17":
+    dependencies:
+      "@types/express": 5.0.6
 
   "@types/pg@8.20.0":
     dependencies:
@@ -8599,6 +8952,10 @@ snapshots:
 
   "@types/prop-types@15.7.15": {}
 
+  "@types/qs@6.15.1": {}
+
+  "@types/range-parser@1.2.7": {}
+
   "@types/react-dom@18.3.7(@types/react@18.3.31)":
     dependencies:
       "@types/react": 18.3.31
@@ -8607,6 +8964,15 @@ snapshots:
     dependencies:
       "@types/prop-types": 15.7.15
       csstype: 3.2.3
+
+  "@types/send@1.2.1":
+    dependencies:
+      "@types/node": 22.20.1
+
+  "@types/serve-static@2.2.0":
+    dependencies:
+      "@types/http-errors": 2.0.5
+      "@types/node": 22.20.1
 
   "@types/stack-utils@2.0.3": {}
 
@@ -8966,6 +9332,12 @@ snapshots:
 
   arg@5.0.2: {}
 
+  argon2@0.41.1:
+    dependencies:
+      "@phc/format": 1.0.0
+      node-addon-api: 8.9.0
+      node-gyp-build: 4.8.4
+
   argparse@1.0.10:
     dependencies:
       sprintf-js: 1.0.3
@@ -9135,11 +9507,6 @@ snapshots:
 
   baseline-browser-mapping@2.10.44: {}
 
-  bcrypt@6.0.0:
-    dependencies:
-      node-addon-api: 8.9.0
-      node-gyp-build: 4.8.4
-
   binary-extensions@2.3.0: {}
 
   bl@4.1.0:
@@ -9197,6 +9564,8 @@ snapshots:
   bser@2.1.1:
     dependencies:
       node-int64: 0.4.0
+
+  buffer-equal-constant-time@1.0.1: {}
 
   buffer-from@1.1.2: {}
 
@@ -9381,6 +9750,13 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
+  cookie-parser@1.4.7:
+    dependencies:
+      cookie: 0.7.2
+      cookie-signature: 1.0.6
+
+  cookie-signature@1.0.6: {}
+
   cookie-signature@1.0.7: {}
 
   cookie-signature@1.2.2: {}
@@ -9552,6 +9928,10 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
+  ecdsa-sig-formatter@1.0.11:
+    dependencies:
+      safe-buffer: 5.2.1
+
   ee-first@1.1.1: {}
 
   electron-to-chromium@1.5.394: {}
@@ -9710,8 +10090,8 @@ snapshots:
       "@typescript-eslint/parser": 8.65.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 5.2.0(eslint@8.57.1)
@@ -9734,7 +10114,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       "@nolyfill/is-core-module": 1.0.39
       debug: 4.4.3
@@ -9745,22 +10125,22 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
+  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       "@typescript-eslint/parser": 8.65.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       "@rtsao/scc": 1.1.0
       array-includes: 3.1.9
@@ -9771,7 +10151,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.65.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3
@@ -10294,6 +10674,8 @@ snapshots:
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
+
+  helmet@8.3.0: {}
 
   html-escaper@2.0.2: {}
 
@@ -10958,12 +11340,60 @@ snapshots:
 
   jsonparse@1.3.1: {}
 
+  jsonwebtoken@9.0.2:
+    dependencies:
+      jws: 3.2.3
+      lodash.includes: 4.3.0
+      lodash.isboolean: 3.0.3
+      lodash.isinteger: 4.0.4
+      lodash.isnumber: 3.0.3
+      lodash.isplainobject: 4.0.6
+      lodash.isstring: 4.0.1
+      lodash.once: 4.1.1
+      ms: 2.1.3
+      semver: 7.8.5
+
+  jsonwebtoken@9.0.3:
+    dependencies:
+      jws: 4.0.1
+      lodash.includes: 4.3.0
+      lodash.isboolean: 3.0.3
+      lodash.isinteger: 4.0.4
+      lodash.isnumber: 3.0.3
+      lodash.isplainobject: 4.0.6
+      lodash.isstring: 4.0.1
+      lodash.once: 4.1.1
+      ms: 2.1.3
+      semver: 7.8.5
+
   jsx-ast-utils@3.3.5:
     dependencies:
       array-includes: 3.1.9
       array.prototype.flat: 1.3.3
       object.assign: 4.1.7
       object.values: 1.2.1
+
+  jwa@1.4.2:
+    dependencies:
+      buffer-equal-constant-time: 1.0.1
+      ecdsa-sig-formatter: 1.0.11
+      safe-buffer: 5.2.1
+
+  jwa@2.0.1:
+    dependencies:
+      buffer-equal-constant-time: 1.0.1
+      ecdsa-sig-formatter: 1.0.11
+      safe-buffer: 5.2.1
+
+  jws@3.2.3:
+    dependencies:
+      jwa: 1.4.2
+      safe-buffer: 5.2.1
+
+  jws@4.0.1:
+    dependencies:
+      jwa: 2.0.1
+      safe-buffer: 5.2.1
 
   keyv@4.5.4:
     dependencies:
@@ -11030,7 +11460,17 @@ snapshots:
 
   lodash.camelcase@4.3.0: {}
 
+  lodash.includes@4.3.0: {}
+
+  lodash.isboolean@3.0.3: {}
+
+  lodash.isinteger@4.0.4: {}
+
+  lodash.isnumber@3.0.3: {}
+
   lodash.isplainobject@4.0.6: {}
+
+  lodash.isstring@4.0.1: {}
 
   lodash.kebabcase@4.1.1: {}
 
@@ -11039,6 +11479,8 @@ snapshots:
   lodash.merge@4.6.2: {}
 
   lodash.mergewith@4.6.2: {}
+
+  lodash.once@4.1.1: {}
 
   lodash.snakecase@4.1.1: {}
 
@@ -11374,6 +11816,19 @@ snapshots:
 
   parseurl@1.3.3: {}
 
+  passport-jwt@4.0.1:
+    dependencies:
+      jsonwebtoken: 9.0.3
+      passport-strategy: 1.0.0
+
+  passport-strategy@1.0.0: {}
+
+  passport@0.7.0:
+    dependencies:
+      passport-strategy: 1.0.0
+      pause: 0.0.1
+      utils-merge: 1.0.1
+
   path-exists@4.0.0: {}
 
   path-exists@5.0.0: {}
@@ -11396,6 +11851,8 @@ snapshots:
   path-to-regexp@3.3.0: {}
 
   path-type@4.0.0: {}
+
+  pause@0.0.1: {}
 
   pg-cloudflare@1.4.0:
     optional: true

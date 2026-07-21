@@ -2,6 +2,8 @@ import "reflect-metadata";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
 
 import { AppModule } from "./app.module";
 import type { EnvConfig } from "./config/env.validation";
@@ -28,10 +30,23 @@ async function bootstrap() {
     }),
   );
 
-  // Permissive dev-only CORS so apps/web and apps/admin (different ports)
-  // can call the API locally. Tightened to an explicit allow-list once
-  // real origins are known — tracked as an M1+ follow-up, not an M0 gap.
-  app.enableCors({ origin: true, credentials: true });
+  // Standard security headers (HSTS, X-Content-Type-Options, etc.).
+  app.use(helmet());
+
+  // Reads the refresh_token cookie AuthController's refresh/logout
+  // endpoints depend on.
+  app.use(cookieParser());
+
+  // Env-driven allow-list (M3) — replaces the M0 permissive `origin: true`
+  // now that credentialed (cookie-carrying) requests are possible.
+  // `credentials: true` is required for the refresh-token cookie to be
+  // sent/accepted cross-origin (apps/web on Vercel, apps/api on Railway).
+  const corsOrigins = config
+    .get("CORS_ORIGIN", { infer: true })
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.enableCors({ origin: corsOrigins, credentials: true });
 
   // Ensures OnModuleDestroy (DatabaseService's pool.end()) actually runs on
   // SIGTERM/SIGINT — required for Railway/Render's graceful-shutdown

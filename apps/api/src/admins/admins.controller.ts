@@ -11,10 +11,14 @@ import {
   Post,
   Query,
   UseFilters,
+  UseGuards,
 } from "@nestjs/common";
 
 import { DomainHttpExceptionFilter } from "../common/filters/domain-http-exception.filter";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
 import { AdminsService } from "./admins.service";
 import type { AdminResponse } from "./admin.response";
 import { CreateAdminDto } from "./dto/create-admin.dto";
@@ -29,8 +33,12 @@ interface ListEnvelope<T> {
   meta: { page: number; perPage: number; total: number };
 }
 
+// Agency back-office management — admin-only. Public self-service accounts
+// are created via POST /auth/register, not this controller.
 @Controller("admins")
 @UseFilters(DomainHttpExceptionFilter)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles("admin")
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 

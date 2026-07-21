@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { useAuth } from "../../lib/auth/AuthContext";
 import { Container } from "./Container";
 
 const NAV_LINKS = [
@@ -15,7 +16,11 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { status, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const accountHref = status === "authenticated" ? "/account" : "/login";
+  const accountLabel =
+    status === "authenticated" ? (user?.fullName ?? "Account") : "Log in";
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-porcelain/95 backdrop-blur">
@@ -50,10 +55,10 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/login"
+            href={accountHref}
             className="text-[15px] font-medium text-ink/80 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass-deep"
           >
-            Log in
+            {accountLabel}
           </Link>
           <Link
             href="/quick-booking"
@@ -106,11 +111,11 @@ export function Navbar() {
               </Link>
             ))}
             <Link
-              href="/login"
+              href={accountHref}
               onClick={() => setIsMenuOpen(false)}
               className="rounded-md px-3 py-2.5 text-[15px] font-medium text-ink/80 hover:bg-porcelain-soft hover:text-ink"
             >
-              Log in
+              {accountLabel}
             </Link>
             <Link
               href="/quick-booking"

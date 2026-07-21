@@ -1,10 +1,14 @@
 "use client";
 
 import { Button } from "@maya-x/ui";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-interface RegisterValues {
+import { ApiError } from "../../lib/api/client";
+import { useAuth } from "../../lib/auth/AuthContext";
+
+interface RegisterFormValues {
   fullName: string;
   email: string;
   phone: string;
@@ -12,7 +16,7 @@ interface RegisterValues {
   confirmPassword: string;
 }
 
-const EMPTY_VALUES: RegisterValues = {
+const EMPTY_VALUES: RegisterFormValues = {
   fullName: "",
   email: "",
   phone: "",
@@ -21,32 +25,66 @@ const EMPTY_VALUES: RegisterValues = {
 };
 
 export function RegisterForm() {
-  const [values, setValues] = useState<RegisterValues>(EMPTY_VALUES);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { register } = useAuth();
+  const [values, setValues] = useState<RegisterFormValues>(EMPTY_VALUES);
+  const [formErrors, setFormErrors] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
 
-  function update<K extends keyof RegisterValues>(
+  function update<K extends keyof RegisterFormValues>(
     field: K,
-    value: RegisterValues[K],
+    value: RegisterFormValues[K],
   ) {
     setValues((prev) => ({ ...prev, [field]: value }));
   }
 
-  // Mock only — no backend yet (M2 UI foundation). Swap for a real
-  // POST to the auth endpoint once it exists.
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (values.password !== values.confirmPassword) {
-      setError("Passwords don't match.");
+      setFormErrors(["Passwords don't match."]);
       return;
     }
-    setError(null);
+
+    setFormErrors([]);
     setStatus("submitting");
-    window.setTimeout(() => setStatus("idle"), 500);
+
+    try {
+      await register({
+        email: values.email,
+        fullName: values.fullName,
+        phone: values.phone || undefined,
+        password: values.password,
+      });
+      router.push("/account");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setFormErrors(
+          error.details.length > 0
+            ? error.details.map(String)
+            : [error.message],
+        );
+      } else {
+        setFormErrors(["Something went wrong. Please try again."]);
+      }
+    } finally {
+      setStatus("idle");
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {formErrors.length > 0 ? (
+        <div
+          role="alert"
+          className="rounded-md bg-danger/10 px-3 py-2 text-[13.5px] text-danger"
+        >
+          {formErrors.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="register-name"
@@ -132,14 +170,7 @@ export function RegisterForm() {
           value={values.confirmPassword}
           onChange={(event) => update("confirmPassword", event.target.value)}
           className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? "register-error" : undefined}
         />
-        {error ? (
-          <p id="register-error" className="text-[13px] text-danger">
-            {error}
-          </p>
-        ) : null}
       </div>
 
       <Button type="submit" disabled={status === "submitting"} className="mt-2">

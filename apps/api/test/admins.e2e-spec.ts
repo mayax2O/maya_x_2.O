@@ -5,6 +5,7 @@ import type { TestingModule } from "@nestjs/testing";
 import request from "supertest";
 
 import { AppModule } from "../src/app.module";
+import { hashPassword } from "../src/auth/password.util";
 import { PrismaService } from "../src/database/prisma.service";
 
 /**
@@ -12,12 +13,19 @@ import { PrismaService } from "../src/database/prisma.service";
  * DATABASE_URL as the health e2e test — local Postgres in dev, the CI
  * service container in CI), through the actual HTTP layer (global prefix +
  * ValidationPipe), not just the service in isolation.
+ *
+ * As of M3 every route here requires an authenticated Admin — the suite
+ * logs in as a Prisma-seeded test admin once in beforeAll and reuses that
+ * access token throughout.
  */
 describe("Admins API (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let accessToken: string;
 
   const testEmail = `admin.e2e.${Date.now()}@example.com`;
+  const authAdminEmail = `admin.e2e.auth.${Date.now()}@example.com`;
+  const authAdminPassword = "AuthAdminPass1";
 
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -36,16 +44,37 @@ describe("Admins API (e2e)", () => {
     await app.init();
 
     prisma = moduleRef.get(PrismaService);
+
+    await prisma.admin.create({
+      data: {
+        email: authAdminEmail,
+        fullName: "E2E Auth Admin",
+        passwordHash: await hashPassword(authAdminPassword),
+      },
+    });
+
+    const login = await request(app.getHttpServer())
+      .post("/api/v1/auth/login")
+      .send({ email: authAdminEmail, password: authAdminPassword });
+    accessToken = login.body.data.accessToken;
   });
 
   afterAll(async () => {
     await prisma.admin.deleteMany({ where: { email: testEmail } });
+    await prisma.admin.deleteMany({ where: { email: authAdminEmail } });
     await app.close();
+  });
+
+  it("rejects unauthenticated requests with 401", async () => {
+    const response = await request(app.getHttpServer()).get("/api/v1/admins");
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHENTICATED");
   });
 
   it("supports the full create → list → get → update → delete lifecycle", async () => {
     const createResponse = await request(app.getHttpServer())
       .post("/api/v1/admins")
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({
         email: testEmail,
         fullName: "E2E Admin",
@@ -61,35 +90,36 @@ describe("Admins API (e2e)", () => {
     expect(createResponse.body.data).not.toHaveProperty("passwordHash");
     const { id } = createResponse.body.data;
 
-    const listResponse = await request(app.getHttpServer()).get(
-      "/api/v1/admins",
-    );
+    const listResponse = await request(app.getHttpServer())
+      .get("/api/v1/admins")
+      .set("Authorization", `Bearer ${accessToken}`);
     expect(listResponse.status).toBe(200);
     expect(listResponse.body.meta).toMatchObject({ page: 1, perPage: 20 });
     expect(
       listResponse.body.data.some((admin: { id: string }) => admin.id === id),
     ).toBe(true);
 
-    const getResponse = await request(app.getHttpServer()).get(
-      `/api/v1/admins/${id}`,
-    );
+    const getResponse = await request(app.getHttpServer())
+      .get(`/api/v1/admins/${id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
     expect(getResponse.status).toBe(200);
     expect(getResponse.body.data.email).toBe(testEmail);
 
     const updateResponse = await request(app.getHttpServer())
       .patch(`/api/v1/admins/${id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({ fullName: "E2E Admin Updated" });
     expect(updateResponse.status).toBe(200);
     expect(updateResponse.body.data.fullName).toBe("E2E Admin Updated");
 
-    const deleteResponse = await request(app.getHttpServer()).delete(
-      `/api/v1/admins/${id}`,
-    );
+    const deleteResponse = await request(app.getHttpServer())
+      .delete(`/api/v1/admins/${id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
     expect(deleteResponse.status).toBe(204);
 
-    const getAfterDeleteResponse = await request(app.getHttpServer()).get(
-      `/api/v1/admins/${id}`,
-    );
+    const getAfterDeleteResponse = await request(app.getHttpServer())
+      .get(`/api/v1/admins/${id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
     expect(getAfterDeleteResponse.status).toBe(404);
     expect(getAfterDeleteResponse.body.error.code).toBe("ADMIN_NOT_FOUND");
   });
@@ -99,6 +129,7 @@ describe("Admins API (e2e)", () => {
 
     const first = await request(app.getHttpServer())
       .post("/api/v1/admins")
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({
         email,
         fullName: "First Admin",
@@ -108,6 +139,7 @@ describe("Admins API (e2e)", () => {
 
     const second = await request(app.getHttpServer())
       .post("/api/v1/admins")
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({ email, fullName: "Second Admin", password: "Password1" });
 
     expect(second.status).toBe(409);
@@ -119,6 +151,7 @@ describe("Admins API (e2e)", () => {
   it("rejects an invalid payload with 400 Bad Request", async () => {
     const response = await request(app.getHttpServer())
       .post("/api/v1/admins")
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({ email: "not-an-email", fullName: "", password: "short" });
 
     expect(response.status).toBe(400);

@@ -1,25 +1,51 @@
 "use client";
 
 import { Button } from "@maya-x/ui";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { ApiError } from "../../lib/api/client";
+import { useAuth } from "../../lib/auth/AuthContext";
+
 export function LoginForm() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // Mock only — no backend yet (M2 UI foundation). Swap for a real
-  // POST to the auth endpoint once it exists; the form fields and
-  // validation shape won't need to change.
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError(null);
     setStatus("submitting");
-    window.setTimeout(() => setStatus("idle"), 500);
+
+    try {
+      await login({ email, password });
+      router.push("/account");
+    } catch (error) {
+      setFormError(
+        error instanceof ApiError
+          ? error.message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setStatus("idle");
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {formError ? (
+        <p
+          role="alert"
+          className="rounded-md bg-danger/10 px-3 py-2 text-[13.5px] text-danger"
+        >
+          {formError}
+        </p>
+      ) : null}
+
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="login-email"

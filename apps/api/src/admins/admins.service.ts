@@ -4,16 +4,14 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import * as bcrypt from "bcrypt";
 
 import { PrismaService } from "../database/prisma.service";
+import { hashPassword } from "../auth/password.util";
 import type { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 import type { PaginatedResult } from "../common/pagination-result.interface";
 import { toAdminResponse, type AdminResponse } from "./admin.response";
 import type { CreateAdminDto } from "./dto/create-admin.dto";
 import type { UpdateAdminDto } from "./dto/update-admin.dto";
-
-const BCRYPT_SALT_ROUNDS = 12;
 
 function isUniqueConstraintViolation(error: unknown): boolean {
   return (
@@ -27,7 +25,7 @@ export class AdminsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateAdminDto): Promise<AdminResponse> {
-    const passwordHash = await bcrypt.hash(dto.password, BCRYPT_SALT_ROUNDS);
+    const passwordHash = await hashPassword(dto.password);
 
     try {
       const admin = await this.prisma.admin.create({
@@ -90,7 +88,7 @@ export class AdminsService {
     if (dto.fullName !== undefined) data.fullName = dto.fullName;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
     if (dto.password !== undefined) {
-      data.passwordHash = await bcrypt.hash(dto.password, BCRYPT_SALT_ROUNDS);
+      data.passwordHash = await hashPassword(dto.password);
     }
 
     try {

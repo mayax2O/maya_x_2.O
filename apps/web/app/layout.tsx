@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Footer } from "../components/layout/Footer";
 import { Navbar } from "../components/layout/Navbar";
+import { AuthProvider } from "../lib/auth/AuthContext";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mayax.example"),
@@ -45,11 +46,13 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Navbar />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

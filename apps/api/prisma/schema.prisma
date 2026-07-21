@@ -1,12 +1,13 @@
 // MAYA_X_2.0 — Prisma schema
 //
-// M1B scope: the Identity & Access core data models only — Admin and User.
-// No auth (login/JWT), no roles/permissions, no other domain tables yet.
-// See docs/04-database (Database Design v1.0) for the full 21-entity target
-// schema this will grow into, table by table, milestone by milestone; the
-// `roles`/`admin_user_roles`/`user_credentials`/token tables documented
-// there are deliberately out of scope until the milestone that implements
-// authentication.
+// M1B added the Identity & Access core data models — Admin and User. M3
+// completes that domain with the auth tables the Database Design document
+// always specified alongside them: Role/AdminUserRole (admin RBAC),
+// UserCredential (customer password + lockout state, deliberately a
+// separate table from User per the design doc), and RefreshToken
+// (polymorphic — belongs to exactly one of User or Admin, enforced by a
+// CHECK constraint in the migration SQL since Prisma's schema DSL can't
+// express that directly). See docs/04-database for full rationale.
 //
 // Supabase connection strings (per Prisma's documented Supabase guidance):
 //   DATABASE_URL — the PgBouncer-pooled connection (port 6543,
@@ -31,11 +32,9 @@ datasource db {
   extensions = [pgcrypto, citext]
 }
 
-/// Agency staff accounts (Database Design §3.1 `admin_users`). Roles/
-/// permissions (`roles`, `admin_user_roles`) and login (`password_hash`
-/// verification) are out of scope for M1B; `passwordHash` exists only
-/// because the column is NOT NULL in the documented physical schema — no
-/// endpoint here validates or issues credentials from it.
+/// Agency staff accounts (Database Design §3.1 `admin_users`). `passwordHash`
+/// is verified by AuthService as of M3 (argon2id); RBAC is expressed via
+/// the adminUserRoles join to Role.
 model Admin {
   id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email        String    @unique @db.Citext
@@ -46,12 +45,16 @@ model Admin {
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  adminUserRoles AdminUserRole[]
+  refreshTokens  RefreshToken[]
+
   @@map("admin_users")
 }
 
 /// Registered customer accounts (Database Design §3.1 `users`). Credentials
-/// (`user_credentials`) and tokens are a deliberately separate table in the
-/// documented schema and are out of scope for M1B.
+/// live in the separate UserCredential table (a customer may exist without
+/// one — e.g. created via the admin-facing Users CRUD — until they register
+/// through /auth/register and gain the ability to log in).
 model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email           String    @unique @db.Citext
@@ -62,5 +65,72 @@ model User {
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  credential    UserCredential?
+  refreshTokens RefreshToken[]
+
   @@map("users")
+}
+
+/// Named admin roles (Database Design §3.1 `roles`) — e.g. "admin",
+/// "super_admin". Fine-grained permissions per role are out of scope for
+/// M3; RolesGuard checks role name membership only.
+model Role {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String  @unique
+  description String?
+
+  adminUserRoles AdminUserRole[]
+
+  @@map("roles")
+}
+
+/// Many-to-many join between Admin and Role (`admin_user_roles`).
+model AdminUserRole {
+  adminUserId String @map("admin_user_id") @db.Uuid
+  roleId      String @map("role_id") @db.Uuid
+
+  admin Admin @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role  Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([adminUserId, roleId])
+  @@map("admin_user_roles")
+}
+
+/// Customer password + lockout state (`user_credentials`), 1:1 with User.
+/// Kept separate from User itself per the Database Design doc, so a
+/// customer record can exist (e.g. admin-created) before it ever gains
+/// login credentials.
+model UserCredential {
+  userId              String    @id @map("user_id") @db.Uuid
+  passwordHash        String    @map("password_hash")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until") @db.Timestamptz(6)
+  passwordChangedAt   DateTime? @map("password_changed_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_credentials")
+}
+
+/// Refresh tokens (`refresh_tokens`) — belongs to exactly one of User or
+/// Admin (never both, never neither); enforced by a CHECK constraint added
+/// by hand in the migration SQL, since the Prisma schema DSL has no way to
+/// express "exactly one of these two FKs is set." Only `tokenHash` (a
+/// SHA-256 digest) is ever stored — the raw token exists only in the
+/// client's cookie.
+model RefreshToken {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String?   @map("user_id") @db.Uuid
+  adminUserId String?   @map("admin_user_id") @db.Uuid
+  tokenHash   String    @unique @map("token_hash")
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  admin Admin? @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([adminUserId])
+  @@map("refresh_tokens")
 }

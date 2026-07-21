@@ -11,10 +11,14 @@ import {
   Post,
   Query,
   UseFilters,
+  UseGuards,
 } from "@nestjs/common";
 
 import { DomainHttpExceptionFilter } from "../common/filters/domain-http-exception.filter";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
 import { UsersService } from "./users.service";
 import type { UserResponse } from "./user.response";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -29,8 +33,12 @@ interface ListEnvelope<T> {
   meta: { page: number; perPage: number; total: number };
 }
 
+// Admin-facing customer management (CRM-style CRUD) — admin-only. Public
+// self-registration is POST /auth/register, not this controller.
 @Controller("users")
 @UseFilters(DomainHttpExceptionFilter)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles("admin")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

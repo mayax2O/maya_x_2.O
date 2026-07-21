@@ -72,7 +72,7 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Apply database migrations (M1B — Admin/User tables)
+      - name: Apply database migrations
         run: pnpm --filter @maya-x/api exec prisma migrate deploy
         env:
           DATABASE_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
@@ -84,6 +84,11 @@ jobs:
           NODE_ENV: test
           DATABASE_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
           DIRECT_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
+          # M3: e2e boots the full AppModule, so ConfigModule's startup
+          # validation requires these — CI-only values, never used outside
+          # this ephemeral job.
+          JWT_ACCESS_SECRET: ci-only-access-secret-not-used-anywhere-else-00
+          JWT_REFRESH_SECRET: ci-only-refresh-secret-not-used-anywhere-else-00
 
       - name: Build
         run: pnpm build
