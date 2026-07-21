@@ -9,6 +9,7 @@
   },
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "dev": "pnpm -r --parallel --if-present run dev",
     "dev:api": "pnpm --filter @maya-x/api dev",
     "dev:web": "pnpm --filter @maya-x/web dev",
     "dev:admin": "pnpm --filter @maya-x/admin dev",
