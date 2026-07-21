@@ -53,6 +53,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # @prisma/client's own postinstall hook looks for a schema at the
+      # workspace root and no-ops here (it's at apps/api/prisma/schema.prisma),
+      # so the client is left with its placeholder (model-less) types unless
+      # generated explicitly — needed before typecheck/build even reference
+      # the client, not just before the DB-touching test steps below.
+      - name: Generate Prisma Client
+        run: pnpm --filter @maya-x/api exec prisma generate
+
       - name: Check formatting
         run: pnpm format:check
 
