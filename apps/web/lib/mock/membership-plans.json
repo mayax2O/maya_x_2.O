@@ -1,0 +1,49 @@
+[
+  {
+    "id": "mem-001",
+    "name": "Essential",
+    "slug": "essential",
+    "price": 0,
+    "currency": "INR",
+    "billingCycle": "yearly",
+    "benefits": [
+      "Browse the full talent catalog",
+      "Standard booking request review (2-3 business days)",
+      "Save talent to a wishlist"
+    ],
+    "isActive": true,
+    "highlighted": false
+  },
+  {
+    "id": "mem-002",
+    "name": "Premium",
+    "slug": "premium",
+    "price": 4999,
+    "currency": "INR",
+    "billingCycle": "yearly",
+    "benefits": [
+      "Priority review on every booking request (within 1 business day)",
+      "Access to member-only talent",
+      "Preferential rates on selected categories",
+      "Dedicated account contact"
+    ],
+    "isActive": true,
+    "highlighted": true
+  },
+  {
+    "id": "mem-003",
+    "name": "Agency Partner",
+    "slug": "agency-partner",
+    "price": 14999,
+    "currency": "INR",
+    "billingCycle": "yearly",
+    "benefits": [
+      "Everything in Premium",
+      "Multi-event package proposals",
+      "Priority access during festival season (Durga Puja, wedding season)",
+      "Quarterly account review call"
+    ],
+    "isActive": true,
+    "highlighted": false
+  }
+]

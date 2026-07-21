@@ -1,0 +1,22 @@
+[
+  { "id": "cat-event-host", "name": "Event Host", "slug": "event-host" },
+  { "id": "cat-anchor-mc", "name": "Anchor & MC", "slug": "anchor-mc" },
+  {
+    "id": "cat-brand-ambassador",
+    "name": "Brand Ambassador",
+    "slug": "brand-ambassador"
+  },
+  {
+    "id": "cat-classical-dance",
+    "name": "Classical Dance",
+    "slug": "classical-dance"
+  },
+  {
+    "id": "cat-folk-live-music",
+    "name": "Folk & Live Music",
+    "slug": "folk-live-music"
+  },
+  { "id": "cat-photography", "name": "Photography", "slug": "photography" },
+  { "id": "cat-modeling", "name": "Modeling", "slug": "modeling" },
+  { "id": "cat-singing", "name": "Singing", "slug": "singing" }
+]

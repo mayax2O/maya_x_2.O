@@ -1,0 +1,50 @@
+[
+  {
+    "id": "test-001",
+    "quote": "The agency handled everything end to end — we never once had to chase the talent directly. Exactly the discretion we needed for a client launch.",
+    "authorName": "Priya Sharma",
+    "authorRole": "Marketing Director, Anandabazar Retail Group",
+    "city": "Kolkata",
+    "rating": 5
+  },
+  {
+    "id": "test-002",
+    "quote": "Booking a classical dancer for our Durga Puja evening was seamless. MAYA_X confirmed availability within a day and the performance was flawless.",
+    "authorName": "Arjun Mehta",
+    "authorRole": "Cultural Committee Head",
+    "city": "Kolkata",
+    "rating": 5
+  },
+  {
+    "id": "test-003",
+    "quote": "Professional from the first enquiry call to the final invoice. The talent showed up prepared and the whole event ran on time.",
+    "authorName": "Sana Fernandes",
+    "authorRole": "Event Producer",
+    "city": "Mumbai",
+    "rating": 4
+  },
+  {
+    "id": "test-004",
+    "quote": "We've booked three brand ambassadors through MAYA_X this year — every one of them was exactly as described on the profile.",
+    "authorName": "Rohan Kapoor",
+    "authorRole": "Brand Manager",
+    "city": "Bengaluru",
+    "rating": 5
+  },
+  {
+    "id": "test-005",
+    "quote": "Membership paid for itself after the first booking — priority review meant we had a confirmed anchor within hours, not days.",
+    "authorName": "Nabanita Roy",
+    "authorRole": "Wedding Planner",
+    "city": "Kolkata",
+    "rating": 5
+  },
+  {
+    "id": "test-006",
+    "quote": "Clear communication throughout, and the agency was upfront about pricing from the very first quote. No surprises at invoicing.",
+    "authorName": "Vikram Nair",
+    "authorRole": "Operations Lead",
+    "city": "Chennai",
+    "rating": 4
+  }
+]

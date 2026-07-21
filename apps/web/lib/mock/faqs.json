@@ -1,0 +1,50 @@
+[
+  {
+    "id": "faq-001",
+    "question": "How does the booking process work?",
+    "answer": "Submit a booking request with your event details and preferred talent. Our team reviews it personally, confirms availability directly with the talent, and gets back to you within one business day.",
+    "category": "Booking"
+  },
+  {
+    "id": "faq-002",
+    "question": "Can I contact talent directly?",
+    "answer": "No — every booking is mediated by our agency team. This keeps communication professional, protects both parties, and ensures the agreed scope and pricing are documented before the event.",
+    "category": "Booking"
+  },
+  {
+    "id": "faq-003",
+    "question": "What does a MAYA_X membership include?",
+    "answer": "Membership gives you priority review on every booking request, access to member-only talent, and preferential rates on selected categories. See the Membership page for full plan details.",
+    "category": "Membership"
+  },
+  {
+    "id": "faq-004",
+    "question": "How far in advance should I book?",
+    "answer": "We recommend booking at least two weeks ahead for standard requests, and four to six weeks for wedding season or major festival dates such as Durga Puja, when demand is highest.",
+    "category": "Booking"
+  },
+  {
+    "id": "faq-005",
+    "question": "Do you serve cities outside Kolkata?",
+    "answer": "Yes. MAYA_X was founded in Kolkata and our roster is strongest across eastern India, but we regularly place talent in Mumbai, Delhi, Bengaluru, Chennai, and Pune.",
+    "category": "General"
+  },
+  {
+    "id": "faq-006",
+    "question": "What is your cancellation policy?",
+    "answer": "Cancellation terms are confirmed in writing at the time of booking and vary by talent and notice period. Our team will always state the applicable terms before you confirm.",
+    "category": "Booking"
+  },
+  {
+    "id": "faq-007",
+    "question": "How are talents vetted?",
+    "answer": "Every talent on the platform is personally interviewed and reference-checked by our team before being listed — we do not operate as an open, self-listing marketplace.",
+    "category": "General"
+  },
+  {
+    "id": "faq-008",
+    "question": "Can I request a custom package for multiple talents?",
+    "answer": "Yes — use the Quick Booking form and describe your event; our team will put together a combined proposal for multiple talents where relevant.",
+    "category": "Booking"
+  }
+]

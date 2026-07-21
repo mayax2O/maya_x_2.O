@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-start justify-center gap-4 px-6">
+    <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-start justify-center gap-4 px-6">
       <p className="font-mono text-xs uppercase tracking-widest text-brass-deep">
         404
       </p>
@@ -10,6 +12,9 @@ export default function NotFound() {
       <p className="text-slate">
         The page you&apos;re looking for doesn&apos;t exist.
       </p>
-    </main>
+      <Link href="/" className="font-medium text-brass-deep hover:text-brass">
+        Back to home →
+      </Link>
+    </div>
   );
 }

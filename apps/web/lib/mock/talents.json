@@ -1,0 +1,509 @@
+[
+  {
+    "id": "tal-001",
+    "slug": "ananya-rao",
+    "displayName": "Ananya Rao",
+    "tagline": "Event Host & Presenter",
+    "bio": "Ananya has hosted over 200 corporate and wedding events across eastern India, known for her composed stage presence and bilingual (English/Bengali) hosting.",
+    "city": "Kolkata",
+    "categories": [
+      { "id": "cat-event-host", "name": "Event Host", "slug": "event-host" },
+      { "id": "cat-anchor-mc", "name": "Anchor & MC", "slug": "anchor-mc" }
+    ],
+    "coverImage": {
+      "id": "med-001-cover",
+      "url": "/mock/talent/ananya-rao/cover.jpg",
+      "assetType": "image",
+      "alt": "Ananya Rao on stage hosting a corporate event"
+    },
+    "gallery": [
+      {
+        "id": "med-001-1",
+        "url": "/mock/talent/ananya-rao/1.jpg",
+        "assetType": "image",
+        "alt": "Ananya Rao presenting at a product launch"
+      },
+      {
+        "id": "med-001-2",
+        "url": "/mock/talent/ananya-rao/2.jpg",
+        "assetType": "image",
+        "alt": "Ananya Rao at a wedding reception"
+      },
+      {
+        "id": "med-001-3",
+        "url": "/mock/talent/ananya-rao/3.jpg",
+        "assetType": "image",
+        "alt": "Ananya Rao portrait"
+      }
+    ],
+    "languages": ["English", "Bengali", "Hindi"],
+    "startingPrice": 25000,
+    "currency": "INR",
+    "rating": 4.9,
+    "reviewCount": 84,
+    "availability": "available",
+    "featured": true
+  },
+  {
+    "id": "tal-002",
+    "slug": "karan-bhatt",
+    "displayName": "Karan Bhatt",
+    "tagline": "Brand Ambassador",
+    "bio": "Karan represents premium consumer brands at retail launches and experiential activations, with a decade of on-camera and in-person brand work.",
+    "city": "Mumbai",
+    "categories": [
+      {
+        "id": "cat-brand-ambassador",
+        "name": "Brand Ambassador",
+        "slug": "brand-ambassador"
+      }
+    ],
+    "coverImage": {
+      "id": "med-002-cover",
+      "url": "/mock/talent/karan-bhatt/cover.jpg",
+      "assetType": "image",
+      "alt": "Karan Bhatt at a brand activation"
+    },
+    "gallery": [
+      {
+        "id": "med-002-1",
+        "url": "/mock/talent/karan-bhatt/1.jpg",
+        "assetType": "image",
+        "alt": "Karan Bhatt at a retail launch"
+      },
+      {
+        "id": "med-002-2",
+        "url": "/mock/talent/karan-bhatt/2.jpg",
+        "assetType": "image",
+        "alt": "Karan Bhatt portrait"
+      }
+    ],
+    "languages": ["English", "Hindi"],
+    "startingPrice": 40000,
+    "currency": "INR",
+    "rating": 4.7,
+    "reviewCount": 52,
+    "availability": "limited",
+    "featured": true
+  },
+  {
+    "id": "tal-003",
+    "slug": "rituparna-sen",
+    "displayName": "Rituparna Sen",
+    "tagline": "Classical Odissi Dancer",
+    "bio": "Rituparna trained under the Kolkata Odissi tradition for over 15 years and performs at cultural evenings, weddings, and Durga Puja functions.",
+    "city": "Kolkata",
+    "categories": [
+      {
+        "id": "cat-classical-dance",
+        "name": "Classical Dance",
+        "slug": "classical-dance"
+      }
+    ],
+    "coverImage": {
+      "id": "med-003-cover",
+      "url": "/mock/talent/rituparna-sen/cover.jpg",
+      "assetType": "image",
+      "alt": "Rituparna Sen performing an Odissi dance piece"
+    },
+    "gallery": [
+      {
+        "id": "med-003-1",
+        "url": "/mock/talent/rituparna-sen/1.jpg",
+        "assetType": "image",
+        "alt": "Rituparna Sen in performance costume"
+      },
+      {
+        "id": "med-003-2",
+        "url": "/mock/talent/rituparna-sen/2.jpg",
+        "assetType": "image",
+        "alt": "Rituparna Sen rehearsing"
+      },
+      {
+        "id": "med-003-3",
+        "url": "/mock/talent/rituparna-sen/3.jpg",
+        "assetType": "image",
+        "alt": "Rituparna Sen at a Durga Puja evening"
+      }
+    ],
+    "languages": ["Bengali", "English"],
+    "startingPrice": 18000,
+    "currency": "INR",
+    "rating": 5.0,
+    "reviewCount": 61,
+    "availability": "available",
+    "featured": true
+  },
+  {
+    "id": "tal-004",
+    "slug": "arindam-bose",
+    "displayName": "Arindam Bose",
+    "tagline": "Folk & Baul Musician",
+    "bio": "Arindam leads a five-piece Baul and folk ensemble, a regular feature at heritage venues and cultural festivals across West Bengal.",
+    "city": "Kolkata",
+    "categories": [
+      {
+        "id": "cat-folk-live-music",
+        "name": "Folk & Live Music",
+        "slug": "folk-live-music"
+      }
+    ],
+    "coverImage": {
+      "id": "med-004-cover",
+      "url": "/mock/talent/arindam-bose/cover.jpg",
+      "assetType": "image",
+      "alt": "Arindam Bose performing with his ensemble"
+    },
+    "gallery": [
+      {
+        "id": "med-004-1",
+        "url": "/mock/talent/arindam-bose/1.jpg",
+        "assetType": "image",
+        "alt": "Arindam Bose playing the ektara"
+      },
+      {
+        "id": "med-004-2",
+        "url": "/mock/talent/arindam-bose/2.jpg",
+        "assetType": "image",
+        "alt": "Arindam Bose's ensemble on stage"
+      }
+    ],
+    "languages": ["Bengali"],
+    "startingPrice": 30000,
+    "currency": "INR",
+    "rating": 4.8,
+    "reviewCount": 37,
+    "availability": "available",
+    "featured": false
+  },
+  {
+    "id": "tal-005",
+    "slug": "trisha-dutta",
+    "displayName": "Trisha Dutta",
+    "tagline": "Fashion & Editorial Model",
+    "bio": "Trisha has walked for leading Indian designers at Kolkata Fashion Week and shot editorials for regional lifestyle publications.",
+    "city": "Kolkata",
+    "categories": [
+      { "id": "cat-modeling", "name": "Modeling", "slug": "modeling" }
+    ],
+    "coverImage": {
+      "id": "med-005-cover",
+      "url": "/mock/talent/trisha-dutta/cover.jpg",
+      "assetType": "image",
+      "alt": "Trisha Dutta on the runway"
+    },
+    "gallery": [
+      {
+        "id": "med-005-1",
+        "url": "/mock/talent/trisha-dutta/1.jpg",
+        "assetType": "image",
+        "alt": "Trisha Dutta editorial shoot"
+      },
+      {
+        "id": "med-005-2",
+        "url": "/mock/talent/trisha-dutta/2.jpg",
+        "assetType": "image",
+        "alt": "Trisha Dutta backstage at Kolkata Fashion Week"
+      }
+    ],
+    "languages": ["English", "Bengali", "Hindi"],
+    "startingPrice": 22000,
+    "currency": "INR",
+    "rating": 4.6,
+    "reviewCount": 29,
+    "availability": "available",
+    "featured": false
+  },
+  {
+    "id": "tal-006",
+    "slug": "sohini-banerjee",
+    "displayName": "Sohini Banerjee",
+    "tagline": "Playback & Live Singer",
+    "bio": "Sohini performs Rabindra Sangeet and contemporary Bengali fusion at weddings and cultural evenings, with occasional playback credits.",
+    "city": "Kolkata",
+    "categories": [
+      { "id": "cat-singing", "name": "Singing", "slug": "singing" }
+    ],
+    "coverImage": {
+      "id": "med-006-cover",
+      "url": "/mock/talent/sohini-banerjee/cover.jpg",
+      "assetType": "image",
+      "alt": "Sohini Banerjee performing live"
+    },
+    "gallery": [
+      {
+        "id": "med-006-1",
+        "url": "/mock/talent/sohini-banerjee/1.jpg",
+        "assetType": "image",
+        "alt": "Sohini Banerjee at a wedding sangeet"
+      },
+      {
+        "id": "med-006-2",
+        "url": "/mock/talent/sohini-banerjee/2.jpg",
+        "assetType": "image",
+        "alt": "Sohini Banerjee in studio"
+      },
+      {
+        "id": "med-006-3",
+        "url": "/mock/talent/sohini-banerjee/3.jpg",
+        "assetType": "image",
+        "alt": "Sohini Banerjee portrait"
+      }
+    ],
+    "languages": ["Bengali", "English", "Hindi"],
+    "startingPrice": 35000,
+    "currency": "INR",
+    "rating": 4.9,
+    "reviewCount": 73,
+    "availability": "limited",
+    "featured": true
+  },
+  {
+    "id": "tal-007",
+    "slug": "abir-chakraborty",
+    "displayName": "Abir Chakraborty",
+    "tagline": "Event Photographer",
+    "bio": "Abir specializes in candid wedding and corporate event photography, with a documentary-style eye developed over 12 years in Kolkata's studio circuit.",
+    "city": "Kolkata",
+    "categories": [
+      { "id": "cat-photography", "name": "Photography", "slug": "photography" }
+    ],
+    "coverImage": {
+      "id": "med-007-cover",
+      "url": "/mock/talent/abir-chakraborty/cover.jpg",
+      "assetType": "image",
+      "alt": "Abir Chakraborty shooting a wedding"
+    },
+    "gallery": [
+      {
+        "id": "med-007-1",
+        "url": "/mock/talent/abir-chakraborty/1.jpg",
+        "assetType": "image",
+        "alt": "Abir Chakraborty at work with a camera"
+      },
+      {
+        "id": "med-007-2",
+        "url": "/mock/talent/abir-chakraborty/2.jpg",
+        "assetType": "image",
+        "alt": "Abir Chakraborty portrait"
+      }
+    ],
+    "languages": ["Bengali", "English"],
+    "startingPrice": 15000,
+    "currency": "INR",
+    "rating": 4.8,
+    "reviewCount": 45,
+    "availability": "available",
+    "featured": false
+  },
+  {
+    "id": "tal-008",
+    "slug": "ishaan-mukherjee",
+    "displayName": "Ishaan Mukherjee",
+    "tagline": "Corporate Anchor & MC",
+    "bio": "Ishaan anchors conferences, award nights, and product launches for enterprise clients, fluent in switching register between formal and lighthearted.",
+    "city": "Bengaluru",
+    "categories": [
+      { "id": "cat-anchor-mc", "name": "Anchor & MC", "slug": "anchor-mc" }
+    ],
+    "coverImage": {
+      "id": "med-008-cover",
+      "url": "/mock/talent/ishaan-mukherjee/cover.jpg",
+      "assetType": "image",
+      "alt": "Ishaan Mukherjee anchoring a conference"
+    },
+    "gallery": [
+      {
+        "id": "med-008-1",
+        "url": "/mock/talent/ishaan-mukherjee/1.jpg",
+        "assetType": "image",
+        "alt": "Ishaan Mukherjee on stage"
+      },
+      {
+        "id": "med-008-2",
+        "url": "/mock/talent/ishaan-mukherjee/2.jpg",
+        "assetType": "image",
+        "alt": "Ishaan Mukherjee portrait"
+      }
+    ],
+    "languages": ["English", "Hindi", "Bengali"],
+    "startingPrice": 28000,
+    "currency": "INR",
+    "rating": 4.7,
+    "reviewCount": 58,
+    "availability": "available",
+    "featured": false
+  },
+  {
+    "id": "tal-009",
+    "slug": "mihika-ghosh",
+    "displayName": "Mihika Ghosh",
+    "tagline": "Contemporary & Classical Fusion Dancer",
+    "bio": "Mihika blends Kathak training with contemporary choreography for stage productions, sangeet performances, and brand campaigns.",
+    "city": "Delhi",
+    "categories": [
+      {
+        "id": "cat-classical-dance",
+        "name": "Classical Dance",
+        "slug": "classical-dance"
+      }
+    ],
+    "coverImage": {
+      "id": "med-009-cover",
+      "url": "/mock/talent/mihika-ghosh/cover.jpg",
+      "assetType": "image",
+      "alt": "Mihika Ghosh performing a fusion piece"
+    },
+    "gallery": [
+      {
+        "id": "med-009-1",
+        "url": "/mock/talent/mihika-ghosh/1.jpg",
+        "assetType": "image",
+        "alt": "Mihika Ghosh in costume"
+      },
+      {
+        "id": "med-009-2",
+        "url": "/mock/talent/mihika-ghosh/2.jpg",
+        "assetType": "image",
+        "alt": "Mihika Ghosh at a sangeet performance"
+      }
+    ],
+    "languages": ["Hindi", "English", "Bengali"],
+    "startingPrice": 32000,
+    "currency": "INR",
+    "rating": 4.9,
+    "reviewCount": 41,
+    "availability": "available",
+    "featured": false
+  },
+  {
+    "id": "tal-010",
+    "slug": "rajarshi-sarkar",
+    "displayName": "Rajarshi Sarkar",
+    "tagline": "Live Band Frontman",
+    "bio": "Rajarshi fronts a six-piece live band covering Bengali, Bollywood, and English repertoire for weddings and corporate parties.",
+    "city": "Kolkata",
+    "categories": [
+      {
+        "id": "cat-folk-live-music",
+        "name": "Folk & Live Music",
+        "slug": "folk-live-music"
+      },
+      { "id": "cat-singing", "name": "Singing", "slug": "singing" }
+    ],
+    "coverImage": {
+      "id": "med-010-cover",
+      "url": "/mock/talent/rajarshi-sarkar/cover.jpg",
+      "assetType": "image",
+      "alt": "Rajarshi Sarkar performing with his band"
+    },
+    "gallery": [
+      {
+        "id": "med-010-1",
+        "url": "/mock/talent/rajarshi-sarkar/1.jpg",
+        "assetType": "image",
+        "alt": "Rajarshi Sarkar's band on stage"
+      },
+      {
+        "id": "med-010-2",
+        "url": "/mock/talent/rajarshi-sarkar/2.jpg",
+        "assetType": "image",
+        "alt": "Rajarshi Sarkar portrait"
+      },
+      {
+        "id": "med-010-3",
+        "url": "/mock/talent/rajarshi-sarkar/3.jpg",
+        "assetType": "image",
+        "alt": "Rajarshi Sarkar's band at a wedding"
+      }
+    ],
+    "languages": ["Bengali", "Hindi", "English"],
+    "startingPrice": 45000,
+    "currency": "INR",
+    "rating": 4.8,
+    "reviewCount": 66,
+    "availability": "unavailable",
+    "featured": false
+  },
+  {
+    "id": "tal-011",
+    "slug": "priyanka-sanyal",
+    "displayName": "Priyanka Sanyal",
+    "tagline": "Brand Ambassador & Presenter",
+    "bio": "Priyanka combines a media background with brand ambassador work for FMCG and lifestyle clients across eastern and southern India.",
+    "city": "Chennai",
+    "categories": [
+      {
+        "id": "cat-brand-ambassador",
+        "name": "Brand Ambassador",
+        "slug": "brand-ambassador"
+      },
+      { "id": "cat-event-host", "name": "Event Host", "slug": "event-host" }
+    ],
+    "coverImage": {
+      "id": "med-011-cover",
+      "url": "/mock/talent/priyanka-sanyal/cover.jpg",
+      "assetType": "image",
+      "alt": "Priyanka Sanyal at a brand event"
+    },
+    "gallery": [
+      {
+        "id": "med-011-1",
+        "url": "/mock/talent/priyanka-sanyal/1.jpg",
+        "assetType": "image",
+        "alt": "Priyanka Sanyal presenting"
+      },
+      {
+        "id": "med-011-2",
+        "url": "/mock/talent/priyanka-sanyal/2.jpg",
+        "assetType": "image",
+        "alt": "Priyanka Sanyal portrait"
+      }
+    ],
+    "languages": ["English", "Tamil", "Bengali"],
+    "startingPrice": 27000,
+    "currency": "INR",
+    "rating": 4.6,
+    "reviewCount": 33,
+    "availability": "available",
+    "featured": false
+  },
+  {
+    "id": "tal-012",
+    "slug": "debjani-chatterjee",
+    "displayName": "Debjani Chatterjee",
+    "tagline": "Event Host & Cultural Curator",
+    "bio": "Debjani hosts heritage and cultural programming, including Durga Puja pandal inaugurations and literary festival panels, in English and Bengali.",
+    "city": "Kolkata",
+    "categories": [
+      { "id": "cat-event-host", "name": "Event Host", "slug": "event-host" }
+    ],
+    "coverImage": {
+      "id": "med-012-cover",
+      "url": "/mock/talent/debjani-chatterjee/cover.jpg",
+      "assetType": "image",
+      "alt": "Debjani Chatterjee hosting a cultural program"
+    },
+    "gallery": [
+      {
+        "id": "med-012-1",
+        "url": "/mock/talent/debjani-chatterjee/1.jpg",
+        "assetType": "image",
+        "alt": "Debjani Chatterjee at a Durga Puja inauguration"
+      },
+      {
+        "id": "med-012-2",
+        "url": "/mock/talent/debjani-chatterjee/2.jpg",
+        "assetType": "image",
+        "alt": "Debjani Chatterjee portrait"
+      }
+    ],
+    "languages": ["Bengali", "English"],
+    "startingPrice": 24000,
+    "currency": "INR",
+    "rating": 4.9,
+    "reviewCount": 50,
+    "availability": "available",
+    "featured": true
+  }
+]
