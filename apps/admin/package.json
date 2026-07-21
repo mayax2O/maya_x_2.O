@@ -2,7 +2,7 @@
   "name": "@maya-x/admin",
   "version": "0.0.0",
   "private": true,
-  "description": "MAYA_X_2.0 Agency Admin Panel (Next.js). M0: bootstrap only — no auth, no talent/booking management yet.",
+  "description": "MAYA_X_2.0 Agency Admin Panel (Next.js). M4: authenticated admin dashboard and talent/city/location/category management. Bookings, memberships, and AI remain out of scope.",
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",

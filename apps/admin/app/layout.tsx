@@ -1,11 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
+import { AuthProvider } from "../lib/auth/AuthContext";
+import { ToastProvider } from "../components/ui/Toast";
 
 export const metadata: Metadata = {
-  title: "MAYA_X Admin",
+  title: {
+    default: "MAYA_X Admin",
+    template: "%s | MAYA_X Admin",
+  },
   description: "Internal agency operations panel.",
   robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#12141c",
 };
 
 export default function RootLayout({
@@ -15,7 +26,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

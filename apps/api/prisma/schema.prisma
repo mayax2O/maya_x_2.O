@@ -134,3 +134,170 @@ model RefreshToken {
   @@index([adminUserId])
   @@map("refresh_tokens")
 }
+
+// ---------------------------------------------------------------------------
+// M4 — Talent Catalog + Admin operations. Extends the Identity & Access
+// domain above with the Talent Catalog entities the Database Design
+// document specifies (TALENT_CATEGORIES, TALENTS, TALENT_CATEGORY_MAP,
+// MEDIA_ASSETS) plus two entities the document doesn't cover — City and
+// Location — added because the admin panel's talent form needs a
+// controlled, filterable city/location taxonomy rather than free text.
+//
+// Two deliberate deviations from the ERD, both documented on the model
+// they affect:
+//   - Talent carries pricing fields (basePrice/hourlyRate/overnightRate/
+//     weekendRate) directly rather than a separate pricing table — pricing
+//     is always exactly 1:1 with a talent and never has its own lifecycle,
+//     so a join table would add a query on every listing for no benefit.
+//   - TalentMedia is a real, Talent-only foreign key rather than the ERD's
+//     generic polymorphic MEDIA_ASSETS(owner_type, owner_id) — M4 only
+//     needs media for Talent, and a polymorphic FK can't carry a real
+//     database foreign-key constraint. If a later milestone needs media on
+//     other entities too, that's the point to introduce the generic table.
+// ---------------------------------------------------------------------------
+
+enum TalentAvailability {
+  available
+  limited
+  unavailable
+}
+
+enum TalentVerificationStatus {
+  pending
+  verified
+  rejected
+}
+
+/// City Talent are based in and events are hosted in (docs/04-database has
+/// no City entity — added for M4's admin-managed, filterable location
+/// taxonomy rather than free-text city names).
+model City {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  state        String
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  locations Location[]
+  talents   Talent[]
+
+  @@unique([name, state])
+  @@map("cities")
+}
+
+/// Sub-area within a City (e.g. a neighborhood or venue district) — added
+/// alongside City for the same reason.
+model Location {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  cityId       String   @map("city_id") @db.Uuid
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  city    City     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  talents Talent[]
+
+  @@unique([cityId, name])
+  @@map("locations")
+}
+
+/// Talent categories (docs/04-database `talent_categories`) — Event Host,
+/// Anchor & MC, Brand Ambassador, Classical Dance, Folk & Live Music,
+/// Photography, Modeling, Singing (the same taxonomy the M2 public-site
+/// mock data used).
+model TalentCategory {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  slug         String  @unique
+  isActive     Boolean @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+
+  talents TalentCategoryMap[]
+
+  @@map("talent_categories")
+}
+
+/// Many-to-many join between Talent and TalentCategory (`talent_category_map`).
+model TalentCategoryMap {
+  talentId   String @map("talent_id") @db.Uuid
+  categoryId String @map("category_id") @db.Uuid
+
+  talent   Talent         @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  category TalentCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([talentId, categoryId])
+  @@map("talent_category_map")
+}
+
+/// Talent profiles (docs/04-database `talents`), extended with the
+/// operational fields the M4 admin panel manages: profile detail
+/// (age/height/bodyType/languages), pricing, availability, and the
+/// premium/featured/verification/active flags the dashboard and talent
+/// listing filter on.
+model Talent {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  displayName String  @map("display_name")
+  slug        String  @unique
+  tagline     String?
+  bio         String?
+
+  age        Int?
+  cityId     String   @map("city_id") @db.Uuid
+  locationId String?  @map("location_id") @db.Uuid
+  languages  String[] @default([])
+  heightCm   Int?     @map("height_cm")
+  bodyType   String?  @map("body_type")
+
+  currency           String   @default("INR")
+  basePrice          Decimal  @map("base_price") @db.Decimal(10, 2)
+  hourlyRate         Decimal? @map("hourly_rate") @db.Decimal(10, 2)
+  overnightRate      Decimal? @map("overnight_rate") @db.Decimal(10, 2)
+  weekendRate        Decimal? @map("weekend_rate") @db.Decimal(10, 2)
+  customPricingNotes String?  @map("custom_pricing_notes")
+
+  availability       TalentAvailability       @default(available)
+  verificationStatus TalentVerificationStatus @default(pending) @map("verification_status")
+  isPremium          Boolean                  @default(false) @map("is_premium")
+  isFeatured         Boolean                  @default(false) @map("is_featured")
+  isActive           Boolean                  @default(true) @map("is_active")
+  displayOrder       Int                      @default(0) @map("display_order")
+
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  city       City                @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  location   Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  categories TalentCategoryMap[]
+  media      TalentMedia[]
+
+  @@map("talents")
+}
+
+/// Talent gallery images (docs/04-database `media_assets`, scoped to
+/// Talent only for M4 — see the file-level note on why this isn't the
+/// ERD's generic polymorphic table). `cloudinaryPublicId` is nullable:
+/// M4 manages gallery entries by URL, not real upload — Cloudinary
+/// integration is the dedicated Media Library milestone's job.
+model TalentMedia {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  talentId           String   @map("talent_id") @db.Uuid
+  url                String
+  alt                String
+  assetType          String   @default("image") @map("asset_type")
+  cloudinaryPublicId String?  @map("cloudinary_public_id")
+  isPrimary          Boolean  @default(false) @map("is_primary")
+  displayOrder       Int      @default(0) @map("display_order")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  talent Talent @relation(fields: [talentId], references: [id], onDelete: Cascade)
+
+  @@index([talentId])
+  @@map("talent_media")
+}

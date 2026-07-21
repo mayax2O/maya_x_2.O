@@ -1,0 +1,607 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+
+import { ApiError } from "../../lib/api/client";
+import { listLocations } from "../../lib/data/locations";
+import { createTalent, updateTalent } from "../../lib/data/talent";
+import {
+  listAllActiveCategories,
+  listAllActiveCities,
+} from "../../lib/data/lookups";
+import type {
+  City,
+  Location,
+  Talent,
+  TalentCategory,
+  TalentFormValues,
+} from "../../lib/types";
+import { useToast } from "../ui/Toast";
+
+const AVAILABILITY_OPTIONS: {
+  value: TalentFormValues["availability"];
+  label: string;
+}[] = [
+  { value: "available", label: "Available" },
+  { value: "limited", label: "Limited availability" },
+  { value: "unavailable", label: "Unavailable" },
+];
+
+const VERIFICATION_OPTIONS: {
+  value: TalentFormValues["verificationStatus"];
+  label: string;
+}[] = [
+  { value: "pending", label: "Pending" },
+  { value: "verified", label: "Verified" },
+  { value: "rejected", label: "Rejected" },
+];
+
+function talentToFormValues(talent: Talent): TalentFormValues {
+  return {
+    displayName: talent.displayName,
+    slug: talent.slug,
+    tagline: talent.tagline ?? "",
+    bio: talent.bio ?? "",
+    age: talent.age ?? undefined,
+    cityId: talent.city.id,
+    locationId: talent.location?.id,
+    languages: talent.languages,
+    heightCm: talent.heightCm ?? undefined,
+    bodyType: talent.bodyType ?? "",
+    currency: talent.pricing.currency,
+    basePrice: talent.pricing.basePrice,
+    hourlyRate: talent.pricing.hourlyRate ?? undefined,
+    overnightRate: talent.pricing.overnightRate ?? undefined,
+    weekendRate: talent.pricing.weekendRate ?? undefined,
+    customPricingNotes: talent.pricing.customPricingNotes ?? "",
+    availability: talent.availability,
+    verificationStatus: talent.verificationStatus,
+    isPremium: talent.isPremium,
+    isFeatured: talent.isFeatured,
+    isActive: talent.isActive,
+    displayOrder: talent.displayOrder,
+    categoryIds: talent.categories.map((category) => category.id),
+  };
+}
+
+const EMPTY_VALUES: TalentFormValues = {
+  displayName: "",
+  cityId: "",
+  basePrice: 0,
+  availability: "available",
+  verificationStatus: "pending",
+  isActive: true,
+  categoryIds: [],
+};
+
+export function TalentForm({
+  talent,
+  onSaved,
+}: {
+  talent?: Talent;
+  onSaved: (talent: Talent) => void;
+}) {
+  const { showToast } = useToast();
+  const [values, setValues] = useState<TalentFormValues>(
+    talent ? talentToFormValues(talent) : EMPTY_VALUES,
+  );
+  const [cities, setCities] = useState<City[]>([]);
+  const [categories, setCategories] = useState<TalentCategory[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [languagesText, setLanguagesText] = useState(
+    (talent?.languages ?? []).join(", "),
+  );
+  const [status, setStatus] = useState<"idle" | "submitting">("idle");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listAllActiveCities()
+      .then(setCities)
+      .catch(() => setCities([]));
+    listAllActiveCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    if (!values.cityId) {
+      setLocations([]);
+      return;
+    }
+    let cancelled = false;
+    listLocations({ cityId: values.cityId, isActive: true, perPage: 200 })
+      .then((result) => {
+        if (!cancelled) setLocations(result.items);
+      })
+      .catch(() => {
+        if (!cancelled) setLocations([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [values.cityId]);
+
+  function update<K extends keyof TalentFormValues>(
+    field: K,
+    value: TalentFormValues[K],
+  ) {
+    setValues((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function toggleCategory(categoryId: string) {
+    setValues((prev) => {
+      const current = prev.categoryIds ?? [];
+      const next = current.includes(categoryId)
+        ? current.filter((id) => id !== categoryId)
+        : [...current, categoryId];
+      return { ...prev, categoryIds: next };
+    });
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError(null);
+    setStatus("submitting");
+
+    const payload: TalentFormValues = {
+      ...values,
+      languages: languagesText
+        .split(",")
+        .map((language) => language.trim())
+        .filter(Boolean),
+    };
+
+    try {
+      const saved = talent
+        ? await updateTalent(talent.id, payload)
+        : await createTalent(payload);
+      showToast(
+        talent ? "Talent profile updated." : "Talent profile created.",
+        "success",
+      );
+      onSaved(saved);
+    } catch (error) {
+      setFormError(
+        error instanceof ApiError
+          ? error.message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setStatus("idle");
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+      {formError ? (
+        <p
+          role="alert"
+          className="rounded-md bg-danger/10 px-3 py-2 text-[13.5px] text-danger"
+        >
+          {formError}
+        </p>
+      ) : null}
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
+          Basic information
+        </h2>
+
+        <Field label="Display name" htmlFor="talent-name">
+          <input
+            id="talent-name"
+            required
+            value={values.displayName}
+            onChange={(event) => update("displayName", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Slug (auto-generated if left blank)"
+          htmlFor="talent-slug"
+        >
+          <input
+            id="talent-slug"
+            value={values.slug ?? ""}
+            onChange={(event) => update("slug", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Tagline / short description" htmlFor="talent-tagline">
+          <input
+            id="talent-tagline"
+            value={values.tagline ?? ""}
+            onChange={(event) => update("tagline", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Age" htmlFor="talent-age">
+          <input
+            id="talent-age"
+            type="number"
+            min={1}
+            max={100}
+            value={values.age ?? ""}
+            onChange={(event) =>
+              update(
+                "age",
+                event.target.value ? Number(event.target.value) : undefined,
+              )
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Full description"
+          htmlFor="talent-bio"
+          className="sm:col-span-2"
+        >
+          <textarea
+            id="talent-bio"
+            rows={4}
+            value={values.bio ?? ""}
+            onChange={(event) => update("bio", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Languages (comma-separated)"
+          htmlFor="talent-languages"
+          className="sm:col-span-2"
+        >
+          <input
+            id="talent-languages"
+            value={languagesText}
+            onChange={(event) => setLanguagesText(event.target.value)}
+            placeholder="English, Bengali, Hindi"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Height (cm)" htmlFor="talent-height">
+          <input
+            id="talent-height"
+            type="number"
+            min={50}
+            max={250}
+            value={values.heightCm ?? ""}
+            onChange={(event) =>
+              update(
+                "heightCm",
+                event.target.value ? Number(event.target.value) : undefined,
+              )
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Body type" htmlFor="talent-body-type">
+          <input
+            id="talent-body-type"
+            value={values.bodyType ?? ""}
+            onChange={(event) => update("bodyType", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
+          Location
+        </h2>
+
+        <Field label="City" htmlFor="talent-city">
+          <select
+            id="talent-city"
+            required
+            value={values.cityId}
+            onChange={(event) => {
+              update("cityId", event.target.value);
+              update("locationId", undefined);
+            }}
+            className={inputClass}
+          >
+            <option value="" disabled>
+              Select a city
+            </option>
+            {cities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}, {city.state}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Location (optional)" htmlFor="talent-location">
+          <select
+            id="talent-location"
+            value={values.locationId ?? ""}
+            onChange={(event) =>
+              update("locationId", event.target.value || undefined)
+            }
+            disabled={!values.cityId}
+            className={inputClass}
+          >
+            <option value="">No specific location</option>
+            {locations.map((location) => (
+              <option key={location.id} value={location.id}>
+                {location.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
+          Pricing
+        </h2>
+
+        <Field label="Currency" htmlFor="talent-currency">
+          <input
+            id="talent-currency"
+            value={values.currency ?? "INR"}
+            onChange={(event) => update("currency", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Base price" htmlFor="talent-base-price">
+          <input
+            id="talent-base-price"
+            type="number"
+            required
+            min={0}
+            value={values.basePrice}
+            onChange={(event) =>
+              update("basePrice", Number(event.target.value))
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Hourly rate" htmlFor="talent-hourly-rate">
+          <input
+            id="talent-hourly-rate"
+            type="number"
+            min={0}
+            value={values.hourlyRate ?? ""}
+            onChange={(event) =>
+              update(
+                "hourlyRate",
+                event.target.value ? Number(event.target.value) : undefined,
+              )
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Overnight / multi-day event rate"
+          htmlFor="talent-overnight-rate"
+        >
+          <input
+            id="talent-overnight-rate"
+            type="number"
+            min={0}
+            value={values.overnightRate ?? ""}
+            onChange={(event) =>
+              update(
+                "overnightRate",
+                event.target.value ? Number(event.target.value) : undefined,
+              )
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Weekend event rate" htmlFor="talent-weekend-rate">
+          <input
+            id="talent-weekend-rate"
+            type="number"
+            min={0}
+            value={values.weekendRate ?? ""}
+            onChange={(event) =>
+              update(
+                "weekendRate",
+                event.target.value ? Number(event.target.value) : undefined,
+              )
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Custom pricing notes"
+          htmlFor="talent-custom-pricing"
+          className="sm:col-span-2"
+        >
+          <textarea
+            id="talent-custom-pricing"
+            rows={2}
+            value={values.customPricingNotes ?? ""}
+            onChange={(event) =>
+              update("customPricingNotes", event.target.value)
+            }
+            className={inputClass}
+          />
+        </Field>
+      </section>
+
+      <section>
+        <h2 className="font-display text-lg font-semibold text-porcelain">
+          Categories
+        </h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {categories.map((category) => {
+            const isChecked = (values.categoryIds ?? []).includes(category.id);
+            return (
+              <label
+                key={category.id}
+                className={[
+                  "cursor-pointer rounded-full border px-3 py-1.5 text-[13px] transition",
+                  isChecked
+                    ? "border-brass bg-brass-deep/20 text-brass"
+                    : "border-white/15 text-porcelain/70 hover:border-white/30",
+                ].join(" ")}
+              >
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => toggleCategory(category.id)}
+                  className="sr-only"
+                />
+                {category.name}
+              </label>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
+          Status
+        </h2>
+
+        <Field label="Availability" htmlFor="talent-availability">
+          <select
+            id="talent-availability"
+            value={values.availability}
+            onChange={(event) =>
+              update(
+                "availability",
+                event.target.value as TalentFormValues["availability"],
+              )
+            }
+            className={inputClass}
+          >
+            {AVAILABILITY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Verification status" htmlFor="talent-verification">
+          <select
+            id="talent-verification"
+            value={values.verificationStatus}
+            onChange={(event) =>
+              update(
+                "verificationStatus",
+                event.target.value as TalentFormValues["verificationStatus"],
+              )
+            }
+            className={inputClass}
+          >
+            {VERIFICATION_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Display order" htmlFor="talent-display-order">
+          <input
+            id="talent-display-order"
+            type="number"
+            value={values.displayOrder ?? 0}
+            onChange={(event) =>
+              update("displayOrder", Number(event.target.value))
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <div className="flex flex-wrap items-center gap-6 sm:col-span-2">
+          <Checkbox
+            label="Active"
+            checked={values.isActive ?? true}
+            onChange={(checked) => update("isActive", checked)}
+          />
+          <Checkbox
+            label="Premium"
+            checked={values.isPremium ?? false}
+            onChange={(checked) => update("isPremium", checked)}
+          />
+          <Checkbox
+            label="Featured"
+            checked={values.isFeatured ?? false}
+            onChange={(checked) => update("isFeatured", checked)}
+          />
+        </div>
+      </section>
+
+      <button
+        type="submit"
+        disabled={status === "submitting"}
+        className="inline-flex w-fit items-center justify-center rounded-md bg-brass-deep px-6 py-2.5 text-[14.5px] font-semibold text-white transition hover:bg-brass disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        {status === "submitting"
+          ? "Saving…"
+          : talent
+            ? "Save changes"
+            : "Create talent"}
+      </button>
+    </form>
+  );
+}
+
+const inputClass =
+  "w-full rounded-md border border-white/15 bg-ink px-3 py-2.5 text-[14px] text-porcelain focus:border-brass focus:outline-none";
+
+function Field({
+  label,
+  htmlFor,
+  children,
+  className,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={["flex flex-col gap-1.5", className].filter(Boolean).join(" ")}
+    >
+      <label
+        htmlFor={htmlFor}
+        className="text-[13px] font-medium text-porcelain/70"
+      >
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function Checkbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-[13.5px] text-porcelain/80">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 accent-brass-deep"
+      />
+      {label}
+    </label>
+  );
+}

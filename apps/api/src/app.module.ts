@@ -9,9 +9,14 @@ import type { EnvConfig } from "./config/env.validation";
 import { validateEnv } from "./config/env.validation";
 import { AdminsModule } from "./admins/admins.module";
 import { AuthModule } from "./auth/auth.module";
+import { CitiesModule } from "./cities/cities.module";
 import { RequestLoggerMiddleware } from "./common/middleware/request-logger.middleware";
+import { DashboardModule } from "./dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
+import { LocationsModule } from "./locations/locations.module";
+import { TalentModule } from "./talent/talent.module";
+import { TalentCategoriesModule } from "./talent-categories/talent-categories.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -36,6 +41,11 @@ import { UsersModule } from "./users/users.module";
     AuthModule,
     AdminsModule,
     UsersModule,
+    CitiesModule,
+    LocationsModule,
+    TalentCategoriesModule,
+    TalentModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

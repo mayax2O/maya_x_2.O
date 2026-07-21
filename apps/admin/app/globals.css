@@ -3,9 +3,14 @@
 @tailwind utilities;
 
 html {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
+/*
+ * The admin panel is always dark (docs/06-design-system §10: "a persistent
+ * left rail... signaling 'you are in an operational tool'") — not a
+ * light/dark toggle, a deliberate fixed professional theme.
+ */
 body {
-  @apply bg-porcelain text-ink font-body antialiased;
+  @apply bg-ink text-porcelain font-body antialiased;
 }
