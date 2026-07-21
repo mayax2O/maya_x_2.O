@@ -162,14 +162,21 @@ describe("Auth API (e2e)", () => {
     const refreshed = await agent.post("/api/v1/auth/refresh").send();
     expect(refreshed.status).toBe(200);
     expect(typeof refreshed.body.data.accessToken).toBe("string");
-    expect(refreshed.headers["set-cookie"]?.[0]).toMatch(/^refresh_token=/);
+    const rotatedCookie = refreshed.headers["set-cookie"]?.[0];
+    expect(rotatedCookie).toMatch(/^refresh_token=/);
 
     const logout = await agent.post("/api/v1/auth/logout").send();
     expect(logout.status).toBe(204);
 
-    // The (now-revoked) rotated refresh cookie the agent is still holding
-    // must no longer work.
-    const refreshAfterLogout = await agent.post("/api/v1/auth/refresh").send();
+    // logout's Set-Cookie: refresh_token=; Max-Age=0 clears it from the
+    // agent's own jar, so re-sending the now-revoked rotated cookie
+    // explicitly is the only way to prove the server rejects it as
+    // revoked (REFRESH_TOKEN_INVALID) rather than merely absent
+    // (REFRESH_TOKEN_MISSING, covered by the next test).
+    const refreshAfterLogout = await request(app.getHttpServer())
+      .post("/api/v1/auth/refresh")
+      .set("Cookie", rotatedCookie)
+      .send();
     expect(refreshAfterLogout.status).toBe(401);
     expect(refreshAfterLogout.body.error.code).toBe("REFRESH_TOKEN_INVALID");
   });
