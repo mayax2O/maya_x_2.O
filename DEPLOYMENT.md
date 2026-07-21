@@ -45,7 +45,11 @@ None of this touches your Railway/Vercel/Supabase accounts by itself — these a
    - `DATABASE_URL` — Supabase pooled connection string (step 1)
    - `DIRECT_URL` — Supabase direct connection string (step 1)
    - `NODE_ENV` = `production`
+   - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — **required since M3**, startup fails without them (`env.validation.ts` enforces ≥32 chars and that the two differ). Generate two independent values: `openssl rand -base64 48`.
+   - `CORS_ORIGIN` — **required for production**, comma-separated, no spaces: the deployed `apps/web` and `apps/admin` Vercel URLs (e.g. `https://maya-x-web.vercel.app,https://maya-x-admin.vercel.app`). The `.env.example` default only covers `localhost:3000`/`:3001` and must not be relied on in production — credentialed cross-origin requests (the refresh-token cookie) will be silently rejected by the browser otherwise.
    - Do **not** set `PORT` — Railway injects it automatically, and `env.validation.ts` already reads it with a fallback.
+   - Optional (defaults exist, override only if needed): `JWT_ACCESS_EXPIRES_IN` (`15m`), `JWT_REFRESH_EXPIRES_IN` (`30d`), `RATE_LIMIT_TTL_SECONDS` (`60`), `RATE_LIMIT_LIMIT` (`100`).
+   - **Ordering note**: `CORS_ORIGIN` needs the Vercel URLs from step 3 below, which in turn need this Railway URL for `NEXT_PUBLIC_API_BASE_URL`. Deploy Railway first with a placeholder/omitted `CORS_ORIGIN`, do step 3, then come back and set the real `CORS_ORIGIN` and redeploy.
 4. If you want deploys triggerable from GitHub Actions (`deploy-api.yml`) rather than only Railway's own auto-deploy-on-push:
    - Railway dashboard → **Project Settings → Tokens** → create a **Project Token**.
    - Add it as a GitHub repo secret named `RAILWAY_TOKEN` (Settings → Secrets and variables → Actions).
@@ -59,7 +63,7 @@ For **each** app:
 2. **Root Directory**: set to `apps/web` (or `apps/admin` for the second project).
 3. Under **Build & Development Settings**, enable **"Include files outside the root directory in the Build Step"** — required so the workspace packages (`packages/ui`, `packages/types`, `packages/config`) are visible to the install/build commands in that app's `vercel.json`.
 4. Environment variables (Project Settings → Environment Variables), once the API is deployed:
-   - `NEXT_PUBLIC_API_BASE_URL` — the Railway API's public URL (e.g. `https://<your-api>.up.railway.app`). Not yet read by any code (reserved, per `.env.example`), but worth setting now so it's ready when a later milestone wires it in.
+   - `NEXT_PUBLIC_API_BASE_URL` — the Railway API's public URL (e.g. `https://<your-api>.up.railway.app`). **Required as of M3/M4** — both apps read it at request time: `apps/web`'s login/register/account pages and `apps/admin`'s entire data layer (auth, dashboard, talent, cities, locations, categories) call it directly. Without it, both apps fall back to `http://localhost:4000`, which will fail in production.
 5. That's it — Vercel's native Git integration (this step) is the simplest path: it deploys previews on every PR and production on every push to the connected branch, with **no GitHub Actions or secrets required**.
 
 **Only if** you specifically want deploys triggerable from the GitHub Actions tab instead of (or in addition to) that native integration:
@@ -86,20 +90,27 @@ Add whichever of these you need (only required for the Action-triggered paths in
 
 ### `apps/api` (Railway service variables)
 
-| Variable       | Required | Notes                                                                                  |
-| -------------- | -------- | -------------------------------------------------------------------------------------- |
-| `DATABASE_URL` | Yes      | Supabase pooled (PgBouncer) connection string                                          |
-| `DIRECT_URL`   | Yes      | Supabase direct connection string — used by `prisma migrate deploy` at container start |
-| `NODE_ENV`     | Yes      | `production`                                                                           |
-| `PORT`         | No       | Injected by Railway automatically; do not set manually                                 |
+| Variable                 | Required | Notes                                                                                                        |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`           | Yes      | Supabase pooled (PgBouncer) connection string                                                                |
+| `DIRECT_URL`             | Yes      | Supabase direct connection string — used by `prisma migrate deploy` at container start                       |
+| `NODE_ENV`               | Yes      | `production`                                                                                                 |
+| `JWT_ACCESS_SECRET`      | Yes      | ≥32 chars, distinct from `JWT_REFRESH_SECRET` — startup fails validation otherwise (`env.validation.ts`)     |
+| `JWT_REFRESH_SECRET`     | Yes      | ≥32 chars, distinct from `JWT_ACCESS_SECRET`                                                                 |
+| `CORS_ORIGIN`            | Yes      | Comma-separated Vercel URLs for `apps/web` + `apps/admin`. Defaults to localhost ports — wrong in production |
+| `PORT`                   | No       | Injected by Railway automatically; do not set manually                                                       |
+| `JWT_ACCESS_EXPIRES_IN`  | No       | Default `15m`                                                                                                |
+| `JWT_REFRESH_EXPIRES_IN` | No       | Default `30d`                                                                                                |
+| `RATE_LIMIT_TTL_SECONDS` | No       | Default `60`                                                                                                 |
+| `RATE_LIMIT_LIMIT`       | No       | Default `100`                                                                                                |
 
-Everything else in `apps/api/.env.example` (`JWT_*`, `REDIS_URL`, `CLOUDINARY_URL`, `RESEND_API_KEY`, `RAZORPAY_*`) is reserved for later milestones — not read or validated by any code yet, so not required for this deployment.
+Everything else in `apps/api/.env.example` (`REDIS_URL`, `CLOUDINARY_URL`, `RESEND_API_KEY`, `RAZORPAY_*`) is reserved for later milestones — not read or validated by any code yet, so not required for this deployment.
 
 ### `apps/web` / `apps/admin` (Vercel project variables)
 
-| Variable                   | Required now | Notes                                                                                                                              |
-| -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_BASE_URL` | No           | Reserved — no code reads it yet. Set it once the API's Railway URL exists so it's ready for the milestone that wires up API calls. |
+| Variable                   | Required now | Notes                                                                                                                                                                                                |
+| -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | **Yes**      | The Railway API's public URL. Read at request time by `apps/web`'s auth pages (login/register/account) and by all of `apps/admin`'s data layer — both fall back to `http://localhost:4000` if unset. |
 
 ---
 
