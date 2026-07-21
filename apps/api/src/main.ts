@@ -26,6 +26,11 @@ async function bootstrap() {
   // real origins are known — tracked as an M1+ follow-up, not an M0 gap.
   app.enableCors({ origin: true, credentials: true });
 
+  // Ensures OnModuleDestroy (DatabaseService's pool.end()) actually runs on
+  // SIGTERM/SIGINT — required for Railway/Render's graceful-shutdown
+  // deploys, not just local Ctrl+C.
+  app.enableShutdownHooks();
+
   const port = config.get("PORT", { infer: true });
   await app.listen(port);
   // eslint-disable-next-line no-console

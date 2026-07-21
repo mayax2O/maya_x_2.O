@@ -19,6 +19,23 @@ jobs:
   lint-typecheck-build:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
+    services:
+      # Backs apps/api's e2e health-check test (M1A) — a real database, not
+      # a mock, so CI genuinely proves connectivity rather than just that
+      # the code compiles.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: maya_x
+          POSTGRES_PASSWORD: maya_x_ci_password
+          POSTGRES_DB: maya_x_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U maya_x"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,6 +63,13 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Test (e2e — requires the postgres service above)
+        run: pnpm --filter @maya-x/api test:e2e
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
+          DIRECT_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
 
       - name: Build
         run: pnpm build
