@@ -20,9 +20,10 @@ jobs:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     services:
-      # Backs apps/api's e2e health-check test (M1A) — a real database, not
-      # a mock, so CI genuinely proves connectivity rather than just that
-      # the code compiles.
+      # Backs apps/api's e2e tests: the M1A health-check and, from M1B, the
+      # Admins/Users CRUD API against real migrated tables — a real
+      # database, not a mock, so CI genuinely proves the behavior rather
+      # than just that the code compiles.
       postgres:
         image: postgres:16-alpine
         env:
@@ -52,6 +53,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # @prisma/client's own postinstall hook looks for a schema at the
+      # workspace root and no-ops here (it's at apps/api/prisma/schema.prisma),
+      # so the client is left with its placeholder (model-less) types unless
+      # generated explicitly — needed before typecheck/build even reference
+      # the client, not just before the DB-touching test steps below.
+      - name: Generate Prisma Client
+        run: pnpm --filter @maya-x/api exec prisma generate
+
       - name: Check formatting
         run: pnpm format:check
 
@@ -63,6 +72,12 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Apply database migrations (M1B — Admin/User tables)
+        run: pnpm --filter @maya-x/api exec prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
+          DIRECT_URL: postgresql://maya_x:maya_x_ci_password@localhost:5432/maya_x_test
 
       - name: Test (e2e — requires the postgres service above)
         run: pnpm --filter @maya-x/api test:e2e

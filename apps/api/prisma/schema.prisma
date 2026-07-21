@@ -1,9 +1,12 @@
 // MAYA_X_2.0 — Prisma schema
 //
-// M1A (Infrastructure) scope only: datasource + generator, no models.
-// Business tables (admins, users, ...) are added starting M1B — see the
-// Database Design document (docs/04-database) for the full target schema
-// this will grow into, table by table, milestone by milestone.
+// M1B scope: the Identity & Access core data models only — Admin and User.
+// No auth (login/JWT), no roles/permissions, no other domain tables yet.
+// See docs/04-database (Database Design v1.0) for the full 21-entity target
+// schema this will grow into, table by table, milestone by milestone; the
+// `roles`/`admin_user_roles`/`user_credentials`/token tables documented
+// there are deliberately out of scope until the milestone that implements
+// authentication.
 //
 // Supabase connection strings (per Prisma's documented Supabase guidance):
 //   DATABASE_URL — the PgBouncer-pooled connection (port 6543,
@@ -17,11 +20,47 @@
 // to the same connection string — see .env.example.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgcrypto, citext]
+}
+
+/// Agency staff accounts (Database Design §3.1 `admin_users`). Roles/
+/// permissions (`roles`, `admin_user_roles`) and login (`password_hash`
+/// verification) are out of scope for M1B; `passwordHash` exists only
+/// because the column is NOT NULL in the documented physical schema — no
+/// endpoint here validates or issues credentials from it.
+model Admin {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique @db.Citext
+  fullName     String    @map("full_name")
+  passwordHash String    @map("password_hash")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@map("admin_users")
+}
+
+/// Registered customer accounts (Database Design §3.1 `users`). Credentials
+/// (`user_credentials`) and tokens are a deliberately separate table in the
+/// documented schema and are out of scope for M1B.
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.Citext
+  fullName        String    @map("full_name")
+  phone           String?
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@map("users")
 }

@@ -1,14 +1,15 @@
 import { Global, Module } from "@nestjs/common";
 
 import { DatabaseService } from "./database.service";
+import { PrismaService } from "./prisma.service";
 
 /**
- * Global so every future feature module can inject DatabaseService (and,
- * from M1B onward, PrismaService once it exists) without re-importing.
+ * Global so every feature module can inject DatabaseService and
+ * PrismaService without re-importing.
  */
 @Global()
 @Module({
-  providers: [DatabaseService],
-  exports: [DatabaseService],
+  providers: [DatabaseService, PrismaService],
+  exports: [DatabaseService, PrismaService],
 })
 export class DatabaseModule {}
