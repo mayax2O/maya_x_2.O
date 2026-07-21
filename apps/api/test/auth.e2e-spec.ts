@@ -164,6 +164,9 @@ describe("Auth API (e2e)", () => {
     expect(typeof refreshed.body.data.accessToken).toBe("string");
     const rotatedCookie = refreshed.headers["set-cookie"]?.[0];
     expect(rotatedCookie).toMatch(/^refresh_token=/);
+    if (!rotatedCookie) {
+      throw new Error("expected a refresh_token Set-Cookie header");
+    }
 
     const logout = await agent.post("/api/v1/auth/logout").send();
     expect(logout.status).toBe(204);
