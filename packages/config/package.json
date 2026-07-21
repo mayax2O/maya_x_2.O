@@ -1,0 +1,20 @@
+{
+  "name": "@maya-x/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared ESLint, Prettier, TypeScript, and Tailwind configuration for every app/package in the monorepo.",
+  "files": [
+    "eslint",
+    "prettier",
+    "tailwind",
+    "typescript"
+  ],
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "eslint-config-next": "^15.5.20",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^5.1.0"
+  }
+}

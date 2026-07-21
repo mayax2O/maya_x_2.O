@@ -1,0 +1,8 @@
+{
+  "extends": "@maya-x/config/typescript/nestjs.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*.ts"]
+}

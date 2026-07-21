@@ -1,0 +1,7 @@
+{
+  "extends": "@maya-x/config/typescript/react-library.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,79 @@
+# Local development environment.
+#
+# Day-to-day M0 development does NOT need this file — `pnpm dev:api`,
+# `pnpm dev:web`, `pnpm dev:admin` run directly on the host and are faster
+# to iterate on. This compose file exists to:
+#   1. Provide Postgres/Redis ahead of time, so M1 (auth) and later
+#      milestones have a running database on day one without a separate
+#      setup step.
+#   2. Offer containerized versions of the three apps for testing the
+#      production Dockerfiles locally before they ever reach CI/staging.
+#
+# Run from the monorepo root:
+#   docker compose -f infra/docker/docker-compose.yml up postgres redis
+#
+name: maya-x-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: maya_x
+      POSTGRES_PASSWORD: maya_x_dev_password
+      POSTGRES_DB: maya_x
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maya_x"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # --- Optional: containerized apps (build context is the repo root) ---
+  # Not started by default; opt in with `--profile containers`.
+  api:
+    profiles: [containers]
+    build:
+      context: ../../
+      dockerfile: apps/api/Dockerfile
+    env_file: ../../apps/api/.env.example
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: [containers]
+    build:
+      context: ../../
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "3000:3000"
+
+  admin:
+    profiles: [containers]
+    build:
+      context: ../../
+      dockerfile: apps/admin/Dockerfile
+    ports:
+      - "3001:3001"
+
+volumes:
+  postgres_data:
