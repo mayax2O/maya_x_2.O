@@ -37,7 +37,7 @@ None of this touches your Railway/Vercel/Supabase accounts by itself — these a
 
 ### 2. Railway (apps/api)
 
-1. Create a Railway project, add one service, and connect it to this GitHub repo (branch: `claude/open-repository-36ktwf`, or `main` once the repo formally switches — see the CI workflow's comment on that).
+1. Create a Railway project, add one service, and connect it to this GitHub repo (branch: `main`).
 2. In the service's Settings:
    - **Root Directory**: leave as `/` (the repo root) — do **not** set it to `apps/api`. `railway.json` already points at `apps/api/Dockerfile` with the correct build context; changing Root Directory would break that context.
    - Confirm it picks up `railway.json` (Railway auto-detects this at the repo root; no extra config needed).

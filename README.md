@@ -142,9 +142,11 @@ Full step-by-step instructions: [`DEPLOYMENT.md`](./DEPLOYMENT.md#3-vercel-appsw
   `pnpm prepare` (runs automatically after `pnpm install`) wires up the
   Husky git hooks.
 - `.husky/pre-commit` runs `lint-staged` (ESLint + Prettier) on staged files.
+- `main` is the sole integration branch — every milestone branches from
+  `main` and merges back into it via pull request.
 - Open a pull request per milestone; CI (`.github/workflows/ci.yml`) runs
   format check, lint, typecheck, unit tests, e2e tests, and build against
-  every PR and against pushes to `main`/`claude/open-repository-36ktwf`.
+  every PR and against pushes to `main`.
 - CI's Postgres is a disposable GitHub Actions service container used only
   to run `apps/api`'s tests and migrations in the CI job — it has no
   relationship to local development, which always talks to your Supabase

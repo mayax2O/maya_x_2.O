@@ -10,7 +10,9 @@ for deployment.
 
 ## Branch naming
 
-Branch off the default branch using one of these prefixes:
+`main` is the repo's sole integration branch. Every branch is created from
+`main` and merges back into it via pull request — there is no separate
+long-lived integration branch. Use one of these prefixes:
 
 | Prefix          | Use for                                                    |
 | --------------- | ---------------------------------------------------------- |

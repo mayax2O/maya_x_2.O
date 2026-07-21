@@ -3,10 +3,9 @@ name: CI
 on:
   pull_request:
   push:
-    # "main" is the intended long-term default branch; the second name is
-    # this repository's current default (an artifact of how it was first
-    # created) — keep both until the repo is formally switched over to main.
-    branches: [main, claude/open-repository-36ktwf]
+    # main is the repo's sole integration branch — every milestone branches
+    # from and merges back into it.
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
