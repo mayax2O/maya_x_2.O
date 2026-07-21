@@ -1,0 +1,27 @@
+// MAYA_X_2.0 — Prisma schema
+//
+// M1A (Infrastructure) scope only: datasource + generator, no models.
+// Business tables (admins, users, ...) are added starting M1B — see the
+// Database Design document (docs/04-database) for the full target schema
+// this will grow into, table by table, milestone by milestone.
+//
+// Supabase connection strings (per Prisma's documented Supabase guidance):
+//   DATABASE_URL — the PgBouncer-pooled connection (port 6543,
+//                  ?pgbouncer=true&connection_limit=1). Used by the app at
+//                  runtime; safe under serverless/many-short-lived-connections.
+//   DIRECT_URL   — the direct, non-pooled connection (port 5432). Used only
+//                  for `prisma migrate` — PgBouncer's transaction pooling
+//                  mode does not support the session-level features
+//                  migrations rely on.
+// In plain local/Docker Postgres (no pooler), both variables simply point
+// to the same connection string — see .env.example.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
