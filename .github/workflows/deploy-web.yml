@@ -1,0 +1,47 @@
+name: Deploy Web (Vercel)
+
+# Manual trigger only, for now — see the note in deploy-api.yml. Vercel's own
+# Git integration (connect the repo in the Vercel dashboard) is the simpler
+# default path for this app and needs no GitHub Actions workflow at all;
+# this one exists for cases where an Action-triggered deploy is preferred
+# instead of (or in addition to) that native integration — see DEPLOYMENT.md.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Deploy apps/web to Vercel (production)
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require Vercel secrets
+        run: |
+          missing=()
+          [ -z "${{ secrets.VERCEL_TOKEN }}" ] && missing+=("VERCEL_TOKEN")
+          [ -z "${{ secrets.VERCEL_ORG_ID }}" ] && missing+=("VERCEL_ORG_ID")
+          [ -z "${{ secrets.VERCEL_PROJECT_ID_WEB }}" ] && missing+=("VERCEL_PROJECT_ID_WEB")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repo secret(s): ${missing[*]}. See DEPLOYMENT.md for how to obtain these from the Vercel dashboard." >&2
+            exit 1
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # `vercel pull` fetches this project's settings (including its
+      # dashboard-configured Root Directory: apps/web) so the subsequent
+      # build/deploy steps apply apps/web/vercel.json correctly even though
+      # this job runs from the repo root, not from inside apps/web.
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

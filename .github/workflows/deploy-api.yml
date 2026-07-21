@@ -1,0 +1,48 @@
+name: Deploy API (Railway)
+
+# Manual trigger only, for now: no Railway project/token exists yet (see
+# DEPLOYMENT.md). Once RAILWAY_TOKEN is added as a repo secret, this can be
+# switched to auto-deploy by adding a `workflow_run` trigger that fires after
+# the CI workflow succeeds on the deploy branch — left manual until then so
+# every push doesn't produce a failing "Deploy API" run with no token to use.
+on:
+  workflow_dispatch: {}
+
+env:
+  NODE_VERSION: "20.18.1"
+
+jobs:
+  deploy:
+    name: Deploy apps/api to Railway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require RAILWAY_TOKEN
+        run: |
+          if [ -z "${{ secrets.RAILWAY_TOKEN }}" ]; then
+            echo "::error::RAILWAY_TOKEN repo secret is not set. See DEPLOYMENT.md for how to create a Railway Project Token and add it here." >&2
+            exit 1
+          fi
+
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      # Railway builds and runs apps/api entirely from railway.json + the
+      # Dockerfile it points to (apps/api/Dockerfile) — this step just
+      # triggers that build on Railway's infrastructure, it does not build
+      # or push an image itself.
+      - name: Deploy to Railway
+        run: railway up --service "${RAILWAY_SERVICE:-api}" --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE_NAME }}
