@@ -1,0 +1,30 @@
+# Build context for apps/{api,web,admin}/Dockerfile is the monorepo root
+# (see those Dockerfiles' own comments) — keep it to source only. Reduces
+# local `docker build` upload/time; git-based remote builds (Railway) never
+# see gitignored paths anyway since they build from the git ref, not disk.
+
+node_modules/
+.pnpm-store/
+
+# Build outputs (each Dockerfile builds these fresh inside the image)
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Env files — real secrets must never enter a build context/image
+.env
+.env.local
+.env.*.local
+!.env.example
+
+.git/
+.github/
+
+# Not needed inside the build context
+docs/
+*.md
+coverage/
+.vscode/
+.idea/
