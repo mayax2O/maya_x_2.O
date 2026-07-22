@@ -46,6 +46,18 @@ const envSchema = z
     // --- M3: rate limiting (@nestjs/throttler) ---
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().positive().default(60),
     RATE_LIMIT_LIMIT: z.coerce.number().int().positive().default(100),
+
+    // --- M5B: Razorpay (Membership & Payment) ---
+    // Read by RazorpayGatewayService — a real Razorpay Dashboard key pair
+    // (test or live mode) in every environment that actually creates orders;
+    // CI/local-without-a-Razorpay-account can use any non-empty placeholder
+    // since e2e tests override the gateway provider rather than calling
+    // the real API (see payments.e2e-spec.ts).
+    RAZORPAY_KEY_ID: z.string().min(1, "RAZORPAY_KEY_ID is required"),
+    RAZORPAY_KEY_SECRET: z.string().min(1, "RAZORPAY_KEY_SECRET is required"),
+    RAZORPAY_WEBHOOK_SECRET: z
+      .string()
+      .min(1, "RAZORPAY_WEBHOOK_SECRET is required"),
   })
   .refine((config) => config.JWT_ACCESS_SECRET !== config.JWT_REFRESH_SECRET, {
     message: "JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different",
