@@ -69,6 +69,11 @@ function AdminShellContent({ children }: { children: ReactNode }) {
       action: () => router.push("/talent"),
     },
     {
+      id: "nav-media",
+      label: "Go to Media Library",
+      action: () => router.push("/media"),
+    },
+    {
       id: "nav-bookings",
       label: "Go to Bookings",
       action: () => router.push("/bookings"),

@@ -53,7 +53,7 @@ export function bulkTalent(
 
 export function addTalentMedia(
   talentId: string,
-  input: { url: string; alt: string; assetType?: string; isPrimary?: boolean },
+  input: { mediaAssetId: string; isPrimary?: boolean },
 ): Promise<TalentMedia> {
   return authedFetch<TalentMedia>(`/talent/${talentId}/media`, {
     method: "POST",

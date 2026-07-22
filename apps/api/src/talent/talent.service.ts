@@ -1,11 +1,16 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 
+import {
+  CLOUDINARY_GATEWAY,
+  type CloudinaryGateway,
+} from "../media/cloudinary-gateway.interface";
 import { PrismaService } from "../database/prisma.service";
 import type {
   BulkActionDto,
@@ -36,8 +41,15 @@ const TALENT_INCLUDE = {
   city: true,
   location: true,
   categories: { include: { category: true } },
-  media: true,
+  media: { include: { mediaAsset: true } },
 } satisfies Prisma.TalentInclude;
+
+// TalentMedia (M4) migrated to reference the M6 Media Library's MediaAsset
+// instead of storing its own url/alt. Usage tracking lives in MediaUsage
+// (entityType "talent_gallery", entityId = talentId) so the Media Library
+// can show accurate "used in N places" counts and refuse to delete an
+// in-use asset.
+const TALENT_GALLERY_USAGE_TYPE = "talent_gallery";
 
 const SORTABLE_FIELDS = new Set([
   "displayName",
@@ -49,7 +61,11 @@ const SORTABLE_FIELDS = new Set([
 
 @Injectable()
 export class TalentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CLOUDINARY_GATEWAY)
+    private readonly cloudinary: CloudinaryGateway,
+  ) {}
 
   async create(dto: CreateTalentDto, adminId: string): Promise<TalentResponse> {
     const { categoryIds, ...rest } = dto;
@@ -87,7 +103,7 @@ export class TalentService {
         },
         include: TALENT_INCLUDE,
       });
-      return toTalentResponse(talent);
+      return toTalentResponse(talent, this.buildOptimizedUrl);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
         throw new ConflictException({
@@ -152,12 +168,17 @@ export class TalentService {
       this.prisma.talent.count({ where }),
     ]);
 
-    return { items: rows.map(toTalentResponse), total };
+    return {
+      items: rows.map((talent) =>
+        toTalentResponse(talent, this.buildOptimizedUrl),
+      ),
+      total,
+    };
   }
 
   async findOne(id: string): Promise<TalentResponse> {
     const talent = await this.findActiveTalentOrThrow(id);
-    return toTalentResponse(talent);
+    return toTalentResponse(talent, this.buildOptimizedUrl);
   }
 
   async update(
@@ -188,7 +209,7 @@ export class TalentService {
           include: TALENT_INCLUDE,
         });
       });
-      return toTalentResponse(talent);
+      return toTalentResponse(talent, this.buildOptimizedUrl);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
         throw new ConflictException({
@@ -237,31 +258,59 @@ export class TalentService {
     dto: CreateTalentMediaDto,
   ): Promise<TalentMediaResponse> {
     await this.findActiveTalentOrThrow(talentId);
+
+    const mediaAsset = await this.prisma.mediaAsset.findFirst({
+      where: { id: dto.mediaAssetId, deletedAt: null },
+    });
+    if (!mediaAsset) {
+      throw new NotFoundException({
+        code: "MEDIA_ASSET_NOT_FOUND",
+        message: "Media asset not found.",
+      });
+    }
+
     const existingCount = await this.prisma.talentMedia.count({
       where: { talentId },
     });
 
-    const media = await this.prisma.$transaction(async (tx) => {
-      const makePrimary = dto.isPrimary ?? existingCount === 0;
-      if (makePrimary) {
-        await tx.talentMedia.updateMany({
-          where: { talentId },
-          data: { isPrimary: false },
+    try {
+      const media = await this.prisma.$transaction(async (tx) => {
+        const makePrimary = dto.isPrimary ?? existingCount === 0;
+        if (makePrimary) {
+          await tx.talentMedia.updateMany({
+            where: { talentId },
+            data: { isPrimary: false },
+          });
+        }
+        const created = await tx.talentMedia.create({
+          data: {
+            talentId,
+            mediaAssetId: dto.mediaAssetId,
+            isPrimary: makePrimary,
+            displayOrder: existingCount,
+          },
+          include: { mediaAsset: true },
+        });
+        await tx.mediaUsage.create({
+          data: {
+            mediaAssetId: dto.mediaAssetId,
+            entityType: TALENT_GALLERY_USAGE_TYPE,
+            entityId: talentId,
+          },
+        });
+        return created;
+      });
+
+      return toTalentMediaResponse(media, this.buildOptimizedUrl);
+    } catch (error) {
+      if (isUniqueConstraintViolation(error)) {
+        throw new ConflictException({
+          code: "TALENT_MEDIA_ALREADY_ADDED",
+          message: "This image is already in this talent's gallery.",
         });
       }
-      return tx.talentMedia.create({
-        data: {
-          talentId,
-          url: dto.url,
-          alt: dto.alt,
-          assetType: dto.assetType ?? "image",
-          isPrimary: makePrimary,
-          displayOrder: existingCount,
-        },
-      });
-    });
-
-    return toTalentMediaResponse(media);
+      throw error;
+    }
   }
 
   async removeMedia(talentId: string, mediaId: string): Promise<void> {
@@ -270,6 +319,13 @@ export class TalentService {
 
     await this.prisma.$transaction(async (tx) => {
       await tx.talentMedia.delete({ where: { id: mediaId } });
+      await tx.mediaUsage.deleteMany({
+        where: {
+          mediaAssetId: media.mediaAssetId,
+          entityType: TALENT_GALLERY_USAGE_TYPE,
+          entityId: talentId,
+        },
+      });
 
       if (media.isPrimary) {
         const next = await tx.talentMedia.findFirst({
@@ -293,7 +349,7 @@ export class TalentService {
     await this.findActiveTalentOrThrow(talentId);
     await this.findTalentMediaOrThrow(talentId, mediaId);
 
-    const [, media] = await this.prisma.$transaction([
+    await this.prisma.$transaction([
       this.prisma.talentMedia.updateMany({
         where: { talentId },
         data: { isPrimary: false },
@@ -304,7 +360,11 @@ export class TalentService {
       }),
     ]);
 
-    return toTalentMediaResponse(media);
+    const media = await this.prisma.talentMedia.findUniqueOrThrow({
+      where: { id: mediaId },
+      include: { mediaAsset: true },
+    });
+    return toTalentMediaResponse(media, this.buildOptimizedUrl);
   }
 
   async reorderMedia(
@@ -329,7 +389,7 @@ export class TalentService {
       });
     }
 
-    const updated = await this.prisma.$transaction(
+    await this.prisma.$transaction(
       dto.mediaIds.map((mediaId, index) =>
         this.prisma.talentMedia.update({
           where: { id: mediaId },
@@ -338,10 +398,30 @@ export class TalentService {
       ),
     );
 
-    return updated
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .map(toTalentMediaResponse);
+    const updated = await this.prisma.talentMedia.findMany({
+      where: { talentId },
+      include: { mediaAsset: true },
+      orderBy: { displayOrder: "asc" },
+    });
+
+    return updated.map((item) =>
+      toTalentMediaResponse(item, this.buildOptimizedUrl),
+    );
   }
+
+  /**
+   * Arrow property (not a method) so it auto-binds `this` — passed directly
+   * as a callback to the pure `toTalentResponse`/`toTalentMediaResponse`
+   * mapping functions. Legacy assets (no `publicId`) fall back to their raw
+   * stored `url`, same fallback `MediaService.buildVariants` uses.
+   */
+  private buildOptimizedUrl = (asset: {
+    publicId: string | null;
+    url: string;
+  }): string =>
+    asset.publicId
+      ? this.cloudinary.buildOptimizedUrl(asset.publicId)
+      : asset.url;
 
   private async findActiveTalentOrThrow(
     id: string,

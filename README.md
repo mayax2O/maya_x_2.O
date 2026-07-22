@@ -11,7 +11,7 @@ frontends (public web + agency admin), shared packages.
 
 ## Project status
 
-Current release: **v0.4.0**. Completed so far:
+Current release: **v1.0.0**. Completed so far:
 
 - **M0** — Monorepo foundations, CI/CD, deploy configs (Railway/Vercel)
 - **M1** — Identity & Access: registration/login, JWT + refresh tokens, RBAC
@@ -19,15 +19,21 @@ Current release: **v0.4.0**. Completed so far:
 - **M3** — Authentication & authorization hardening
 - **M4** — Admin dashboard & talent management
 - **M5A** — Booking System: Guest + Member booking submission, Admin review
-  queue and status lifecycle, booking history — **no payments** (Razorpay,
-  membership billing, coupons, and notifications are separate, not-yet-started
-  milestones)
+  queue and status lifecycle, booking history — no payments yet
+- **M5B** — Membership & Payment: subscription plans, Razorpay checkout
+  (orders + webhook), admin plan CRUD and payment reconciliation — coupons
+  deliberately deferred
+- **M6** — Media Library: Cloudinary-backed upload/storage, folders, reuse
+  across the system, admin Media Library UI, talent gallery now references
+  real uploaded images instead of raw URLs
+- Production deployment: Vercel (`apps/web`, `apps/admin`) + Railway
+  (`apps/api`) + Supabase (Postgres)
 
-Not yet started: Membership & Payment (Razorpay), Notifications, Reporting/
-Analytics/Coupons, SEO/Performance/Accessibility hardening, and final QA/
-Security/Launch prep — see `docs/07-planning` for the original milestone plan
-(the milestone numbering above reflects actual build order, which diverged
-from that plan's sequence once implementation started).
+Not yet started: Coupons, Notifications, Reporting/Analytics, SEO/Performance/
+Accessibility hardening, and final QA/Security/Launch prep — see
+`docs/07-planning` for the original milestone plan (the milestone numbering
+above reflects actual build order, which diverged from that plan's sequence
+once implementation started).
 
 ## Local development
 

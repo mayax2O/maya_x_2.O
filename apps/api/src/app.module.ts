@@ -16,6 +16,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
 import { LocationsModule } from "./locations/locations.module";
+import { MediaModule } from "./media/media.module";
 import { MembershipModule } from "./membership/membership.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { TalentModule } from "./talent/talent.module";
@@ -48,6 +49,7 @@ import { UsersModule } from "./users/users.module";
     LocationsModule,
     TalentCategoriesModule,
     TalentModule,
+    MediaModule,
     BookingModule,
     MembershipModule,
     PaymentsModule,

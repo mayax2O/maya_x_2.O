@@ -1,6 +1,7 @@
 import type {
   City,
   Location,
+  MediaAsset,
   Talent,
   TalentCategory,
   TalentCategoryMap,
@@ -11,7 +12,7 @@ export type TalentWithRelations = Talent & {
   city: City;
   location: Location | null;
   categories: (TalentCategoryMap & { category: TalentCategory })[];
-  media: TalentMedia[];
+  media: (TalentMedia & { mediaAsset: MediaAsset })[];
 };
 
 export interface TalentResponse {
@@ -43,7 +44,9 @@ export interface TalentResponse {
   categories: { id: string; name: string; slug: string }[];
   media: {
     id: string;
+    mediaAssetId: string;
     url: string;
+    optimizedUrl: string;
     alt: string;
     assetType: string;
     isPrimary: boolean;
@@ -53,7 +56,13 @@ export interface TalentResponse {
   updatedAt: Date;
 }
 
-export function toTalentResponse(talent: TalentWithRelations): TalentResponse {
+export function toTalentResponse(
+  talent: TalentWithRelations,
+  buildOptimizedUrl: (asset: {
+    publicId: string | null;
+    url: string;
+  }) => string,
+): TalentResponse {
   return {
     id: talent.id,
     slug: talent.slug,
@@ -98,9 +107,11 @@ export function toTalentResponse(talent: TalentWithRelations): TalentResponse {
       .sort((a, b) => a.displayOrder - b.displayOrder)
       .map((item) => ({
         id: item.id,
-        url: item.url,
-        alt: item.alt,
-        assetType: item.assetType,
+        mediaAssetId: item.mediaAssetId,
+        url: item.mediaAsset.url,
+        optimizedUrl: buildOptimizedUrl(item.mediaAsset),
+        alt: item.mediaAsset.altText ?? "",
+        assetType: item.mediaAsset.resourceType,
         isPrimary: item.isPrimary,
         displayOrder: item.displayOrder,
       })),

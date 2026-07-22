@@ -2,12 +2,13 @@ import { z } from "zod";
 
 /**
  * Startup env validation. Grows one milestone at a time: only variables the
- * app actually reads belong here. As of M3 that's NODE_ENV/PORT (M0),
- * DATABASE_URL/DIRECT_URL (M1A), and the JWT/CORS/rate-limit variables
- * AuthModule and main.ts read (M3). REDIS_URL, Razorpay/Cloudinary/Resend
- * keys, etc. remain documented in .env.example as placeholders for later
- * milestones, but are NOT validated here yet — adding them before any code
- * reads them would make local/CI startup fail on variables nothing uses.
+ * app actually reads belong here. As of M6 that's NODE_ENV/PORT (M0),
+ * DATABASE_URL/DIRECT_URL (M1A), the JWT/CORS/rate-limit variables
+ * AuthModule and main.ts read (M3), Razorpay (M5B), and Cloudinary + media
+ * upload limits (M6). REDIS_URL, Resend keys, etc. remain documented in
+ * .env.example as placeholders for later milestones, but are NOT validated
+ * here yet — adding them before any code reads them would make local/CI
+ * startup fail on variables nothing uses.
  */
 const envSchema = z
   .object({
@@ -58,6 +59,39 @@ const envSchema = z
     RAZORPAY_WEBHOOK_SECRET: z
       .string()
       .min(1, "RAZORPAY_WEBHOOK_SECRET is required"),
+
+    // --- M6: Cloudinary (Media Library) ---
+    // Read by CloudinaryGatewayService. Three separate vars (rather than one
+    // CLOUDINARY_URL connection string) so a missing one produces its own
+    // clear validation error, matching the Razorpay KEY_ID/KEY_SECRET split
+    // above. CI/local-without-a-Cloudinary-account can use any non-empty
+    // placeholder since e2e tests override the gateway provider rather than
+    // calling the real API (see media.e2e-spec.ts).
+    CLOUDINARY_CLOUD_NAME: z
+      .string()
+      .min(1, "CLOUDINARY_CLOUD_NAME is required"),
+    CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
+    CLOUDINARY_API_SECRET: z
+      .string()
+      .min(1, "CLOUDINARY_API_SECRET is required"),
+    CLOUDINARY_UPLOAD_FOLDER: z.string().default("maya-x"),
+    // Validation limits for uploads — configurable per environment.
+    MEDIA_MAX_UPLOAD_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(10 * 1024 * 1024),
+    MEDIA_MAX_DIMENSION_PX: z.coerce.number().int().positive().default(8000),
+    MEDIA_UPLOAD_RATE_LIMIT_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(60),
+    MEDIA_UPLOAD_RATE_LIMIT_LIMIT: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(20),
   })
   .refine((config) => config.JWT_ACCESS_SECRET !== config.JWT_REFRESH_SECRET, {
     message: "JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different",

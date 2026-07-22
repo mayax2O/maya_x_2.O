@@ -1,6 +1,12 @@
 import { refreshRequest } from "../auth/api";
 import { getAccessToken, setAccessToken } from "../auth/token-store";
-import { apiFetch, apiFetchList, ApiError, type Paginated } from "./client";
+import {
+  apiFetch,
+  apiFetchList,
+  ApiError,
+  uploadFile,
+  type Paginated,
+} from "./client";
 
 function withAuthHeader(options: RequestInit = {}): RequestInit {
   const token = getAccessToken();
@@ -11,6 +17,11 @@ function withAuthHeader(options: RequestInit = {}): RequestInit {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   };
+}
+
+function authHeaderOnly(): RequestInit {
+  const token = getAccessToken();
+  return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 }
 
 /**
@@ -47,6 +58,22 @@ export async function authedFetchList<T>(
       const { accessToken } = await refreshRequest();
       setAccessToken(accessToken);
       return apiFetchList<T>(path, withAuthHeader(options));
+    }
+    throw error;
+  }
+}
+
+export async function authedUpload<T>(
+  path: string,
+  formData: FormData,
+): Promise<T> {
+  try {
+    return await uploadFile<T>(path, formData, authHeaderOnly());
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      const { accessToken } = await refreshRequest();
+      setAccessToken(accessToken);
+      return uploadFile<T>(path, formData, authHeaderOnly());
     }
     throw error;
   }

@@ -8,6 +8,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "../database/prisma.service";
+import { CLOUDINARY_GATEWAY } from "../media/cloudinary-gateway.interface";
 import { TalentService } from "./talent.service";
 
 function createUniqueConstraintError(): Prisma.PrismaClientKnownRequestError {
@@ -82,10 +83,13 @@ describe("TalentService", () => {
       create: jest.Mock;
       findFirst: jest.Mock;
       findMany: jest.Mock;
+      findUniqueOrThrow: jest.Mock;
       update: jest.Mock;
       updateMany: jest.Mock;
       delete: jest.Mock;
     };
+    mediaAsset: { findFirst: jest.Mock };
+    mediaUsage: { create: jest.Mock; deleteMany: jest.Mock };
     $transaction: jest.Mock;
   };
 
@@ -105,10 +109,13 @@ describe("TalentService", () => {
         create: jest.fn(),
         findFirst: jest.fn(),
         findMany: jest.fn(),
+        findUniqueOrThrow: jest.fn(),
         update: jest.fn(),
         updateMany: jest.fn(),
         delete: jest.fn(),
       },
+      mediaAsset: { findFirst: jest.fn() },
+      mediaUsage: { create: jest.fn(), deleteMany: jest.fn() },
       $transaction: jest.fn(),
     };
     // Default: interactive-transaction form hands back `prisma` as `tx`;
@@ -120,7 +127,21 @@ describe("TalentService", () => {
     });
 
     const moduleRef: TestingModule = await Test.createTestingModule({
-      providers: [TalentService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        TalentService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: CLOUDINARY_GATEWAY,
+          useValue: {
+            uploadAsset: jest.fn(),
+            deleteAsset: jest.fn(),
+            buildOptimizedUrl: jest.fn(
+              (publicId: string) => `optimized:${publicId}`,
+            ),
+            buildVariantUrls: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = moduleRef.get(TalentService);
@@ -248,41 +269,55 @@ describe("TalentService", () => {
   });
 
   describe("media", () => {
+    const mediaAssetRow = {
+      id: "asset-1",
+      url: "https://res.cloudinary.com/demo/image/upload/a.jpg",
+      altText: "Photo",
+      resourceType: "image",
+    };
+
     it("makes the first uploaded image primary by default", async () => {
       prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
+      prisma.mediaAsset.findFirst.mockResolvedValue(mediaAssetRow);
       prisma.talentMedia.count.mockResolvedValue(0);
       prisma.talentMedia.create.mockResolvedValue({
         id: "media-1",
-        url: "https://example.com/a.jpg",
-        alt: "Photo",
-        assetType: "image",
+        mediaAssetId: "asset-1",
         isPrimary: true,
         displayOrder: 0,
+        mediaAsset: mediaAssetRow,
       });
+      prisma.mediaUsage.create.mockResolvedValue({});
 
       const result = await service.addMedia("talent-1", {
-        url: "https://example.com/a.jpg",
-        alt: "Photo",
+        mediaAssetId: "asset-1",
       });
 
       expect(result.isPrimary).toBe(true);
+      expect(prisma.mediaUsage.create).toHaveBeenCalledWith({
+        data: {
+          mediaAssetId: "asset-1",
+          entityType: "talent_gallery",
+          entityId: "talent-1",
+        },
+      });
     });
 
     it("unsets other primaries when a new image is explicitly marked primary", async () => {
       prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
+      prisma.mediaAsset.findFirst.mockResolvedValue(mediaAssetRow);
       prisma.talentMedia.count.mockResolvedValue(2);
       prisma.talentMedia.create.mockResolvedValue({
         id: "media-3",
-        url: "https://example.com/c.jpg",
-        alt: "Photo",
-        assetType: "image",
+        mediaAssetId: "asset-1",
         isPrimary: true,
         displayOrder: 2,
+        mediaAsset: mediaAssetRow,
       });
+      prisma.mediaUsage.create.mockResolvedValue({});
 
       await service.addMedia("talent-1", {
-        url: "https://example.com/c.jpg",
-        alt: "Photo",
+        mediaAssetId: "asset-1",
         isPrimary: true,
       });
 
@@ -292,18 +327,39 @@ describe("TalentService", () => {
       });
     });
 
+    it("rejects adding a media asset that doesn't exist", async () => {
+      prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
+      prisma.mediaAsset.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.addMedia("talent-1", { mediaAssetId: "missing" }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
     it("promotes the next image to primary after the primary image is removed", async () => {
       prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
       prisma.talentMedia.findFirst
-        .mockResolvedValueOnce({ id: "media-1", isPrimary: true }) // findTalentMediaOrThrow
+        .mockResolvedValueOnce({
+          id: "media-1",
+          mediaAssetId: "asset-1",
+          isPrimary: true,
+        }) // findTalentMediaOrThrow
         .mockResolvedValueOnce({ id: "media-2", displayOrder: 1 }); // next-primary lookup
       prisma.talentMedia.delete.mockResolvedValue({});
       prisma.talentMedia.update.mockResolvedValue({});
+      prisma.mediaUsage.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.removeMedia("talent-1", "media-1");
 
       expect(prisma.talentMedia.delete).toHaveBeenCalledWith({
         where: { id: "media-1" },
+      });
+      expect(prisma.mediaUsage.deleteMany).toHaveBeenCalledWith({
+        where: {
+          mediaAssetId: "asset-1",
+          entityType: "talent_gallery",
+          entityId: "talent-1",
+        },
       });
       expect(prisma.talentMedia.update).toHaveBeenCalledWith({
         where: { id: "media-2" },
@@ -325,27 +381,25 @@ describe("TalentService", () => {
 
     it("reorders media according to the given sequence", async () => {
       prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
-      prisma.talentMedia.findMany.mockResolvedValue([
-        { id: "media-1" },
-        { id: "media-2" },
-      ]);
-      prisma.talentMedia.update
-        .mockResolvedValueOnce({
-          id: "media-2",
-          url: "b",
-          alt: "b",
-          assetType: "image",
-          isPrimary: false,
-          displayOrder: 0,
-        })
-        .mockResolvedValueOnce({
-          id: "media-1",
-          url: "a",
-          alt: "a",
-          assetType: "image",
-          isPrimary: true,
-          displayOrder: 1,
-        });
+      prisma.talentMedia.findMany
+        .mockResolvedValueOnce([{ id: "media-1" }, { id: "media-2" }])
+        .mockResolvedValueOnce([
+          {
+            id: "media-2",
+            mediaAssetId: "asset-2",
+            isPrimary: false,
+            displayOrder: 0,
+            mediaAsset: { ...mediaAssetRow, id: "asset-2" },
+          },
+          {
+            id: "media-1",
+            mediaAssetId: "asset-1",
+            isPrimary: true,
+            displayOrder: 1,
+            mediaAsset: mediaAssetRow,
+          },
+        ]);
+      prisma.talentMedia.update.mockResolvedValue({});
 
       const result = await service.reorderMedia("talent-1", {
         mediaIds: ["media-2", "media-1"],

@@ -299,13 +299,30 @@ async function main(): Promise<void> {
       where: { talentId: talent.id },
     });
     if (!existingMedia) {
+      // Seed data predates real Cloudinary uploads — a "legacy" MediaAsset
+      // (source: "legacy", no publicId/contentHash) carries the mock cover
+      // image url/alt, same as the M6 migration's backfill for pre-existing
+      // TalentMedia rows.
+      const mediaAsset = await prisma.mediaAsset.create({
+        data: {
+          url: `/mock/talent/${talentDef.slug}/cover.jpg`,
+          altText: `${talentDef.displayName} portrait`,
+          source: "legacy",
+        },
+      });
       await prisma.talentMedia.create({
         data: {
           talentId: talent.id,
-          url: `/mock/talent/${talentDef.slug}/cover.jpg`,
-          alt: `${talentDef.displayName} portrait`,
+          mediaAssetId: mediaAsset.id,
           isPrimary: true,
           displayOrder: 0,
+        },
+      });
+      await prisma.mediaUsage.create({
+        data: {
+          mediaAssetId: mediaAsset.id,
+          entityType: "talent_gallery",
+          entityId: talent.id,
         },
       });
     }

@@ -286,25 +286,25 @@ model Talent {
   @@map("talents")
 }
 
-/// Talent gallery images (docs/04-database `media_assets`, scoped to
-/// Talent only for M4 — see the file-level note on why this isn't the
-/// ERD's generic polymorphic table). `cloudinaryPublicId` is nullable:
-/// M4 manages gallery entries by URL, not real upload — Cloudinary
-/// integration is the dedicated Media Library milestone's job.
+/// Join between Talent and the M6 Media Library (`talent_media`) — ordering
+/// and primary-image selection are per-talent-usage concerns, so they live
+/// here rather than on MediaAsset itself, which is fully reusable. Superseded
+/// M4's URL-only version of this table (see the M6 migration for the
+/// backfill: every pre-M6 row's `url`/`alt` became one legacy MediaAsset).
 model TalentMedia {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  talentId           String   @map("talent_id") @db.Uuid
-  url                String
-  alt                String
-  assetType          String   @default("image") @map("asset_type")
-  cloudinaryPublicId String?  @map("cloudinary_public_id")
-  isPrimary          Boolean  @default(false) @map("is_primary")
-  displayOrder       Int      @default(0) @map("display_order")
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  talentId     String   @map("talent_id") @db.Uuid
+  mediaAssetId String   @map("media_asset_id") @db.Uuid
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  talent Talent @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talent     Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
 
+  @@unique([talentId, mediaAssetId])
   @@index([talentId])
+  @@index([mediaAssetId])
   @@map("talent_media")
 }
 
@@ -479,4 +479,104 @@ model Payment {
 
   @@index([subscriptionId])
   @@map("payments")
+}
+
+// ---------------------------------------------------------------------------
+// M6 — Media Library (docs/04-database's generic `media_assets` concept,
+// finally introduced for real). Cloudinary-backed upload, storage, and
+// reuse of images across the system. TalentMedia (M4) is migrated to
+// reference MediaAsset instead of storing its own url/alt — see that
+// model's comment and the M6 migration for the backfill strategy.
+//
+// MediaTag was listed as optional in the milestone brief and is deferred:
+// MediaFolder already gives admins a organizational axis (folder filter),
+// and no requirement called for tag-based filtering specifically. Adding
+// it later is a purely additive migration (new table + join table), so
+// deferring costs nothing. See DEPLOYMENT.md's M6 section for the note.
+// ---------------------------------------------------------------------------
+
+/// Folder organization for the Media Library (`media_folders`). Optional,
+/// flat-or-nested via `parentId` self-relation; assets may sit in no folder.
+model MediaFolder {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  parentId  String?  @map("parent_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  parent   MediaFolder?  @relation("MediaFolderChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children MediaFolder[] @relation("MediaFolderChildren")
+  assets   MediaAsset[]
+
+  @@map("media_folders")
+}
+
+/// The Media Library's core entity (`media_assets`) — one row per uploaded
+/// (or, for pre-M6 data, legacy) image. `publicId`/`contentHash` are
+/// nullable because rows backfilled from M4's URL-only TalentMedia were
+/// never actually uploaded to Cloudinary and have neither; every asset
+/// created through the M6 upload endpoint has both. `contentHash` (SHA-256
+/// of the uploaded bytes) is how duplicate-upload detection works: the
+/// upload endpoint checks for an existing row with the same hash before
+/// calling Cloudinary at all.
+model MediaAsset {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  folderId         String?   @map("folder_id") @db.Uuid
+  publicId         String?   @unique @map("public_id")
+  url              String
+  format           String?
+  resourceType     String    @default("image") @map("resource_type")
+  bytes            Int?
+  width            Int?
+  height           Int?
+  contentHash      String?   @unique @map("content_hash")
+  originalFilename String?   @map("original_filename")
+  altText          String?   @map("alt_text")
+  displayOrder     Int       @default(0) @map("display_order")
+  source           String    @default("cloudinary")
+
+  // AI-ready metadata (M6 polish pass) -- nullable/empty-default, populated
+  // by no code path today. Added now so a future AI-tagging/auto-alt-text/
+  // moderation milestone is a pure backfill job, never a schema migration on
+  // an asset table that may have grown very large by then.
+  aiDescription   String?  @map("ai_description")
+  aiTags          String[] @default([]) @map("ai_tags")
+  dominantColor   String?  @map("dominant_color")
+  detectedObjects Json?    @map("detected_objects")
+  detectedFaces   Json?    @map("detected_faces")
+
+  createdBy String?   @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  folder      MediaFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  talentMedia TalentMedia[]
+  usages      MediaUsage[]
+
+  @@index([folderId])
+  @@index([deletedAt])
+  @@map("media_assets")
+}
+
+/// Tracks every place a MediaAsset is actually used (`media_usages`), so the
+/// Media Library can show a "used in N places" count and the API can block
+/// deletion of an in-use asset. `entityType`/`entityId` is a deliberate,
+/// narrow polymorphic reference (unlike TalentMedia's real FK to Talent —
+/// see that model's comment) because usage tracking spans arbitrary future
+/// entity types and is advisory bookkeeping, not a relation the database
+/// needs to enforce referential integrity on.
+model MediaUsage {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mediaAssetId String   @map("media_asset_id") @db.Uuid
+  entityType   String   @map("entity_type")
+  entityId     String   @map("entity_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaAssetId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@map("media_usages")
 }
