@@ -45,6 +45,22 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    href: "/bookings",
+    label: "Bookings",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        className="h-5 w-5"
+      >
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M8 3v4M16 3v4M4 10h16M9 14l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
     href: "/cities",
     label: "Cities",
     icon: (

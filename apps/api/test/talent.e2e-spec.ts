@@ -174,4 +174,38 @@ describe("Talent API (e2e)", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("GET /public/talent lists active talent without authentication", async () => {
+    const publicTalentSlug = `e2e-public-talent-${Date.now()}`;
+    const talent = await prisma.talent.create({
+      data: {
+        displayName: "E2E Public Talent",
+        slug: publicTalentSlug,
+        cityId,
+        basePrice: 15000,
+      },
+    });
+    const inactive = await prisma.talent.create({
+      data: {
+        displayName: "E2E Inactive Public Talent",
+        slug: `${publicTalentSlug}-inactive`,
+        cityId,
+        basePrice: 15000,
+        isActive: false,
+      },
+    });
+
+    const response = await request(app.getHttpServer())
+      .get("/api/v1/public/talent")
+      .query({ q: "E2E Public Talent" });
+
+    expect(response.status).toBe(200);
+    const ids = response.body.data.map((row: { id: string }) => row.id);
+    expect(ids).toContain(talent.id);
+    expect(ids).not.toContain(inactive.id);
+
+    await prisma.talent.deleteMany({
+      where: { id: { in: [talent.id, inactive.id] } },
+    });
+  });
 });

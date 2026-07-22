@@ -15,31 +15,50 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getStats(): Promise<DashboardStatsResponse> {
-    const [totalUsers, totalTalent, activeTalent, recentTalent, recentUsers] =
-      await Promise.all([
-        this.prisma.user.count({ where: { deletedAt: null } }),
-        this.prisma.talent.count({ where: { deletedAt: null } }),
-        this.prisma.talent.count({
-          where: { deletedAt: null, isActive: true },
-        }),
-        this.prisma.talent.findMany({
-          where: { deletedAt: null },
-          orderBy: { updatedAt: "desc" },
-          take: RECENT_ACTIVITY_LIMIT,
-          select: {
-            id: true,
-            displayName: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-        }),
-        this.prisma.user.findMany({
-          where: { deletedAt: null },
-          orderBy: { createdAt: "desc" },
-          take: RECENT_ACTIVITY_LIMIT,
-          select: { id: true, fullName: true, email: true, createdAt: true },
-        }),
-      ]);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [
+      totalUsers,
+      totalTalent,
+      activeTalent,
+      pendingBookings,
+      todaysBookings,
+      recentTalent,
+      recentUsers,
+    ] = await Promise.all([
+      this.prisma.user.count({ where: { deletedAt: null } }),
+      this.prisma.talent.count({ where: { deletedAt: null } }),
+      this.prisma.talent.count({
+        where: { deletedAt: null, isActive: true },
+      }),
+      this.prisma.bookingRequest.count({
+        where: {
+          deletedAt: null,
+          status: { in: ["submitted", "under_review", "contacted"] },
+        },
+      }),
+      this.prisma.bookingRequest.count({
+        where: { deletedAt: null, createdAt: { gte: startOfToday } },
+      }),
+      this.prisma.talent.findMany({
+        where: { deletedAt: null },
+        orderBy: { updatedAt: "desc" },
+        take: RECENT_ACTIVITY_LIMIT,
+        select: {
+          id: true,
+          displayName: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.user.findMany({
+        where: { deletedAt: null },
+        orderBy: { createdAt: "desc" },
+        take: RECENT_ACTIVITY_LIMIT,
+        select: { id: true, fullName: true, email: true, createdAt: true },
+      }),
+    ]);
 
     const talentActivity: RecentActivityItem[] = recentTalent.map((talent) => {
       // Same instant (to the second) means this is the row's original
@@ -81,16 +100,11 @@ export class DashboardService {
       totalUsers,
       totalTalent,
       activeTalent,
-      pendingBookings: 0,
-      todaysBookings: 0,
+      pendingBookings,
+      todaysBookings,
       premiumMembers: 0,
       monthlyRevenue: 0,
-      mockedFields: [
-        "pendingBookings",
-        "todaysBookings",
-        "premiumMembers",
-        "monthlyRevenue",
-      ],
+      mockedFields: ["premiumMembers", "monthlyRevenue"],
       recentActivity,
       latestRegistrations,
     };

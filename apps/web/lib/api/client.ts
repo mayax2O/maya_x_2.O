@@ -57,3 +57,45 @@ export async function apiFetch<T>(
 
   return (body?.data ?? undefined) as T;
 }
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
+/** Same envelope as apiFetch, but for list endpoints — reads `meta` alongside `data`. */
+export async function apiFetchList<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<Paginated<T>> {
+  const response = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  const body = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      body?.error ?? {
+        code: "UNKNOWN_ERROR",
+        message: "Something went wrong.",
+        details: [],
+      },
+    );
+  }
+
+  return {
+    items: body.data,
+    total: body.meta.total,
+    page: body.meta.page,
+    perPage: body.meta.perPage,
+  };
+}

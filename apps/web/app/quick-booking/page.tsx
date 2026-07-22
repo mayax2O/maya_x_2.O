@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
 import { Container } from "../../components/layout/Container";
-import { QuickBookingForm } from "../../components/booking/QuickBookingForm";
-import { getTalents } from "../../lib/data/talents";
+import { QuickBookingPageContent } from "../../components/booking/QuickBookingPageContent";
 
 export const metadata: Metadata = {
   title: "Quick Booking | MAYA_X",
@@ -10,9 +9,7 @@ export const metadata: Metadata = {
     "Submit a booking request and our team will recommend the right talent for your event.",
 };
 
-export default async function QuickBookingPage() {
-  const talents = await getTalents();
-
+export default function QuickBookingPage() {
   return (
     <Container className="flex justify-center py-16 sm:py-24">
       <div className="w-full max-w-lg">
@@ -28,12 +25,7 @@ export default async function QuickBookingPage() {
         </p>
 
         <div className="mt-8">
-          <QuickBookingForm
-            talentOptions={talents.map((talent) => ({
-              id: talent.id,
-              displayName: talent.displayName,
-            }))}
-          />
+          <QuickBookingPageContent />
         </div>
       </div>
     </Container>

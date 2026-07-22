@@ -9,12 +9,14 @@ describe("DashboardService", () => {
   let prisma: {
     user: { count: jest.Mock; findMany: jest.Mock };
     talent: { count: jest.Mock; findMany: jest.Mock };
+    bookingRequest: { count: jest.Mock };
   };
 
   beforeEach(async () => {
     prisma = {
       user: { count: jest.fn(), findMany: jest.fn() },
       talent: { count: jest.fn(), findMany: jest.fn() },
+      bookingRequest: { count: jest.fn() },
     };
 
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -30,6 +32,9 @@ describe("DashboardService", () => {
   it("reports real counts and clearly labels the mocked fields", async () => {
     prisma.user.count.mockResolvedValue(42);
     prisma.talent.count.mockResolvedValueOnce(10).mockResolvedValueOnce(7);
+    prisma.bookingRequest.count
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(2);
     prisma.talent.findMany.mockResolvedValue([]);
     prisma.user.findMany.mockResolvedValue([]);
 
@@ -38,18 +43,15 @@ describe("DashboardService", () => {
     expect(result.totalUsers).toBe(42);
     expect(result.totalTalent).toBe(10);
     expect(result.activeTalent).toBe(7);
-    expect(result.mockedFields).toEqual([
-      "pendingBookings",
-      "todaysBookings",
-      "premiumMembers",
-      "monthlyRevenue",
-    ]);
-    expect(result.pendingBookings).toBe(0);
+    expect(result.pendingBookings).toBe(3);
+    expect(result.todaysBookings).toBe(2);
+    expect(result.mockedFields).toEqual(["premiumMembers", "monthlyRevenue"]);
   });
 
   it("merges talent and user activity, sorted most-recent first", async () => {
     prisma.user.count.mockResolvedValue(1);
     prisma.talent.count.mockResolvedValue(1);
+    prisma.bookingRequest.count.mockResolvedValue(0);
     prisma.talent.findMany.mockResolvedValue([
       {
         id: "t1",
@@ -78,6 +80,7 @@ describe("DashboardService", () => {
   it("labels a talent as updated (not created) when updatedAt is well after createdAt", async () => {
     prisma.user.count.mockResolvedValue(0);
     prisma.talent.count.mockResolvedValue(1);
+    prisma.bookingRequest.count.mockResolvedValue(0);
     prisma.talent.findMany.mockResolvedValue([
       {
         id: "t1",

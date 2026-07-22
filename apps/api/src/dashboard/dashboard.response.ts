@@ -16,9 +16,9 @@ export interface DashboardStatsResponse {
   totalUsers: number;
   totalTalent: number;
   activeTalent: number;
-  /** Placeholder — Booking is out of scope until that milestone. */
+  /** Count of booking requests still awaiting resolution (submitted/under_review/contacted). */
   pendingBookings: number;
-  /** Placeholder — Booking is out of scope until that milestone. */
+  /** Count of booking requests created today (server-local calendar day). */
   todaysBookings: number;
   /** Placeholder — customer Membership/Subscription is out of scope until that milestone. */
   premiumMembers: number;
@@ -27,7 +27,7 @@ export interface DashboardStatsResponse {
   /** Which of the fields above are mocked, so the UI can badge them honestly rather than presenting fake numbers as real. */
   mockedFields: (keyof Pick<
     DashboardStatsResponse,
-    "pendingBookings" | "todaysBookings" | "premiumMembers" | "monthlyRevenue"
+    "premiumMembers" | "monthlyRevenue"
   >)[];
   recentActivity: RecentActivityItem[];
   latestRegistrations: LatestRegistrationItem[];
