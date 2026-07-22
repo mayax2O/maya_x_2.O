@@ -5,6 +5,7 @@ import type {
   MediaBulkActionResult,
   MediaFolder,
   MediaListFilters,
+  MediaStats,
 } from "../types";
 
 export function listMedia(
@@ -48,8 +49,22 @@ export function updateMedia(
   });
 }
 
+/** Moves the asset to Trash (soft delete) — see `restoreMedia`/`permanentlyDeleteMedia`. */
 export function deleteMedia(id: string): Promise<void> {
   return authedFetch<void>(`/media/${id}`, { method: "DELETE" });
+}
+
+export function restoreMedia(id: string): Promise<MediaAsset> {
+  return authedFetch<MediaAsset>(`/media/${id}/restore`, { method: "POST" });
+}
+
+/** Only works on an asset already in Trash — removes the Cloudinary object too. */
+export function permanentlyDeleteMedia(id: string): Promise<void> {
+  return authedFetch<void>(`/media/${id}/permanent`, { method: "DELETE" });
+}
+
+export function getMediaStats(): Promise<MediaStats> {
+  return authedFetch<MediaStats>("/media/stats");
 }
 
 export function bulkDeleteMedia(

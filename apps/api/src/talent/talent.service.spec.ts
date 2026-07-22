@@ -8,6 +8,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "../database/prisma.service";
+import { CLOUDINARY_GATEWAY } from "../media/cloudinary-gateway.interface";
 import { TalentService } from "./talent.service";
 
 function createUniqueConstraintError(): Prisma.PrismaClientKnownRequestError {
@@ -126,7 +127,21 @@ describe("TalentService", () => {
     });
 
     const moduleRef: TestingModule = await Test.createTestingModule({
-      providers: [TalentService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        TalentService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: CLOUDINARY_GATEWAY,
+          useValue: {
+            uploadAsset: jest.fn(),
+            deleteAsset: jest.fn(),
+            buildOptimizedUrl: jest.fn(
+              (publicId: string) => `optimized:${publicId}`,
+            ),
+            buildVariantUrls: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = moduleRef.get(TalentService);

@@ -32,7 +32,11 @@ import { UpdateFolderDto } from "./dto/update-folder.dto";
 import { UpdateMediaDto } from "./dto/update-media.dto";
 import type { MediaAssetResponse } from "./media-asset.response";
 import type { MediaFolderResponse } from "./media-folder.response";
-import { MediaService, type BulkActionResult } from "./media.service";
+import {
+  MediaService,
+  type BulkActionResult,
+  type MediaStatsResponse,
+} from "./media.service";
 
 interface DataEnvelope<T> {
   data: T;
@@ -119,6 +123,12 @@ export class MediaController {
     return { data };
   }
 
+  @Get("stats")
+  async getStats(): Promise<DataEnvelope<MediaStatsResponse>> {
+    const data = await this.mediaService.getStats();
+    return { data };
+  }
+
   @Get("folders")
   async findAllFolders(): Promise<DataEnvelope<MediaFolderResponse[]>> {
     const data = await this.mediaService.findAllFolders();
@@ -169,6 +179,21 @@ export class MediaController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
     await this.mediaService.remove(id);
+  }
+
+  @Post(":id/restore")
+  @HttpCode(HttpStatus.OK)
+  async restore(
+    @Param("id", ParseUUIDPipe) id: string,
+  ): Promise<DataEnvelope<MediaAssetResponse>> {
+    const data = await this.mediaService.restore(id);
+    return { data };
+  }
+
+  @Delete(":id/permanent")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async permanentDelete(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
+    await this.mediaService.permanentDelete(id);
   }
 
   @Post(":id/replace")

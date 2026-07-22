@@ -21,8 +21,12 @@ const ONE_PX_PNG = Buffer.from(
 // byte duplicate — that's a tested feature, not a bug) — appending a
 // distinguishing tail after the valid PNG stream keeps the header
 // `image-size` reads intact while making the sha256 hash unique.
+// `Date.now()` keeps every fixture's contentHash unique across repeated
+// local test runs against a persistent dev database, not just within one
+// run — a prior run's uncleaned row would otherwise dedup-match a later
+// run's "same" fixture and silently reuse it instead of creating fresh.
 function pngFixture(tag: string): Buffer {
-  return Buffer.concat([ONE_PX_PNG, Buffer.from(`:${tag}`)]);
+  return Buffer.concat([ONE_PX_PNG, Buffer.from(`:${tag}:${Date.now()}`)]);
 }
 
 /**
@@ -54,6 +58,15 @@ class StubCloudinaryGateway {
 
   buildOptimizedUrl(publicId: string) {
     return `https://res.cloudinary.com/stub/image/upload/f_auto,q_auto/${publicId}.png`;
+  }
+
+  buildVariantUrls(publicId: string) {
+    return {
+      thumbnail: `https://res.cloudinary.com/stub/image/upload/w_200/${publicId}.png`,
+      medium: `https://res.cloudinary.com/stub/image/upload/w_800/${publicId}.png`,
+      large: `https://res.cloudinary.com/stub/image/upload/w_1600/${publicId}.png`,
+      original: this.buildOptimizedUrl(publicId),
+    };
   }
 }
 
@@ -169,17 +182,22 @@ describe("Media Library API (e2e)", () => {
   });
 
   it("returns the same asset for a duplicate upload instead of a new one", async () => {
+    // Same bytes reused for both requests on purpose — this test exercises
+    // the contentHash dedup path, unlike every other test here where
+    // pngFixture's Date.now() suffix deliberately keeps uploads distinct.
+    const identicalBytes = pngFixture("dup");
+
     const first = await request(app.getHttpServer())
       .post("/api/v1/media/upload")
       .set("Authorization", `Bearer ${adminAccessToken}`)
-      .attach("file", pngFixture("dup"), "dup.png");
+      .attach("file", identicalBytes, "dup.png");
     expect(first.status).toBe(201);
     createdAssetIds.push(first.body.data.id);
 
     const second = await request(app.getHttpServer())
       .post("/api/v1/media/upload")
       .set("Authorization", `Bearer ${adminAccessToken}`)
-      .attach("file", pngFixture("dup"), "dup-again.png");
+      .attach("file", identicalBytes, "dup-again.png");
     expect(second.status).toBe(201);
     expect(second.body.data.id).toBe(first.body.data.id);
   });
@@ -269,8 +287,9 @@ describe("Media Library API (e2e)", () => {
     const allowedDelete = await request(app.getHttpServer())
       .delete(`/api/v1/media/${assetId}`)
       .set("Authorization", `Bearer ${adminAccessToken}`);
+    // Soft delete (Trash) — the row still exists afterwards, so it's left
+    // in createdAssetIds for afterAll's real Prisma cleanup to hard-remove.
     expect(allowedDelete.status).toBe(204);
-    createdAssetIds.splice(createdAssetIds.indexOf(assetId), 1);
 
     await prisma.talent.deleteMany({ where: { id: talent.id } });
     await prisma.city.deleteMany({ where: { id: city.id } });
@@ -297,10 +316,17 @@ describe("Media Library API (e2e)", () => {
     expect(bulkDelete.status).toBe(200);
     expect(bulkDelete.body.data).toEqual({ requested: 2, affected: 2 });
 
-    const stillThere = await prisma.mediaAsset.findMany({
-      where: { id: { in: [idA, idB] } },
+    // Bulk delete is a soft delete (Trash) — rows still exist, marked deleted.
+    const activeRows = await prisma.mediaAsset.findMany({
+      where: { id: { in: [idA, idB] }, deletedAt: null },
     });
-    expect(stillThere).toHaveLength(0);
+    expect(activeRows).toHaveLength(0);
+    const trashedRows = await prisma.mediaAsset.findMany({
+      where: { id: { in: [idA, idB] }, deletedAt: { not: null } },
+    });
+    expect(trashedRows).toHaveLength(2);
+
+    await prisma.mediaAsset.deleteMany({ where: { id: { in: [idA, idB] } } });
   });
 
   it("rejects an invalid upload payload with 400", async () => {
@@ -310,5 +336,84 @@ describe("Media Library API (e2e)", () => {
       .send();
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("MEDIA_FILE_REQUIRED");
+  });
+
+  it("moves an asset to Trash, lists it there, restores it, then permanently deletes it", async () => {
+    const upload = await request(app.getHttpServer())
+      .post("/api/v1/media/upload")
+      .set("Authorization", `Bearer ${adminAccessToken}`)
+      .attach("file", pngFixture("trash-flow"), "trash-flow.png");
+    const assetId = upload.body.data.id;
+
+    const trash = await request(app.getHttpServer())
+      .delete(`/api/v1/media/${assetId}`)
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+    expect(trash.status).toBe(204);
+
+    const activeList = await request(app.getHttpServer())
+      .get("/api/v1/media")
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+    expect(
+      activeList.body.data.some((row: { id: string }) => row.id === assetId),
+    ).toBe(false);
+
+    const trashList = await request(app.getHttpServer())
+      .get("/api/v1/media")
+      .query({ trashed: "true" })
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+    expect(
+      trashList.body.data.some((row: { id: string }) => row.id === assetId),
+    ).toBe(true);
+
+    const restore = await request(app.getHttpServer())
+      .post(`/api/v1/media/${assetId}/restore`)
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+    expect(restore.status).toBe(200);
+    expect(restore.body.data.deletedAt).toBeNull();
+
+    const permanentBeforeTrash = await request(app.getHttpServer())
+      .delete(`/api/v1/media/${assetId}/permanent`)
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+    expect(permanentBeforeTrash.status).toBe(404);
+
+    await request(app.getHttpServer())
+      .delete(`/api/v1/media/${assetId}`)
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+
+    const permanentDelete = await request(app.getHttpServer())
+      .delete(`/api/v1/media/${assetId}/permanent`)
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+    expect(permanentDelete.status).toBe(204);
+
+    const gone = await prisma.mediaAsset.findUnique({
+      where: { id: assetId },
+    });
+    expect(gone).toBeNull();
+  });
+
+  it("returns dashboard stats", async () => {
+    const upload = await request(app.getHttpServer())
+      .post("/api/v1/media/upload")
+      .set("Authorization", `Bearer ${adminAccessToken}`)
+      .attach("file", pngFixture("stats"), "stats.png");
+    createdAssetIds.push(upload.body.data.id);
+
+    const stats = await request(app.getHttpServer())
+      .get("/api/v1/media/stats")
+      .set("Authorization", `Bearer ${adminAccessToken}`);
+
+    expect(stats.status).toBe(200);
+    expect(stats.body.data).toEqual(
+      expect.objectContaining({
+        totalAssets: expect.any(Number),
+        totalFolders: expect.any(Number),
+        trashedAssets: expect.any(Number),
+        storageBytes: expect.any(Number),
+        unusedAssets: expect.any(Number),
+        recentUploads: expect.any(Number),
+        duplicateAssets: 0,
+      }),
+    );
+    expect(stats.body.data.totalAssets).toBeGreaterThan(0);
   });
 });

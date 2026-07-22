@@ -19,6 +19,7 @@ import { PrismaService } from "../database/prisma.service";
 import {
   CLOUDINARY_GATEWAY,
   type CloudinaryGateway,
+  type MediaVariantUrls,
 } from "./cloudinary-gateway.interface";
 import type { BulkDeleteMediaDto } from "./dto/bulk-delete-media.dto";
 import type { BulkMoveMediaDto } from "./dto/bulk-move-media.dto";
@@ -56,6 +57,24 @@ export interface BulkActionResult {
   affected: number;
 }
 
+export interface MediaStatsResponse {
+  totalAssets: number;
+  totalFolders: number;
+  trashedAssets: number;
+  storageBytes: number;
+  unusedAssets: number;
+  recentUploads: number;
+  /**
+   * Always 0 by design, not by omission: `contentHash`'s DB-level unique
+   * constraint makes a true byte-for-byte duplicate structurally
+   * impossible in this table (see `upload`'s dedup check) — reported here
+   * so the dashboard can show it explicitly rather than silently drop it.
+   */
+  duplicateAssets: 0;
+}
+
+const RECENT_UPLOADS_WINDOW_DAYS = 7;
+
 @Injectable()
 export class MediaService {
   private readonly maxUploadBytes: number;
@@ -82,15 +101,25 @@ export class MediaService {
 
     const contentHash = createHash("sha256").update(input.buffer).digest("hex");
 
+    // Intentionally not scoped to deletedAt: null — contentHash is globally
+    // unique, so if a trashed asset already has these exact bytes, the
+    // right move is to restore it (undelete), not fail on the unique
+    // constraint trying to insert a second row with the same hash.
     const existing = await this.prisma.mediaAsset.findUnique({
       where: { contentHash },
     });
     if (existing) {
-      const usageCount = await this.countUsage(existing.id);
+      const restored = existing.deletedAt
+        ? await this.prisma.mediaAsset.update({
+            where: { id: existing.id },
+            data: { deletedAt: null },
+          })
+        : existing;
+      const usageCount = await this.countUsage(restored.id);
       return toMediaAssetResponse(
-        existing,
+        restored,
         usageCount,
-        this.buildOptimizedUrl(existing),
+        this.buildVariants(restored),
       );
     }
 
@@ -121,7 +150,7 @@ export class MediaService {
           source: "cloudinary",
         },
       });
-      return toMediaAssetResponse(asset, 0, this.buildOptimizedUrl(asset));
+      return toMediaAssetResponse(asset, 0, this.buildVariants(asset));
     } catch (error) {
       // Roll back the Cloudinary upload if we couldn't persist the row
       // (e.g. a race on contentHash's unique constraint) — never leave an
@@ -146,7 +175,7 @@ export class MediaService {
     const perPage = query.perPage ?? 24;
 
     const where = {
-      deletedAt: null,
+      deletedAt: query.trashed ? { not: null } : null,
       ...(query.folderId ? { folderId: query.folderId } : {}),
       ...(query.search
         ? {
@@ -192,7 +221,7 @@ export class MediaService {
         toMediaAssetResponse(
           asset,
           usageCounts.get(asset.id) ?? 0,
-          this.buildOptimizedUrl(asset),
+          this.buildVariants(asset),
         ),
       ),
       total,
@@ -202,11 +231,7 @@ export class MediaService {
   async findOne(id: string): Promise<MediaAssetResponse> {
     const asset = await this.findAssetOrThrow(id);
     const usageCount = await this.countUsage(id);
-    return toMediaAssetResponse(
-      asset,
-      usageCount,
-      this.buildOptimizedUrl(asset),
-    );
+    return toMediaAssetResponse(asset, usageCount, this.buildVariants(asset));
   }
 
   async update(id: string, dto: UpdateMediaDto): Promise<MediaAssetResponse> {
@@ -226,11 +251,7 @@ export class MediaService {
       },
     });
     const usageCount = await this.countUsage(id);
-    return toMediaAssetResponse(
-      asset,
-      usageCount,
-      this.buildOptimizedUrl(asset),
-    );
+    return toMediaAssetResponse(asset, usageCount, this.buildVariants(asset));
   }
 
   /** Uploads a new file and points the same MediaAsset row at it, deleting the old Cloudinary asset. */
@@ -272,15 +293,16 @@ export class MediaService {
     }
 
     const usageCount = await this.countUsage(id);
-    return toMediaAssetResponse(
-      asset,
-      usageCount,
-      this.buildOptimizedUrl(asset),
-    );
+    return toMediaAssetResponse(asset, usageCount, this.buildVariants(asset));
   }
 
+  /**
+   * Soft delete — moves the asset to Trash (`deletedAt` set). The Cloudinary
+   * object is left untouched so `restore` can bring it back exactly as it
+   * was; only `permanentDelete` actually removes it from Cloudinary.
+   */
   async remove(id: string): Promise<void> {
-    const asset = await this.findAssetOrThrow(id);
+    await this.findAssetOrThrow(id);
     const usageCount = await this.countUsage(id);
     if (usageCount > 0) {
       throw new ConflictException({
@@ -289,6 +311,29 @@ export class MediaService {
       });
     }
 
+    await this.prisma.mediaAsset.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async restore(id: string): Promise<MediaAssetResponse> {
+    await this.findTrashedAssetOrThrow(id);
+    const restored = await this.prisma.mediaAsset.update({
+      where: { id },
+      data: { deletedAt: null },
+    });
+    const usageCount = await this.countUsage(id);
+    return toMediaAssetResponse(
+      restored,
+      usageCount,
+      this.buildVariants(restored),
+    );
+  }
+
+  /** Permanently deletes a Trashed asset — Cloudinary object included. Must already be in Trash (`remove` first). */
+  async permanentDelete(id: string): Promise<void> {
+    const asset = await this.findTrashedAssetOrThrow(id);
     await this.prisma.mediaAsset.delete({ where: { id } });
     if (asset.publicId) {
       await this.cloudinary.deleteAsset(asset.publicId).catch(() => {
@@ -297,6 +342,7 @@ export class MediaService {
     }
   }
 
+  /** Bulk soft delete — see `remove`'s doc comment for the Trash semantics. */
   async bulkDelete(dto: BulkDeleteMediaDto): Promise<BulkActionResult> {
     const assets = await this.prisma.mediaAsset.findMany({
       where: { id: { in: dto.mediaIds }, deletedAt: null },
@@ -307,18 +353,10 @@ export class MediaService {
     );
 
     if (deletable.length > 0) {
-      await this.prisma.mediaAsset.deleteMany({
+      await this.prisma.mediaAsset.updateMany({
         where: { id: { in: deletable.map((a) => a.id) } },
+        data: { deletedAt: new Date() },
       });
-      await Promise.all(
-        deletable
-          .filter((a) => a.publicId)
-          .map((a) =>
-            this.cloudinary.deleteAsset(a.publicId as string).catch(() => {
-              // best-effort cleanup only
-            }),
-          ),
-      );
     }
 
     return { requested: dto.mediaIds.length, affected: deletable.length };
@@ -372,7 +410,7 @@ export class MediaService {
         toMediaAssetResponse(
           asset,
           usageCounts.get(asset.id) ?? 0,
-          this.buildOptimizedUrl(asset),
+          this.buildVariants(asset),
         ),
       );
   }
@@ -471,6 +509,46 @@ export class MediaService {
     await this.prisma.mediaFolder.delete({ where: { id } });
   }
 
+  // --- Dashboard ---
+
+  async getStats(): Promise<MediaStatsResponse> {
+    const recentSince = new Date();
+    recentSince.setDate(recentSince.getDate() - RECENT_UPLOADS_WINDOW_DAYS);
+
+    const [
+      totalAssets,
+      totalFolders,
+      trashedAssets,
+      storageAggregate,
+      unusedAssets,
+      recentUploads,
+    ] = await Promise.all([
+      this.prisma.mediaAsset.count({ where: { deletedAt: null } }),
+      this.prisma.mediaFolder.count(),
+      this.prisma.mediaAsset.count({ where: { deletedAt: { not: null } } }),
+      this.prisma.mediaAsset.aggregate({
+        where: { deletedAt: null },
+        _sum: { bytes: true },
+      }),
+      this.prisma.mediaAsset.count({
+        where: { deletedAt: null, usages: { none: {} } },
+      }),
+      this.prisma.mediaAsset.count({
+        where: { deletedAt: null, createdAt: { gte: recentSince } },
+      }),
+    ]);
+
+    return {
+      totalAssets,
+      totalFolders,
+      trashedAssets,
+      storageBytes: storageAggregate._sum.bytes ?? 0,
+      unusedAssets,
+      recentUploads,
+      duplicateAssets: 0,
+    };
+  }
+
   // --- Shared helpers (used by TalentService too, via export below) ---
 
   async countUsage(mediaAssetId: string): Promise<number> {
@@ -489,13 +567,25 @@ export class MediaService {
     return new Map(grouped.map((g) => [g.mediaAssetId, g._count._all]));
   }
 
-  private buildOptimizedUrl(asset: {
+  /**
+   * Legacy assets (`source: "legacy"`, backfilled from pre-M6 TalentMedia
+   * rows) have no `publicId` — there's nothing in Cloudinary to build a
+   * transformation URL against, so every variant falls back to the raw
+   * stored `url` unchanged.
+   */
+  private buildVariants(asset: {
     publicId: string | null;
     url: string;
-  }): string {
-    return asset.publicId
-      ? this.cloudinary.buildOptimizedUrl(asset.publicId)
-      : asset.url;
+  }): MediaVariantUrls {
+    if (!asset.publicId) {
+      return {
+        thumbnail: asset.url,
+        medium: asset.url,
+        large: asset.url,
+        original: asset.url,
+      };
+    }
+    return this.cloudinary.buildVariantUrls(asset.publicId);
   }
 
   private validateMimeType(mimetype: string): void {
@@ -541,14 +631,6 @@ export class MediaService {
     return dimensions;
   }
 
-  private slugify(value: string): string {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  }
-
   private async findAssetOrThrow(id: string) {
     const asset = await this.prisma.mediaAsset.findFirst({
       where: { id, deletedAt: null },
@@ -557,6 +639,19 @@ export class MediaService {
       throw new NotFoundException({
         code: "MEDIA_ASSET_NOT_FOUND",
         message: "Media asset not found.",
+      });
+    }
+    return asset;
+  }
+
+  private async findTrashedAssetOrThrow(id: string) {
+    const asset = await this.prisma.mediaAsset.findFirst({
+      where: { id, deletedAt: { not: null } },
+    });
+    if (!asset) {
+      throw new NotFoundException({
+        code: "MEDIA_ASSET_NOT_IN_TRASH",
+        message: "This image isn't in Trash (move it to Trash first).",
       });
     }
     return asset;

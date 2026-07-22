@@ -17,8 +17,18 @@ export interface UploadedAsset {
   height: number;
 }
 
+export interface MediaVariantUrls {
+  thumbnail: string;
+  medium: string;
+  large: string;
+  original: string;
+}
+
 export interface CloudinaryGateway {
   uploadAsset(params: UploadAssetParams): Promise<UploadedAsset>;
   deleteAsset(publicId: string): Promise<void>;
+  /** `f_auto,q_auto` + metadata-stripping delivery URL at original dimensions. */
   buildOptimizedUrl(publicId: string): string;
+  /** Same optimization + metadata stripping, at four standard sizes. */
+  buildVariantUrls(publicId: string): MediaVariantUrls;
 }

@@ -72,12 +72,12 @@ export function MediaDetailModal({
 
   async function handleDelete() {
     if (!asset) return;
-    if (!window.confirm("Delete this image? This cannot be undone.")) return;
+    if (!window.confirm("Move this image to Trash?")) return;
     setDeleting(true);
     try {
       await deleteMedia(asset.id);
       onDeleted(asset.id);
-      showToast("Image deleted.", "success");
+      showToast("Image moved to Trash.", "success");
     } catch (error) {
       showToast(
         error instanceof ApiError ? error.message : "Failed to delete image.",
@@ -210,7 +210,7 @@ export function MediaDetailModal({
               }
               className="rounded-md border border-danger/40 px-4 py-2 text-[13px] font-semibold text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Delete
+              Move to Trash
             </button>
           </div>
         </div>

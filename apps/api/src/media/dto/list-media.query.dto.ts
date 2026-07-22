@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsIn, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsIn, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class ListMediaQueryDto {
   @IsOptional()
@@ -21,4 +21,10 @@ export class ListMediaQueryDto {
   @IsOptional()
   @IsIn(["newest", "oldest", "name"])
   sort?: "newest" | "oldest" | "name" = "newest";
+
+  // List Trash (soft-deleted assets) instead of active ones.
+  @IsOptional()
+  @Transform(({ value }) => value === "true" || value === true)
+  @IsBoolean()
+  trashed?: boolean;
 }

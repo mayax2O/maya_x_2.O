@@ -5,9 +5,18 @@ import { v2 as cloudinary } from "cloudinary";
 import type { EnvConfig } from "../config/env.validation";
 import type {
   CloudinaryGateway,
+  MediaVariantUrls,
   UploadAssetParams,
   UploadedAsset,
 } from "./cloudinary-gateway.interface";
+
+// `strip_profile` drops the ICC color profile and any embedded EXIF/IPTC/
+// XMP metadata (GPS location, camera model, etc.) from the delivered file —
+// applied to every delivery URL this gateway builds, so nothing that ever
+// leaves this service via a URL carries the uploader's original metadata,
+// regardless of what Cloudinary's account-level settings do with the master
+// asset it stores internally.
+const STRIP_METADATA_FLAG = "strip_profile";
 
 @Injectable()
 export class CloudinaryGatewayService implements CloudinaryGateway {
@@ -69,6 +78,23 @@ export class CloudinaryGatewayService implements CloudinaryGateway {
       secure: true,
       fetch_format: "auto",
       quality: "auto",
+      flags: STRIP_METADATA_FLAG,
     });
+  }
+
+  buildVariantUrls(publicId: string): MediaVariantUrls {
+    const common = {
+      secure: true,
+      fetch_format: "auto",
+      quality: "auto",
+      flags: STRIP_METADATA_FLAG,
+      crop: "limit",
+    } as const;
+    return {
+      thumbnail: cloudinary.url(publicId, { ...common, width: 200 }),
+      medium: cloudinary.url(publicId, { ...common, width: 800 }),
+      large: cloudinary.url(publicId, { ...common, width: 1600 }),
+      original: this.buildOptimizedUrl(publicId),
+    };
   }
 }

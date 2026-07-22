@@ -5,6 +5,7 @@ export interface TalentMedia {
   id: string;
   mediaAssetId: string;
   url: string;
+  optimizedUrl: string;
   alt: string;
   assetType: string;
   isPrimary: boolean;

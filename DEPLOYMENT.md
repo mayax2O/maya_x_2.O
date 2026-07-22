@@ -149,6 +149,114 @@ Everything above was written, and the underlying logic verified, entirely from t
 
 ---
 
+## M6 polish pass — architecture review
+
+Before merging M6, a final production-readiness pass reviewed nine specific
+items against the shipped implementation. Summary of what changed, what was
+already covered, and what's explicitly deferred:
+
+**Implemented this pass** (all additive, no breaking changes):
+
+- Soft delete (Trash) for `MediaAsset` — `DELETE /media/:id` now sets
+  `deletedAt` instead of removing the row/Cloudinary object; `POST
+/media/:id/restore` undoes it; `DELETE /media/:id/permanent` (only
+  callable on a Trashed asset) does the real removal. `GET /media?trashed=true`
+  lists Trash. A duplicate upload of previously-Trashed bytes restores the
+  existing row rather than erroring on `contentHash`'s unique constraint.
+- Every Cloudinary delivery URL (`buildOptimizedUrl`/`buildVariantUrls`) now
+  carries the `strip_profile` flag, which strips ICC color profile and any
+  embedded EXIF/IPTC/XMP metadata (camera model, GPS location, etc.) from
+  the delivered file — this is the guaranteed, code-level control; it does
+  not depend on Cloudinary's account-level metadata settings.
+- Standardized image variants: `MediaAssetResponse.variants` now returns
+  `{ thumbnail (200px), medium (800px), large (1600px), original }`, all
+  `f_auto,q_auto` + `strip_profile`. `TalentMedia`'s gallery response also
+  gained `optimizedUrl` (via the same Cloudinary gateway, now exported from
+  `MediaModule` and injected into `TalentModule`) — the admin Talent editor's
+  gallery grid renders this instead of the raw stored URL.
+- Nullable AI-ready columns on `MediaAsset` (`aiDescription`, `aiTags`,
+  `dominantColor`, `detectedObjects`, `detectedFaces`) — every value is
+  `null`/`[]` today; no code path populates them. A future AI-tagging
+  milestone is a backfill job against existing rows, not a schema migration.
+- `GET /media/stats` — total assets/folders, storage bytes, unused-asset
+  count, uploads in the last 7 days, Trashed count. `duplicateAssets` is
+  always `0` by design (see below), not a placeholder. Surfaced as a stat
+  card row + a "View Trash" toggle on the admin Media Library page.
+
+**Already covered, no change needed:**
+
+- _"Ensure all frontend image delivery uses `f_auto,q_auto`"_ — the admin
+  Media Library UI already exclusively rendered `optimizedUrl`/`variants`,
+  never the raw `url`, since the original M6 pass. The one gap (Talent
+  gallery rendering the raw `url`) is fixed above.
+- _"Verify MediaService stays generic/reusable"_ — it already has zero
+  Talent-specific logic; the only Talent-aware piece is `MediaUsage`'s
+  `entityType: "talent_gallery"` convention, which lives entirely in
+  `TalentService`. A future Blog/Banner/Avatar/Homepage module reuses
+  `MediaService/MediaModule` unchanged: import `MediaModule`, call
+  `mediaService.upload(...)`, write its own `MediaUsage` rows with a new
+  `entityType` string. No changes were needed here beyond exporting
+  `CLOUDINARY_GATEWAY` from `MediaModule` (done above) so a consuming module
+  can build delivery URLs for MediaAssets it already has in hand, without
+  re-implementing Cloudinary URL construction.
+- _"Duplicate detection"_ — `contentHash`'s DB-level unique constraint
+  already makes a true byte-for-byte duplicate structurally impossible in
+  this table (verified: re-uploading identical bytes returns the existing
+  asset, confirmed by both a unit test and an e2e test). `getStats()`'s
+  `duplicateAssets: 0` documents this explicitly rather than logging it as
+  an untracked metric.
+
+**Migration rollback/deployment safety (item 8):**
+
+- This pass's migration (`20260722110000_media_library_polish`) is purely
+  additive — five nullable/empty-default columns plus one index, no drops,
+  no data transformation. It is safe to run against a populated production
+  table with zero downtime, and a rollback (if ever needed) would just drop
+  the same columns — no data loss in either direction since nothing depends
+  on them yet.
+- The original M6 migration (`20260722100000_add_media_library`) is the
+  riskier one: it drops `talent_media.url/alt/asset_type/cloudinary_public_id`
+  after backfilling every row into a new `MediaAsset`. Two things make this
+  safe to run against production: (1) Postgres migrations run inside a
+  transaction by default under `prisma migrate deploy`, so a mid-migration
+  failure rolls back atomically — there's no partially-applied state to
+  recover from; (2) the backfill is verified lossless — every pre-existing
+  `url`/`alt` pair is preserved verbatim on a new `MediaAsset` row (source:
+  `"legacy"`) before the old columns are dropped, confirmed against a
+  locally seeded database with real M4 talent gallery data. There is
+  intentionally no auto-generated "down" migration (Prisma doesn't produce
+  one) — a real rollback of this specific migration would need a new
+  forward migration reconstructing `talent_media.url/alt` from the linked
+  `MediaAsset`, which is straightforward given the data is fully preserved,
+  but wasn't written speculatively since no rollback has been requested.
+- **Recommendation before applying to production**: take a Supabase
+  point-in-time-recovery snapshot immediately before the Railway deploy that
+  runs these migrations, per standard practice for any migration that drops
+  columns — this costs nothing and is the real safety net, independent of
+  how carefully the migration itself was written.
+
+**Scalability notes for future milestones (item 9), no code change:**
+
+- Uploads are a single synchronous Cloudinary API call inside the request
+  handler. Fine at current traffic; a future high-volume bulk-import feature
+  should move to a queued/background job rather than scaling this endpoint
+  directly.
+- `bulkDelete`/`bulkMove` load all matching rows into memory in one query.
+  Bounded today by the admin UI only ever multi-selecting one page (≤40)
+  at a time; if a future "select all matching filter" feature is added,
+  these two methods would need batching.
+- `MediaUsage`'s polymorphic `(entityType, entityId)` design is exactly the
+  extension point a future Blog/Banner/Avatar/Homepage module needs — no
+  schema change required to onboard a new entity type, just new rows with a
+  new `entityType` string.
+- Cloudinary configuration is a single global account (`CLOUDINARY_UPLOAD_FOLDER`
+  plus per-asset `folderId` namespacing). Sufficient for a single-brand
+  deployment; a future multi-tenant/white-label requirement would need
+  per-tenant Cloudinary credentials or folder-prefix isolation, not
+  supported today.
+
+---
+
 ## Keeping the project deployable
 
 - `pnpm lint` / `typecheck` / `test` / `test:e2e` / `build` all still pass repo-wide after these changes (config/docs only — no application code changed).

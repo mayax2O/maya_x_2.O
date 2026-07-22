@@ -136,7 +136,7 @@ export function TalentGallery({
             >
               <div className="aspect-square overflow-hidden rounded-md">
                 <MediaThumbnail
-                  src={item.url}
+                  src={item.optimizedUrl}
                   alt={item.alt}
                   className="h-full w-full"
                 />

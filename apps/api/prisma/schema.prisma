@@ -535,16 +535,28 @@ model MediaAsset {
   altText          String?   @map("alt_text")
   displayOrder     Int       @default(0) @map("display_order")
   source           String    @default("cloudinary")
-  createdBy        String?   @map("created_by") @db.Uuid
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // AI-ready metadata (M6 polish pass) -- nullable/empty-default, populated
+  // by no code path today. Added now so a future AI-tagging/auto-alt-text/
+  // moderation milestone is a pure backfill job, never a schema migration on
+  // an asset table that may have grown very large by then.
+  aiDescription   String?  @map("ai_description")
+  aiTags          String[] @default([]) @map("ai_tags")
+  dominantColor   String?  @map("dominant_color")
+  detectedObjects Json?    @map("detected_objects")
+  detectedFaces   Json?    @map("detected_faces")
+
+  createdBy String?   @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   folder      MediaFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
   talentMedia TalentMedia[]
   usages      MediaUsage[]
 
   @@index([folderId])
+  @@index([deletedAt])
   @@map("media_assets")
 }
 

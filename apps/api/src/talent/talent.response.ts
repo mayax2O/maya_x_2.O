@@ -46,6 +46,7 @@ export interface TalentResponse {
     id: string;
     mediaAssetId: string;
     url: string;
+    optimizedUrl: string;
     alt: string;
     assetType: string;
     isPrimary: boolean;
@@ -55,7 +56,13 @@ export interface TalentResponse {
   updatedAt: Date;
 }
 
-export function toTalentResponse(talent: TalentWithRelations): TalentResponse {
+export function toTalentResponse(
+  talent: TalentWithRelations,
+  buildOptimizedUrl: (asset: {
+    publicId: string | null;
+    url: string;
+  }) => string,
+): TalentResponse {
   return {
     id: talent.id,
     slug: talent.slug,
@@ -102,6 +109,7 @@ export function toTalentResponse(talent: TalentWithRelations): TalentResponse {
         id: item.id,
         mediaAssetId: item.mediaAssetId,
         url: item.mediaAsset.url,
+        optimizedUrl: buildOptimizedUrl(item.mediaAsset),
         alt: item.mediaAsset.altText ?? "",
         assetType: item.mediaAsset.resourceType,
         isPrimary: item.isPrimary,

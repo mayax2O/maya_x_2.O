@@ -1,11 +1,16 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 
+import {
+  CLOUDINARY_GATEWAY,
+  type CloudinaryGateway,
+} from "../media/cloudinary-gateway.interface";
 import { PrismaService } from "../database/prisma.service";
 import type {
   BulkActionDto,
@@ -56,7 +61,11 @@ const SORTABLE_FIELDS = new Set([
 
 @Injectable()
 export class TalentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CLOUDINARY_GATEWAY)
+    private readonly cloudinary: CloudinaryGateway,
+  ) {}
 
   async create(dto: CreateTalentDto, adminId: string): Promise<TalentResponse> {
     const { categoryIds, ...rest } = dto;
@@ -94,7 +103,7 @@ export class TalentService {
         },
         include: TALENT_INCLUDE,
       });
-      return toTalentResponse(talent);
+      return toTalentResponse(talent, this.buildOptimizedUrl);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
         throw new ConflictException({
@@ -159,12 +168,17 @@ export class TalentService {
       this.prisma.talent.count({ where }),
     ]);
 
-    return { items: rows.map(toTalentResponse), total };
+    return {
+      items: rows.map((talent) =>
+        toTalentResponse(talent, this.buildOptimizedUrl),
+      ),
+      total,
+    };
   }
 
   async findOne(id: string): Promise<TalentResponse> {
     const talent = await this.findActiveTalentOrThrow(id);
-    return toTalentResponse(talent);
+    return toTalentResponse(talent, this.buildOptimizedUrl);
   }
 
   async update(
@@ -195,7 +209,7 @@ export class TalentService {
           include: TALENT_INCLUDE,
         });
       });
-      return toTalentResponse(talent);
+      return toTalentResponse(talent, this.buildOptimizedUrl);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
         throw new ConflictException({
@@ -287,7 +301,7 @@ export class TalentService {
         return created;
       });
 
-      return toTalentMediaResponse(media);
+      return toTalentMediaResponse(media, this.buildOptimizedUrl);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
         throw new ConflictException({
@@ -350,7 +364,7 @@ export class TalentService {
       where: { id: mediaId },
       include: { mediaAsset: true },
     });
-    return toTalentMediaResponse(media);
+    return toTalentMediaResponse(media, this.buildOptimizedUrl);
   }
 
   async reorderMedia(
@@ -390,8 +404,24 @@ export class TalentService {
       orderBy: { displayOrder: "asc" },
     });
 
-    return updated.map(toTalentMediaResponse);
+    return updated.map((item) =>
+      toTalentMediaResponse(item, this.buildOptimizedUrl),
+    );
   }
+
+  /**
+   * Arrow property (not a method) so it auto-binds `this` — passed directly
+   * as a callback to the pure `toTalentResponse`/`toTalentMediaResponse`
+   * mapping functions. Legacy assets (no `publicId`) fall back to their raw
+   * stored `url`, same fallback `MediaService.buildVariants` uses.
+   */
+  private buildOptimizedUrl = (asset: {
+    publicId: string | null;
+    url: string;
+  }): string =>
+    asset.publicId
+      ? this.cloudinary.buildOptimizedUrl(asset.publicId)
+      : asset.url;
 
   private async findActiveTalentOrThrow(
     id: string,

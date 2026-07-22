@@ -63,6 +63,7 @@ describe("MediaService", () => {
       updateMany: jest.Mock;
       delete: jest.Mock;
       deleteMany: jest.Mock;
+      aggregate: jest.Mock;
     };
     mediaFolder: {
       findUnique: jest.Mock;
@@ -79,6 +80,7 @@ describe("MediaService", () => {
     uploadAsset: jest.Mock;
     deleteAsset: jest.Mock;
     buildOptimizedUrl: jest.Mock;
+    buildVariantUrls: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -93,6 +95,7 @@ describe("MediaService", () => {
         updateMany: jest.fn(),
         delete: jest.fn(),
         deleteMany: jest.fn(),
+        aggregate: jest.fn(),
       },
       mediaFolder: {
         findUnique: jest.fn(),
@@ -117,6 +120,12 @@ describe("MediaService", () => {
       uploadAsset: jest.fn(),
       deleteAsset: jest.fn().mockResolvedValue(undefined),
       buildOptimizedUrl: jest.fn((publicId: string) => `optimized:${publicId}`),
+      buildVariantUrls: jest.fn((publicId: string) => ({
+        thumbnail: `thumb:${publicId}`,
+        medium: `medium:${publicId}`,
+        large: `large:${publicId}`,
+        original: `optimized:${publicId}`,
+      })),
     };
 
     const configService = {
@@ -244,16 +253,18 @@ describe("MediaService", () => {
       expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
     });
 
-    it("deletes the asset and its Cloudinary object when unused", async () => {
+    it("soft-deletes (moves to Trash) without touching Cloudinary when unused", async () => {
       prisma.mediaAsset.findFirst.mockResolvedValue(makeAssetRow());
       prisma.mediaUsage.count.mockResolvedValue(0);
 
       await service.remove("asset-1");
 
-      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({
+      expect(prisma.mediaAsset.update).toHaveBeenCalledWith({
         where: { id: "asset-1" },
+        data: { deletedAt: expect.any(Date) },
       });
-      expect(gateway.deleteAsset).toHaveBeenCalledWith("maya-x/abc123");
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+      expect(gateway.deleteAsset).not.toHaveBeenCalled();
     });
 
     it("throws when the asset doesn't exist", async () => {
@@ -264,8 +275,56 @@ describe("MediaService", () => {
     });
   });
 
+  describe("restore", () => {
+    it("clears deletedAt on a trashed asset", async () => {
+      const trashed = makeAssetRow({ deletedAt: new Date() });
+      prisma.mediaAsset.findFirst.mockResolvedValue(trashed);
+      prisma.mediaAsset.update.mockResolvedValue(
+        makeAssetRow({ deletedAt: null }),
+      );
+
+      const result = await service.restore("asset-1");
+
+      expect(prisma.mediaAsset.update).toHaveBeenCalledWith({
+        where: { id: "asset-1" },
+        data: { deletedAt: null },
+      });
+      expect(result.deletedAt).toBeNull();
+    });
+
+    it("throws when the asset isn't in Trash", async () => {
+      prisma.mediaAsset.findFirst.mockResolvedValue(null);
+      await expect(service.restore("asset-1")).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe("permanentDelete", () => {
+    it("hard-deletes a trashed asset and its Cloudinary object", async () => {
+      prisma.mediaAsset.findFirst.mockResolvedValue(
+        makeAssetRow({ deletedAt: new Date() }),
+      );
+
+      await service.permanentDelete("asset-1");
+
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({
+        where: { id: "asset-1" },
+      });
+      expect(gateway.deleteAsset).toHaveBeenCalledWith("maya-x/abc123");
+    });
+
+    it("refuses to permanently delete an asset that isn't in Trash yet", async () => {
+      prisma.mediaAsset.findFirst.mockResolvedValue(null);
+      await expect(service.permanentDelete("asset-1")).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+    });
+  });
+
   describe("bulkDelete", () => {
-    it("only deletes assets with zero usages, reporting affected count", async () => {
+    it("only soft-deletes assets with zero usages, reporting affected count", async () => {
       prisma.mediaAsset.findMany.mockResolvedValue([
         makeAssetRow({ id: "asset-1" }),
         makeAssetRow({ id: "asset-2", publicId: "maya-x/def456" }),
@@ -278,10 +337,38 @@ describe("MediaService", () => {
         mediaIds: ["asset-1", "asset-2"],
       });
 
-      expect(prisma.mediaAsset.deleteMany).toHaveBeenCalledWith({
+      expect(prisma.mediaAsset.updateMany).toHaveBeenCalledWith({
         where: { id: { in: ["asset-2"] } },
+        data: { deletedAt: expect.any(Date) },
       });
+      expect(gateway.deleteAsset).not.toHaveBeenCalled();
       expect(result).toEqual({ requested: 2, affected: 1 });
+    });
+  });
+
+  describe("getStats", () => {
+    it("aggregates dashboard counters", async () => {
+      prisma.mediaAsset.count
+        .mockResolvedValueOnce(42) // totalAssets
+        .mockResolvedValueOnce(3) // trashedAssets
+        .mockResolvedValueOnce(5) // unusedAssets
+        .mockResolvedValueOnce(2); // recentUploads
+      prisma.mediaFolder.count.mockResolvedValue(4);
+      prisma.mediaAsset.aggregate.mockResolvedValue({
+        _sum: { bytes: 123456 },
+      });
+
+      const stats = await service.getStats();
+
+      expect(stats).toEqual({
+        totalAssets: 42,
+        totalFolders: 4,
+        trashedAssets: 3,
+        storageBytes: 123456,
+        unusedAssets: 5,
+        recentUploads: 2,
+        duplicateAssets: 0,
+      });
     });
   });
 
