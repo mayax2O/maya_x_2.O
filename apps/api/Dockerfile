@@ -17,8 +17,23 @@
 # startup, so a plain `docker run`/docker-compose use of this image never
 # touches a database's schema by surprise. `prisma migrate deploy` runs as
 # part of Railway's configured start command instead (see railway.json).
+#
+# Base image: Debian slim (bookworm), not Alpine. Prisma's query/schema
+# engines are prebuilt native binaries dynamically linked against OpenSSL;
+# Alpine's musl libc + minimal/absent libssl means the engine binary either
+# can't resolve libssl.so at all, or resolves the wrong major version
+# depending on the exact Alpine tag — this is a long-standing, still-open
+# class of Prisma/Alpine bugs (the engine crashes before it can emit JSON,
+# which is why Railway's start command sees non-JSON stderr and blows up
+# parsing it as JSON, i.e. exactly this deployment's failure). Debian's
+# glibc + explicit openssl package below give the engine a runtime it can
+# always resolve deterministically, so this is a permanent fix rather than
+# pinning apk package versions that can drift again on the next Alpine bump.
 
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS base
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 WORKDIR /repo
 
@@ -37,11 +52,17 @@ COPY . .
 # root and no-ops (ours is at apps/api/prisma/schema.prisma), so the client
 # is left with its placeholder, model-less types after `pnpm install` above
 # — generate explicitly, now that the full source (incl. the schema) has
-# been copied in, and before `nest build` type-checks against it.
+# been copied in, and before `nest build` type-checks against it. Running
+# this in the same Debian base as `runtime` (below) also ensures the
+# generated "native" engine binaries are the ones that actually match the
+# container they'll execute in.
 RUN pnpm --filter @maya-x/api exec prisma generate
 RUN pnpm --filter @maya-x/api... build
 
-FROM node:20-alpine AS runtime
+FROM node:20-bookworm-slim AS runtime
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 ENV NODE_ENV=production
 WORKDIR /repo
