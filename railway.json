@@ -5,7 +5,8 @@
     "dockerfilePath": "apps/api/Dockerfile"
   },
   "deploy": {
-    "startCommand": "pnpm exec prisma migrate deploy && node dist/main.js",
+    "preDeployCommand": "pnpm exec prisma migrate deploy",
+    "startCommand": "pnpm start:prod",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
