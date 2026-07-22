@@ -9,6 +9,7 @@ import type { EnvConfig } from "./config/env.validation";
 import { validateEnv } from "./config/env.validation";
 import { AdminsModule } from "./admins/admins.module";
 import { AuthModule } from "./auth/auth.module";
+import { BookingModule } from "./booking/booking.module";
 import { CitiesModule } from "./cities/cities.module";
 import { RequestLoggerMiddleware } from "./common/middleware/request-logger.middleware";
 import { DashboardModule } from "./dashboard/dashboard.module";
@@ -45,6 +46,7 @@ import { UsersModule } from "./users/users.module";
     LocationsModule,
     TalentCategoriesModule,
     TalentModule,
+    BookingModule,
     DashboardModule,
   ],
   controllers: [AppController],

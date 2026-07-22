@@ -65,9 +65,9 @@ describe("Dashboard API (e2e)", () => {
     expect(response.status).toBe(200);
     expect(typeof response.body.data.totalUsers).toBe("number");
     expect(typeof response.body.data.totalTalent).toBe("number");
+    expect(typeof response.body.data.pendingBookings).toBe("number");
+    expect(typeof response.body.data.todaysBookings).toBe("number");
     expect(response.body.data.mockedFields).toEqual([
-      "pendingBookings",
-      "todaysBookings",
       "premiumMembers",
       "monthlyRevenue",
     ]);
