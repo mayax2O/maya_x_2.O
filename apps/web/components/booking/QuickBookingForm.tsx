@@ -4,8 +4,10 @@ import { Button } from "@maya-x/ui";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { ApiError } from "../../lib/api/client";
 import { submitQuickBooking } from "../../lib/data/bookings";
-import type { QuickBookingFormValues } from "../../lib/types";
+import { useAuth } from "../../lib/auth/AuthContext";
+import type { BookingResponse, QuickBookingFormValues } from "../../lib/types";
 
 type FieldErrors = Partial<Record<keyof QuickBookingFormValues, string>>;
 
@@ -18,17 +20,22 @@ const EMPTY_VALUES: QuickBookingFormValues = {
   eventDetails: "",
 };
 
-function validate(values: QuickBookingFormValues): FieldErrors {
+function validate(
+  values: QuickBookingFormValues,
+  isMember: boolean,
+): FieldErrors {
   const errors: FieldErrors = {};
 
-  if (!values.fullName.trim()) {
-    errors.fullName = "Enter your full name.";
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-    errors.email = "Enter a complete email address, like name@company.com";
-  }
-  if (values.phone.replace(/\D/g, "").length < 10) {
-    errors.phone = "Enter a valid phone number, including country code.";
+  if (!isMember) {
+    if (!values.fullName.trim()) {
+      errors.fullName = "Enter your full name.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+      errors.email = "Enter a complete email address, like name@company.com";
+    }
+    if (values.phone.replace(/\D/g, "").length < 10) {
+      errors.phone = "Enter a valid phone number, including country code.";
+    }
   }
   if (!values.eventDate) {
     errors.eventDate = "Select your event date.";
@@ -50,8 +57,11 @@ export function QuickBookingForm({
   talentName?: string;
   /** When provided (standalone Quick Booking page), renders a "preferred talent" select instead of the pre-filled banner. */
   talentOptions?: { id: string; displayName: string }[];
-  onSuccess?: () => void;
+  onSuccess?: (booking: BookingResponse) => void;
 }) {
+  const { status: authStatus, accessToken, user } = useAuth();
+  const isMember = authStatus === "authenticated";
+
   const [values, setValues] = useState<QuickBookingFormValues>({
     ...EMPTY_VALUES,
     talentId,
@@ -63,10 +73,11 @@ export function QuickBookingForm({
   const [status, setStatus] = useState<"idle" | "submitting" | "success">(
     "idle",
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function handleBlur(field: keyof QuickBookingFormValues) {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors(validate(values));
+    setErrors(validate(values, isMember));
   }
 
   function handleChange<K extends keyof QuickBookingFormValues>(
@@ -76,9 +87,13 @@ export function QuickBookingForm({
     setValues((prev) => ({ ...prev, [field]: value }));
   }
 
+  const selectedTalentName =
+    talentName ??
+    talentOptions?.find((option) => option.id === values.talentId)?.displayName;
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const validationErrors = validate(values);
+    const validationErrors = validate(values, isMember);
     setErrors(validationErrors);
     setTouched({
       fullName: true,
@@ -90,10 +105,24 @@ export function QuickBookingForm({
 
     if (Object.keys(validationErrors).length > 0) return;
 
+    setSubmitError(null);
     setStatus("submitting");
-    await submitQuickBooking(values);
-    setStatus("success");
-    onSuccess?.();
+    try {
+      const booking = await submitQuickBooking(
+        values,
+        isMember ? accessToken : null,
+        selectedTalentName,
+      );
+      setStatus("success");
+      onSuccess?.(booking);
+    } catch (error) {
+      setStatus("idle");
+      setSubmitError(
+        error instanceof ApiError
+          ? error.message
+          : "Something went wrong submitting your request. Please try again.",
+      );
+    }
   }
 
   if (status === "success") {
@@ -105,7 +134,7 @@ export function QuickBookingForm({
         <p className="font-semibold">Your request is with our team.</p>
         <p className="mt-1 text-slate">
           We&apos;ll call you within one business day to confirm details
-          {talentName ? ` for ${talentName}` : ""}.
+          {selectedTalentName ? ` for ${selectedTalentName}` : ""}.
         </p>
       </div>
     );
@@ -113,6 +142,13 @@ export function QuickBookingForm({
 
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {isMember ? (
+        <p className="rounded-md bg-brass-tint/40 px-3 py-2 text-[13.5px] text-ink/80">
+          Booking as <span className="font-semibold">{user?.fullName}</span> (
+          {user?.email})
+        </p>
+      ) : null}
+
       {talentName ? (
         <p className="rounded-md bg-brass-tint/40 px-3 py-2 text-[13.5px] text-ink/80">
           Booking request for{" "}
@@ -148,75 +184,82 @@ export function QuickBookingForm({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="qb-name" className="text-[13.5px] font-medium text-ink">
-          Full name
-        </label>
-        <input
-          id="qb-name"
-          type="text"
-          value={values.fullName}
-          onChange={(event) => handleChange("fullName", event.target.value)}
-          onBlur={() => handleBlur("fullName")}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
-          aria-invalid={touched.fullName && Boolean(errors.fullName)}
-          aria-describedby={errors.fullName ? "qb-name-error" : undefined}
-        />
-        {touched.fullName && errors.fullName ? (
-          <p id="qb-name-error" className="text-[13px] text-danger">
-            {errors.fullName}
-          </p>
-        ) : null}
-      </div>
+      {!isMember ? (
+        <>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="qb-name"
+              className="text-[13.5px] font-medium text-ink"
+            >
+              Full name
+            </label>
+            <input
+              id="qb-name"
+              type="text"
+              value={values.fullName}
+              onChange={(event) => handleChange("fullName", event.target.value)}
+              onBlur={() => handleBlur("fullName")}
+              className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+              aria-invalid={touched.fullName && Boolean(errors.fullName)}
+              aria-describedby={errors.fullName ? "qb-name-error" : undefined}
+            />
+            {touched.fullName && errors.fullName ? (
+              <p id="qb-name-error" className="text-[13px] text-danger">
+                {errors.fullName}
+              </p>
+            ) : null}
+          </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="qb-email"
-          className="text-[13.5px] font-medium text-ink"
-        >
-          Email address
-        </label>
-        <input
-          id="qb-email"
-          type="email"
-          value={values.email}
-          onChange={(event) => handleChange("email", event.target.value)}
-          onBlur={() => handleBlur("email")}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
-          aria-invalid={touched.email && Boolean(errors.email)}
-          aria-describedby={errors.email ? "qb-email-error" : undefined}
-        />
-        {touched.email && errors.email ? (
-          <p id="qb-email-error" className="text-[13px] text-danger">
-            {errors.email}
-          </p>
-        ) : null}
-      </div>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="qb-email"
+              className="text-[13.5px] font-medium text-ink"
+            >
+              Email address
+            </label>
+            <input
+              id="qb-email"
+              type="email"
+              value={values.email}
+              onChange={(event) => handleChange("email", event.target.value)}
+              onBlur={() => handleBlur("email")}
+              className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+              aria-invalid={touched.email && Boolean(errors.email)}
+              aria-describedby={errors.email ? "qb-email-error" : undefined}
+            />
+            {touched.email && errors.email ? (
+              <p id="qb-email-error" className="text-[13px] text-danger">
+                {errors.email}
+              </p>
+            ) : null}
+          </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="qb-phone"
-          className="text-[13.5px] font-medium text-ink"
-        >
-          Phone number
-        </label>
-        <input
-          id="qb-phone"
-          type="tel"
-          value={values.phone}
-          onChange={(event) => handleChange("phone", event.target.value)}
-          onBlur={() => handleBlur("phone")}
-          placeholder="+91 98765 43210"
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
-          aria-invalid={touched.phone && Boolean(errors.phone)}
-          aria-describedby={errors.phone ? "qb-phone-error" : undefined}
-        />
-        {touched.phone && errors.phone ? (
-          <p id="qb-phone-error" className="text-[13px] text-danger">
-            {errors.phone}
-          </p>
-        ) : null}
-      </div>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="qb-phone"
+              className="text-[13.5px] font-medium text-ink"
+            >
+              Phone number
+            </label>
+            <input
+              id="qb-phone"
+              type="tel"
+              value={values.phone}
+              onChange={(event) => handleChange("phone", event.target.value)}
+              onBlur={() => handleBlur("phone")}
+              placeholder="+91 98765 43210"
+              className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+              aria-invalid={touched.phone && Boolean(errors.phone)}
+              aria-describedby={errors.phone ? "qb-phone-error" : undefined}
+            />
+            {touched.phone && errors.phone ? (
+              <p id="qb-phone-error" className="text-[13px] text-danger">
+                {errors.phone}
+              </p>
+            ) : null}
+          </div>
+        </>
+      ) : null}
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="qb-date" className="text-[13.5px] font-medium text-ink">
@@ -265,6 +308,12 @@ export function QuickBookingForm({
           </p>
         ) : null}
       </div>
+
+      {submitError ? (
+        <p role="alert" className="text-[13.5px] text-danger">
+          {submitError}
+        </p>
+      ) : null}
 
       <Button
         type="submit"

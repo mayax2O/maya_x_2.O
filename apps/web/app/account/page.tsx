@@ -4,6 +4,7 @@ import { Button } from "@maya-x/ui";
 import { useRouter } from "next/navigation";
 
 import { RequireAuth } from "../../components/auth/RequireAuth";
+import { BookingHistoryList } from "../../components/booking/BookingHistoryList";
 import { Container } from "../../components/layout/Container";
 import { useAuth } from "../../lib/auth/AuthContext";
 
@@ -18,7 +19,7 @@ function AccountContent() {
 
   return (
     <Container className="py-16 sm:py-24">
-      <div className="mx-auto max-w-sm">
+      <div className="mx-auto max-w-lg">
         <p className="text-[13px] font-semibold uppercase tracking-widest text-brass-deep">
           Account
         </p>
@@ -35,6 +36,15 @@ function AccountContent() {
         >
           Log out
         </Button>
+
+        <div className="mt-12">
+          <h2 className="font-display text-xl font-semibold text-ink">
+            My bookings
+          </h2>
+          <div className="mt-4">
+            <BookingHistoryList />
+          </div>
+        </div>
       </div>
     </Container>
   );
