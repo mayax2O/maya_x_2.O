@@ -99,6 +99,41 @@ export async function apiFetchList<T>(
 }
 
 /**
+ * Multipart upload — deliberately omits `Content-Type` (the browser sets
+ * the multipart boundary automatically) unlike `apiFetch`'s JSON default,
+ * so this can't share that helper's fetch call.
+ */
+export async function uploadFile<T>(
+  path: string,
+  formData: FormData,
+  options: RequestInit = {},
+): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+    ...options,
+    method: options.method ?? "POST",
+    credentials: "include",
+    headers: options.headers,
+    body: formData,
+  });
+
+  const isNoContent = response.status === 204;
+  const body = isNoContent ? undefined : await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      body?.error ?? {
+        code: "UNKNOWN_ERROR",
+        message: "Something went wrong.",
+        details: [],
+      },
+    );
+  }
+
+  return (body?.data ?? undefined) as T;
+}
+
+/**
  * Builds a query string from a params object, skipping undefined/null/empty
  * values. Accepts any plain object (list filter DTOs are concrete
  * interfaces, not index-signature types) — the generic constraint is just

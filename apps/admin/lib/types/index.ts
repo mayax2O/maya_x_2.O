@@ -2,6 +2,7 @@ export * from "./city";
 export * from "./location";
 export * from "./category";
 export * from "./talent";
+export * from "./media";
 export * from "./booking";
 export * from "./membership";
 export * from "./payment";

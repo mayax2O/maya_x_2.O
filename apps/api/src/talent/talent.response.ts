@@ -1,6 +1,7 @@
 import type {
   City,
   Location,
+  MediaAsset,
   Talent,
   TalentCategory,
   TalentCategoryMap,
@@ -11,7 +12,7 @@ export type TalentWithRelations = Talent & {
   city: City;
   location: Location | null;
   categories: (TalentCategoryMap & { category: TalentCategory })[];
-  media: TalentMedia[];
+  media: (TalentMedia & { mediaAsset: MediaAsset })[];
 };
 
 export interface TalentResponse {
@@ -43,6 +44,7 @@ export interface TalentResponse {
   categories: { id: string; name: string; slug: string }[];
   media: {
     id: string;
+    mediaAssetId: string;
     url: string;
     alt: string;
     assetType: string;
@@ -98,9 +100,10 @@ export function toTalentResponse(talent: TalentWithRelations): TalentResponse {
       .sort((a, b) => a.displayOrder - b.displayOrder)
       .map((item) => ({
         id: item.id,
-        url: item.url,
-        alt: item.alt,
-        assetType: item.assetType,
+        mediaAssetId: item.mediaAssetId,
+        url: item.mediaAsset.url,
+        alt: item.mediaAsset.altText ?? "",
+        assetType: item.mediaAsset.resourceType,
         isPrimary: item.isPrimary,
         displayOrder: item.displayOrder,
       })),

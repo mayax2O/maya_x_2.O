@@ -3,6 +3,7 @@ export type TalentVerificationStatus = "pending" | "verified" | "rejected";
 
 export interface TalentMedia {
   id: string;
+  mediaAssetId: string;
   url: string;
   alt: string;
   assetType: string;

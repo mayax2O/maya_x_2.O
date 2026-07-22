@@ -14,6 +14,7 @@ describe("Talent API (e2e)", () => {
   let accessToken: string;
   let cityId: string;
   let categoryId: string;
+  let galleryAssetIds: string[] = [];
 
   const authAdminEmail = `talent.e2e.auth.${Date.now()}@example.com`;
   const cityName = `E2E Talent City ${Date.now()}`;
@@ -61,6 +62,11 @@ describe("Talent API (e2e)", () => {
 
   afterAll(async () => {
     await prisma.talent.deleteMany({ where: { slug: talentSlug } });
+    if (galleryAssetIds.length > 0) {
+      await prisma.mediaAsset.deleteMany({
+        where: { id: { in: galleryAssetIds } },
+      });
+    }
     await prisma.talentCategory.deleteMany({ where: { id: categoryId } });
     await prisma.city.deleteMany({ where: { id: cityId } });
     await prisma.admin.deleteMany({ where: { email: authAdminEmail } });
@@ -102,11 +108,19 @@ describe("Talent API (e2e)", () => {
       ),
     ).toBe(true);
 
-    // --- Gallery ---
+    // --- Gallery (M6: references pre-existing MediaAsset rows) ---
+    const assetA = await prisma.mediaAsset.create({
+      data: { url: "https://example.com/a.jpg", altText: "Photo A" },
+    });
+    const assetB = await prisma.mediaAsset.create({
+      data: { url: "https://example.com/b.jpg", altText: "Photo B" },
+    });
+    galleryAssetIds = [assetA.id, assetB.id];
+
     const addFirst = await request(app.getHttpServer())
       .post(`/api/v1/talent/${talentId}/media`)
       .set("Authorization", `Bearer ${accessToken}`)
-      .send({ url: "https://example.com/a.jpg", alt: "Photo A" });
+      .send({ mediaAssetId: assetA.id });
     expect(addFirst.status).toBe(201);
     expect(addFirst.body.data.isPrimary).toBe(true);
     const mediaAId = addFirst.body.data.id;
@@ -114,7 +128,7 @@ describe("Talent API (e2e)", () => {
     const addSecond = await request(app.getHttpServer())
       .post(`/api/v1/talent/${talentId}/media`)
       .set("Authorization", `Bearer ${accessToken}`)
-      .send({ url: "https://example.com/b.jpg", alt: "Photo B" });
+      .send({ mediaAssetId: assetB.id });
     expect(addSecond.status).toBe(201);
     expect(addSecond.body.data.isPrimary).toBe(false);
     const mediaBId = addSecond.body.data.id;

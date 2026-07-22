@@ -97,6 +97,14 @@ jobs:
           RAZORPAY_KEY_ID: rzp_test_ci_placeholder_not_a_real_key
           RAZORPAY_KEY_SECRET: ci-only-razorpay-key-secret-placeholder
           RAZORPAY_WEBHOOK_SECRET: ci-only-razorpay-webhook-secret-placeholder
+          # M6: also required for ConfigModule startup validation. Real
+          # Cloudinary API calls never happen in this job — media.e2e-spec.ts
+          # overrides the CLOUDINARY_GATEWAY provider with a stub, so these
+          # placeholders only need to satisfy env.validation.ts, not
+          # actually authenticate against Cloudinary.
+          CLOUDINARY_CLOUD_NAME: ci-only-cloud-name-placeholder
+          CLOUDINARY_API_KEY: ci-only-api-key-placeholder
+          CLOUDINARY_API_SECRET: ci-only-api-secret-placeholder
 
       - name: Build
         run: pnpm build

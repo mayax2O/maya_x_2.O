@@ -51,6 +51,10 @@ None of this touches your Railway/Vercel/Supabase accounts by itself — these a
    - `CORS_ORIGIN` — **required for production**, comma-separated, no spaces: the deployed `apps/web` and `apps/admin` Vercel URLs (e.g. `https://maya-x-web.vercel.app,https://maya-x-admin.vercel.app`). The `.env.example` default only covers `localhost:3000`/`:3001` and must not be relied on in production — credentialed cross-origin requests (the refresh-token cookie) will be silently rejected by the browser otherwise.
    - Do **not** set `PORT` — Railway injects it automatically, and `env.validation.ts`/`main.ts` already read it correctly (`app.listen(port)` against whatever Railway provides). If Railway's automated diagnosis ever suggests "Set PORT to 3000" during a healthcheck failure, that's very likely a red herring from the same misdiagnosis as the Start Command issue above (the tool sees the server never bound to _any_ port, so it guesses a fixed-port fix) — don't hardcode it; fix the actual Start Command/Pre-Deploy Command config instead.
    - Optional (defaults exist, override only if needed): `JWT_ACCESS_EXPIRES_IN` (`15m`), `JWT_REFRESH_EXPIRES_IN` (`30d`), `RATE_LIMIT_TTL_SECONDS` (`60`), `RATE_LIMIT_LIMIT` (`100`).
+   - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` — **required since M5B**, startup fails without them. From your Razorpay Dashboard → Settings → API Keys (Test Mode keys are fine until you're ready to take real payments).
+   - `RAZORPAY_WEBHOOK_SECRET` — **required since M5B**. Create a webhook in Razorpay Dashboard → Settings → Webhooks pointing at `https://<your-api>.up.railway.app/api/v1/payments/webhook`, subscribed to at least the `payment.captured`/`payment.failed` events; the secret shown there is this value.
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — **required since M6**, startup fails without them. From your Cloudinary Dashboard homepage ("Product Environment Credentials") — a free-tier account is enough to start.
+   - Optional (M6, defaults exist): `CLOUDINARY_UPLOAD_FOLDER` (`maya-x`), `MEDIA_MAX_UPLOAD_BYTES` (`10485760`), `MEDIA_MAX_DIMENSION_PX` (`8000`).
    - **Ordering note**: `CORS_ORIGIN` needs the Vercel URLs from step 3 below, which in turn need this Railway URL for `NEXT_PUBLIC_API_BASE_URL`. Deploy Railway first with a placeholder/omitted `CORS_ORIGIN`, do step 3, then come back and set the real `CORS_ORIGIN` and redeploy.
 4. If you want deploys triggerable from GitHub Actions (`deploy-api.yml`) rather than only Railway's own auto-deploy-on-push:
    - Railway dashboard → **Project Settings → Tokens** → create a **Project Token**.
@@ -92,21 +96,30 @@ Add whichever of these you need (only required for the Action-triggered paths in
 
 ### `apps/api` (Railway service variables)
 
-| Variable                 | Required | Notes                                                                                                        |
-| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`           | Yes      | Supabase pooled (PgBouncer) connection string                                                                |
-| `DIRECT_URL`             | Yes      | Supabase direct connection string — used by `prisma migrate deploy` at container start                       |
-| `NODE_ENV`               | Yes      | `production`                                                                                                 |
-| `JWT_ACCESS_SECRET`      | Yes      | ≥32 chars, distinct from `JWT_REFRESH_SECRET` — startup fails validation otherwise (`env.validation.ts`)     |
-| `JWT_REFRESH_SECRET`     | Yes      | ≥32 chars, distinct from `JWT_ACCESS_SECRET`                                                                 |
-| `CORS_ORIGIN`            | Yes      | Comma-separated Vercel URLs for `apps/web` + `apps/admin`. Defaults to localhost ports — wrong in production |
-| `PORT`                   | No       | Injected by Railway automatically; do not set manually                                                       |
-| `JWT_ACCESS_EXPIRES_IN`  | No       | Default `15m`                                                                                                |
-| `JWT_REFRESH_EXPIRES_IN` | No       | Default `30d`                                                                                                |
-| `RATE_LIMIT_TTL_SECONDS` | No       | Default `60`                                                                                                 |
-| `RATE_LIMIT_LIMIT`       | No       | Default `100`                                                                                                |
+| Variable                   | Required | Notes                                                                                                                         |
+| -------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`             | Yes      | Supabase pooled (PgBouncer) connection string                                                                                 |
+| `DIRECT_URL`               | Yes      | Supabase direct connection string — used by `prisma migrate deploy` at container start                                        |
+| `NODE_ENV`                 | Yes      | `production`                                                                                                                  |
+| `JWT_ACCESS_SECRET`        | Yes      | ≥32 chars, distinct from `JWT_REFRESH_SECRET` — startup fails validation otherwise (`env.validation.ts`)                      |
+| `JWT_REFRESH_SECRET`       | Yes      | ≥32 chars, distinct from `JWT_ACCESS_SECRET`                                                                                  |
+| `CORS_ORIGIN`              | Yes      | Comma-separated Vercel URLs for `apps/web` + `apps/admin`. Defaults to localhost ports — wrong in production                  |
+| `PORT`                     | No       | Injected by Railway automatically; do not set manually                                                                        |
+| `JWT_ACCESS_EXPIRES_IN`    | No       | Default `15m`                                                                                                                 |
+| `JWT_REFRESH_EXPIRES_IN`   | No       | Default `30d`                                                                                                                 |
+| `RATE_LIMIT_TTL_SECONDS`   | No       | Default `60`                                                                                                                  |
+| `RATE_LIMIT_LIMIT`         | No       | Default `100`                                                                                                                 |
+| `RAZORPAY_KEY_ID`          | Yes      | From Razorpay Dashboard → Settings → API Keys. Startup fails validation without it (M5B)                                      |
+| `RAZORPAY_KEY_SECRET`      | Yes      | Same as above                                                                                                                 |
+| `RAZORPAY_WEBHOOK_SECRET`  | Yes      | From Razorpay Dashboard → Settings → Webhooks, once a webhook pointing at `POST /api/v1/payments/webhook` is configured there |
+| `CLOUDINARY_CLOUD_NAME`    | Yes      | From the Cloudinary Dashboard's "Product Environment Credentials". Startup fails validation without it (M6)                   |
+| `CLOUDINARY_API_KEY`       | Yes      | Same as above                                                                                                                 |
+| `CLOUDINARY_API_SECRET`    | Yes      | Same as above                                                                                                                 |
+| `CLOUDINARY_UPLOAD_FOLDER` | No       | Default `maya-x` — folder prefix within your Cloudinary account                                                               |
+| `MEDIA_MAX_UPLOAD_BYTES`   | No       | Default `10485760` (10MB)                                                                                                     |
+| `MEDIA_MAX_DIMENSION_PX`   | No       | Default `8000`                                                                                                                |
 
-Everything else in `apps/api/.env.example` (`REDIS_URL`, `CLOUDINARY_URL`, `RESEND_API_KEY`, `RAZORPAY_*`) is reserved for later milestones — not read or validated by any code yet, so not required for this deployment.
+Everything else in `apps/api/.env.example` (`REDIS_URL`, `RESEND_API_KEY`) is reserved for later milestones — not read or validated by any code yet, so not required for this deployment.
 
 ### `apps/web` / `apps/admin` (Vercel project variables)
 
