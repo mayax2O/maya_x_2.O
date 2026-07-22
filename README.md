@@ -9,6 +9,26 @@ frontends (public web + agency admin), shared packages.
 | `apps/web`   | Public site | Next.js   | 3000       |
 | `apps/admin` | Admin panel | Next.js   | 3001       |
 
+## Project status
+
+Current release: **v0.4.0**. Completed so far:
+
+- **M0** — Monorepo foundations, CI/CD, deploy configs (Railway/Vercel)
+- **M1** — Identity & Access: registration/login, JWT + refresh tokens, RBAC
+- **M2** — Public website UI (mock data)
+- **M3** — Authentication & authorization hardening
+- **M4** — Admin dashboard & talent management
+- **M5A** — Booking System: Guest + Member booking submission, Admin review
+  queue and status lifecycle, booking history — **no payments** (Razorpay,
+  membership billing, coupons, and notifications are separate, not-yet-started
+  milestones)
+
+Not yet started: Membership & Payment (Razorpay), Notifications, Reporting/
+Analytics/Coupons, SEO/Performance/Accessibility hardening, and final QA/
+Security/Launch prep — see `docs/07-planning` for the original milestone plan
+(the milestone numbering above reflects actual build order, which diverged
+from that plan's sequence once implementation started).
+
 ## Local development
 
 Local dev is cloud-only: there is no Docker, no local PostgreSQL, and no

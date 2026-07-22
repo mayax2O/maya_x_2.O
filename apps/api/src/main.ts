@@ -9,7 +9,12 @@ import { AppModule } from "./app.module";
 import type { EnvConfig } from "./config/env.validation";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true — POST /payments/webhook needs the exact, unparsed
+  // request body (as `req.rawBody`) to verify Razorpay's HMAC signature;
+  // computing it over the re-serialized JSON object would not match what
+  // Razorpay signed. Every other route is unaffected and keeps working
+  // through the normal parsed `req.body`.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   const config = app.get(ConfigService<EnvConfig, true>);
 
   // REST API Specification §1: all versioned routes live under /api/v1/.

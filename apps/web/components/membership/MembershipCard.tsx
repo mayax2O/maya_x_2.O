@@ -1,7 +1,12 @@
-import { Button } from "@maya-x/ui";
-
 import { formatPrice } from "../../lib/format";
 import type { MembershipPlan } from "../../lib/types";
+import { SubscribeButton } from "./SubscribeButton";
+
+const CYCLE_LABEL: Record<MembershipPlan["billingCycle"], string> = {
+  monthly: "month",
+  annual: "year",
+  one_time: "one-time",
+};
 
 export function MembershipCard({ plan }: { plan: MembershipPlan }) {
   return (
@@ -23,7 +28,7 @@ export function MembershipCard({ plan }: { plan: MembershipPlan }) {
 
       <p className="mt-4 font-display text-3xl font-semibold">
         {plan.price === 0 ? "Free" : formatPrice(plan.price, plan.currency)}
-        {plan.price > 0 ? (
+        {plan.price > 0 && plan.billingCycle !== "one_time" ? (
           <span
             className={[
               "text-sm font-normal",
@@ -31,7 +36,7 @@ export function MembershipCard({ plan }: { plan: MembershipPlan }) {
             ].join(" ")}
           >
             {" "}
-            / {plan.billingCycle === "yearly" ? "year" : "month"}
+            / {CYCLE_LABEL[plan.billingCycle]}
           </span>
         ) : null}
       </p>
@@ -63,13 +68,10 @@ export function MembershipCard({ plan }: { plan: MembershipPlan }) {
         ))}
       </ul>
 
-      <Button
-        type="button"
+      <SubscribeButton
+        plan={plan}
         variant={plan.highlighted ? "primary" : "secondary"}
-        className="mt-8 justify-center"
-      >
-        {plan.price === 0 ? "Get started" : "Subscribe"}
-      </Button>
+      />
     </div>
   );
 }

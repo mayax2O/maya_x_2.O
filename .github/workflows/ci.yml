@@ -89,6 +89,14 @@ jobs:
           # this ephemeral job.
           JWT_ACCESS_SECRET: ci-only-access-secret-not-used-anywhere-else-00
           JWT_REFRESH_SECRET: ci-only-refresh-secret-not-used-anywhere-else-00
+          # M5B: also required for ConfigModule startup validation. Real
+          # Razorpay API calls never happen in this job — payments.e2e-spec.ts
+          # overrides the RAZORPAY_GATEWAY provider with a stub, so these
+          # placeholders only need to satisfy env.validation.ts, not
+          # actually authenticate against Razorpay.
+          RAZORPAY_KEY_ID: rzp_test_ci_placeholder_not_a_real_key
+          RAZORPAY_KEY_SECRET: ci-only-razorpay-key-secret-placeholder
+          RAZORPAY_WEBHOOK_SECRET: ci-only-razorpay-webhook-secret-placeholder
 
       - name: Build
         run: pnpm build

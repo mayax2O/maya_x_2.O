@@ -5,10 +5,9 @@ import { Container } from "../components/layout/Container";
 import { Faq } from "../components/home/Faq";
 import { Hero } from "../components/home/Hero";
 import { Testimonials } from "../components/home/Testimonials";
-import { MembershipCard } from "../components/membership/MembershipCard";
+import { MembershipTeaser } from "../components/membership/MembershipTeaser";
 import { TalentCard } from "../components/talent/TalentCard";
 import { getFaqs } from "../lib/data/faqs";
-import { getMembershipPlans } from "../lib/data/memberships";
 import { getFeaturedTalents } from "../lib/data/talents";
 import { getTestimonials } from "../lib/data/testimonials";
 
@@ -19,13 +18,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [featuredTalents, testimonials, faqs, membershipPlans] =
-    await Promise.all([
-      getFeaturedTalents(4),
-      getTestimonials(3),
-      getFaqs(),
-      getMembershipPlans(),
-    ]);
+  const [featuredTalents, testimonials, faqs] = await Promise.all([
+    getFeaturedTalents(4),
+    getTestimonials(3),
+    getFaqs(),
+  ]);
 
   return (
     <>
@@ -91,16 +88,7 @@ export default async function HomePage() {
               member-only talent.
             </p>
           </div>
-          <ul
-            className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-3"
-            role="list"
-          >
-            {membershipPlans.map((plan) => (
-              <li key={plan.id}>
-                <MembershipCard plan={plan} />
-              </li>
-            ))}
-          </ul>
+          <MembershipTeaser />
         </Container>
       </section>
 
