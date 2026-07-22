@@ -69,6 +69,11 @@ function AdminShellContent({ children }: { children: ReactNode }) {
       action: () => router.push("/talent"),
     },
     {
+      id: "nav-bookings",
+      label: "Go to Bookings",
+      action: () => router.push("/bookings"),
+    },
+    {
       id: "nav-talent-new",
       label: "Create new Talent",
       hint: "Talent",

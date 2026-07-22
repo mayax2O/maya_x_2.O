@@ -97,6 +97,7 @@ const ICONS = {
 };
 
 const QUICK_ACTIONS = [
+  { href: "/bookings", label: "Review booking requests" },
   { href: "/talent/new", label: "Add new talent" },
   { href: "/talent", label: "Review talent catalog" },
   { href: "/cities", label: "Manage cities" },
@@ -174,25 +175,25 @@ function DashboardContent() {
               label="Pending Bookings"
               value={stats.pendingBookings}
               icon={ICONS.clock}
-              mocked
+              mocked={stats.mockedFields.includes("pendingBookings")}
             />
             <StatCard
               label="Today's Bookings"
               value={stats.todaysBookings}
               icon={ICONS.calendar}
-              mocked
+              mocked={stats.mockedFields.includes("todaysBookings")}
             />
             <StatCard
               label="Premium Members"
               value={stats.premiumMembers}
               icon={ICONS.star}
-              mocked
+              mocked={stats.mockedFields.includes("premiumMembers")}
             />
             <StatCard
               label="Monthly Revenue"
               value={`₹${stats.monthlyRevenue.toLocaleString("en-IN")}`}
               icon={ICONS.rupee}
-              mocked
+              mocked={stats.mockedFields.includes("monthlyRevenue")}
             />
           </>
         )}
