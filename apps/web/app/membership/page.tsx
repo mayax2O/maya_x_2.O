@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 
 import { Container } from "../../components/layout/Container";
 import { Faq } from "../../components/home/Faq";
-import { MembershipCard } from "../../components/membership/MembershipCard";
+import { MembershipTeaser } from "../../components/membership/MembershipTeaser";
 import { getFaqs } from "../../lib/data/faqs";
-import { getMembershipPlans } from "../../lib/data/memberships";
 
 export const metadata: Metadata = {
   title: "Membership | MAYA_X",
@@ -13,10 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MembershipPage() {
-  const [plans, faqs] = await Promise.all([
-    getMembershipPlans(),
-    getFaqs("Membership"),
-  ]);
+  const faqs = await getFaqs("Membership");
 
   return (
     <>
@@ -35,16 +31,9 @@ export default async function MembershipPage() {
           </p>
         </div>
 
-        <ul
-          className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-3"
-          role="list"
-        >
-          {plans.map((plan) => (
-            <li key={plan.id}>
-              <MembershipCard plan={plan} />
-            </li>
-          ))}
-        </ul>
+        <div className="mt-12">
+          <MembershipTeaser />
+        </div>
       </Container>
 
       {faqs.length > 0 ? (

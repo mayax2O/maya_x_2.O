@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { RequireAuth } from "../../components/auth/RequireAuth";
 import { BookingHistoryList } from "../../components/booking/BookingHistoryList";
 import { Container } from "../../components/layout/Container";
+import { MembershipStatus } from "../../components/membership/MembershipStatus";
 import { useAuth } from "../../lib/auth/AuthContext";
 
 function AccountContent() {
@@ -36,6 +37,15 @@ function AccountContent() {
         >
           Log out
         </Button>
+
+        <div className="mt-12">
+          <h2 className="font-display text-xl font-semibold text-ink">
+            Membership
+          </h2>
+          <div className="mt-4">
+            <MembershipStatus />
+          </div>
+        </div>
 
         <div className="mt-12">
           <h2 className="font-display text-xl font-semibold text-ink">
