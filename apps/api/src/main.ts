@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 
 import { AppModule } from "./app.module";
+import { createCorsOriginValidator, parseOriginList } from "./config/cors.util";
 import type { EnvConfig } from "./config/env.validation";
 
 async function bootstrap() {
@@ -46,12 +47,21 @@ async function bootstrap() {
   // now that credentialed (cookie-carrying) requests are possible.
   // `credentials: true` is required for the refresh-token cookie to be
   // sent/accepted cross-origin (apps/web on Vercel, apps/api on Railway).
-  const corsOrigins = config
-    .get("CORS_ORIGIN", { infer: true })
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-  app.enableCors({ origin: corsOrigins, credentials: true });
+  // A function-based origin (rather than a static array) additionally
+  // accepts Vercel *preview* deployment URLs — which have a per-deploy
+  // hash/branch segment that can't be enumerated in CORS_ORIGIN ahead of
+  // time — scoped to this project's known Vercel project slugs only, never
+  // a bare wildcard. See cors.util.ts for the full rationale.
+  const corsOrigins = parseOriginList(
+    config.get("CORS_ORIGIN", { infer: true }),
+  );
+  const corsPreviewProjects = parseOriginList(
+    config.get("CORS_VERCEL_PREVIEW_PROJECTS", { infer: true }),
+  );
+  app.enableCors({
+    origin: createCorsOriginValidator(corsOrigins, corsPreviewProjects),
+    credentials: true,
+  });
 
   // Ensures OnModuleDestroy (DatabaseService's pool.end()) actually runs on
   // SIGTERM/SIGINT — required for Railway/Render's graceful-shutdown

@@ -39,10 +39,21 @@ const envSchema = z
 
     // --- M3: CORS ---
     // Comma-separated allow-list; defaults to the local Next.js dev ports
-    // for apps/web and apps/admin.
+    // for apps/web and apps/admin. Exact-match only — see cors.util.ts for
+    // how Vercel preview deployments (which don't have a fixed URL) are
+    // handled separately, without needing this list touched per-deploy.
     CORS_ORIGIN: z
       .string()
       .default("http://localhost:3000,http://localhost:3001"),
+    // Comma-separated Vercel project slugs (the first path segment of a
+    // Vercel deployment URL, e.g. "maya-x-2-o-admin" from
+    // https://maya-x-2-o-admin.vercel.app) whose *preview* deployments
+    // (https://<slug>-<hash-or-branch>-<team>.vercel.app) are allowed
+    // through CORS in addition to CORS_ORIGIN's exact list. Scoped to named
+    // slugs, never a bare "*.vercel.app" wildcard — see cors.util.ts.
+    CORS_VERCEL_PREVIEW_PROJECTS: z
+      .string()
+      .default("maya-x-2-o-web,maya-x-2-o-admin"),
 
     // --- M3: rate limiting (@nestjs/throttler) ---
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().positive().default(60),
