@@ -6,12 +6,16 @@ import type { ReactNode } from "react";
 
 import { RequireAdminAuth } from "../auth/RequireAdminAuth";
 import { useAuth } from "../../lib/auth/AuthContext";
+import { getDashboardStats } from "../../lib/data/dashboard";
 import { CommandPalette, type Command } from "../ui/CommandPalette";
 import { Sidebar } from "./Sidebar";
 import { ShortcutsHelp } from "./ShortcutsHelp";
 import { TopNav } from "./TopNav";
 
 const SIDEBAR_COLLAPSED_KEY = "maya-x-admin-sidebar-collapsed";
+// Sidebar badges are a nice-to-have, not real-time — a minute-scale refresh
+// keeps them roughly fresh without adding a new endpoint or a socket.
+const SIDEBAR_BADGE_REFRESH_MS = 60_000;
 
 function AdminShellContent({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -20,9 +24,34 @@ function AdminShellContent({ children }: { children: ReactNode }) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [sidebarBadges, setSidebarBadges] = useState<Record<string, number>>(
+    {},
+  );
 
   useEffect(() => {
     setCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBadges() {
+      try {
+        const stats = await getDashboardStats();
+        if (!cancelled) {
+          setSidebarBadges({ "/bookings": stats.pendingBookings });
+        }
+      } catch {
+        // Non-critical — sidebar just renders without badges.
+      }
+    }
+
+    void loadBadges();
+    const interval = window.setInterval(loadBadges, SIDEBAR_BADGE_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -127,7 +156,7 @@ function AdminShellContent({ children }: { children: ReactNode }) {
           collapsed ? "w-[72px]" : "w-64",
         ].join(" ")}
       >
-        <Sidebar collapsed={collapsed} />
+        <Sidebar collapsed={collapsed} badges={sidebarBadges} />
       </aside>
 
       {/* Mobile drawer */}
@@ -141,6 +170,7 @@ function AdminShellContent({ children }: { children: ReactNode }) {
             <Sidebar
               collapsed={false}
               onNavigate={() => setMobileDrawerOpen(false)}
+              badges={sidebarBadges}
             />
           </div>
         </div>
