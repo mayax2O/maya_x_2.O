@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 
 /**
- * Max-width + gutter wrapper matching the design system's grid (§05):
- * 1280px max content width, centered, with responsive side padding.
+ * Fluid, full-width gutter wrapper — no max-width cap by default, just
+ * responsive side padding, so page content spans the viewport. Callers
+ * that want a narrower reading width (forms, FAQ, etc.) pass their own
+ * `max-w-*` in `className`, which overrides this.
  */
 export function Container({
   children,
@@ -13,10 +15,7 @@ export function Container({
 }) {
   return (
     <div
-      className={[
-        "mx-auto w-full max-w-[1280px] px-4 sm:px-8 lg:px-12",
-        className,
-      ]
+      className={["w-full px-4 sm:px-8 lg:px-12", className]
         .filter(Boolean)
         .join(" ")}
     >

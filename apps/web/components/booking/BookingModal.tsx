@@ -51,7 +51,7 @@ export function BookingModal({ talent }: { talent: Talent }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-modal-title"
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-porcelain p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-4">

@@ -521,20 +521,20 @@ model MediaFolder {
 /// upload endpoint checks for an existing row with the same hash before
 /// calling Cloudinary at all.
 model MediaAsset {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  folderId         String?   @map("folder_id") @db.Uuid
-  publicId         String?   @unique @map("public_id")
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  folderId         String? @map("folder_id") @db.Uuid
+  publicId         String? @unique @map("public_id")
   url              String
   format           String?
-  resourceType     String    @default("image") @map("resource_type")
+  resourceType     String  @default("image") @map("resource_type")
   bytes            Int?
   width            Int?
   height           Int?
-  contentHash      String?   @unique @map("content_hash")
-  originalFilename String?   @map("original_filename")
-  altText          String?   @map("alt_text")
-  displayOrder     Int       @default(0) @map("display_order")
-  source           String    @default("cloudinary")
+  contentHash      String? @unique @map("content_hash")
+  originalFilename String? @map("original_filename")
+  altText          String? @map("alt_text")
+  displayOrder     Int     @default(0) @map("display_order")
+  source           String  @default("cloudinary")
 
   // AI-ready metadata (M6 polish pass) -- nullable/empty-default, populated
   // by no code path today. Added now so a future AI-tagging/auto-alt-text/
@@ -558,6 +558,28 @@ model MediaAsset {
   @@index([folderId])
   @@index([deletedAt])
   @@map("media_assets")
+}
+
+enum HeroMode {
+  image
+  video
+  slider
+}
+
+/// Singleton row (application code always reads/writes the one fixed id —
+/// see hero.service.ts's HERO_SETTINGS_ID) configuring the public site's
+/// Hero background: a single image, a single autoplay/muted video, or an
+/// ordered slider of images. `mediaIds` references MediaAsset by id (plain
+/// text array, matching the array-column convention used elsewhere in this
+/// schema, e.g. Talent.languages) — order matters only in "slider" mode.
+model HeroSettings {
+  id        String   @id @db.Uuid
+  mode      HeroMode @default(image)
+  mediaIds  String[] @default([]) @map("media_ids")
+  updatedBy String?  @map("updated_by") @db.Uuid
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("hero_settings")
 }
 
 /// Tracks every place a MediaAsset is actually used (`media_usages`), so the

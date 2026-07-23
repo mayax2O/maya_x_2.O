@@ -19,7 +19,7 @@ export function MembershipCard({ plan }: { plan: MembershipPlan }) {
         "flex flex-col rounded-lg p-6",
         plan.highlighted
           ? "bg-[#12141c] text-[#f3f4f6] ring-2 ring-brass-deep"
-          : "bg-white text-ink ring-1 ring-ink/5",
+          : "bg-porcelain text-ink ring-1 ring-ink/5",
       ].join(" ")}
     >
       {plan.highlighted ? (

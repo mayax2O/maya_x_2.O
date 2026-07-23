@@ -170,7 +170,7 @@ export function QuickBookingForm({
             onChange={(event) =>
               handleChange("talentId", event.target.value || null)
             }
-            className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+            className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
           >
             <option value="">
               No preference — recommend based on my event
@@ -199,7 +199,7 @@ export function QuickBookingForm({
               value={values.fullName}
               onChange={(event) => handleChange("fullName", event.target.value)}
               onBlur={() => handleBlur("fullName")}
-              className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+              className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
               aria-invalid={touched.fullName && Boolean(errors.fullName)}
               aria-describedby={errors.fullName ? "qb-name-error" : undefined}
             />
@@ -223,7 +223,7 @@ export function QuickBookingForm({
               value={values.email}
               onChange={(event) => handleChange("email", event.target.value)}
               onBlur={() => handleBlur("email")}
-              className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+              className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
               aria-invalid={touched.email && Boolean(errors.email)}
               aria-describedby={errors.email ? "qb-email-error" : undefined}
             />
@@ -248,7 +248,7 @@ export function QuickBookingForm({
               onChange={(event) => handleChange("phone", event.target.value)}
               onBlur={() => handleBlur("phone")}
               placeholder="+91 98765 43210"
-              className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+              className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
               aria-invalid={touched.phone && Boolean(errors.phone)}
               aria-describedby={errors.phone ? "qb-phone-error" : undefined}
             />
@@ -271,7 +271,7 @@ export function QuickBookingForm({
           value={values.eventDate}
           onChange={(event) => handleChange("eventDate", event.target.value)}
           onBlur={() => handleBlur("eventDate")}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
           aria-invalid={touched.eventDate && Boolean(errors.eventDate)}
           aria-describedby={errors.eventDate ? "qb-date-error" : undefined}
         />
@@ -296,7 +296,7 @@ export function QuickBookingForm({
           onChange={(event) => handleChange("eventDetails", event.target.value)}
           onBlur={() => handleBlur("eventDetails")}
           placeholder="Event type, guest count, city, and any specific requirements"
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
           aria-invalid={touched.eventDetails && Boolean(errors.eventDetails)}
           aria-describedby={
             errors.eventDetails ? "qb-details-error" : undefined

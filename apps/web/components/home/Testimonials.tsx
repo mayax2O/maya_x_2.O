@@ -10,7 +10,7 @@ export function Testimonials({
     <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
       {testimonials.map((testimonial) => (
         <li key={testimonial.id}>
-          <figure className="flex h-full flex-col justify-between rounded-lg bg-white p-6 ring-1 ring-ink/5">
+          <figure className="flex h-full flex-col justify-between rounded-lg bg-porcelain p-6 ring-1 ring-ink/5">
             <div>
               <div
                 className="flex gap-0.5 text-brass-deep"

@@ -79,7 +79,7 @@ export default function AboutPage() {
             {VALUES.map((value) => (
               <li
                 key={value.title}
-                className="rounded-lg bg-white p-6 ring-1 ring-ink/5"
+                className="rounded-lg bg-porcelain p-6 ring-1 ring-ink/5"
               >
                 <h3 className="font-display text-lg font-semibold text-ink">
                   {value.title}

@@ -63,7 +63,7 @@ export function ContactForm() {
           onChange={(event) =>
             setValues((prev) => ({ ...prev, fullName: event.target.value }))
           }
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 
@@ -82,7 +82,7 @@ export function ContactForm() {
           onChange={(event) =>
             setValues((prev) => ({ ...prev, email: event.target.value }))
           }
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 
@@ -101,7 +101,7 @@ export function ContactForm() {
           onChange={(event) =>
             setValues((prev) => ({ ...prev, message: event.target.value }))
           }
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 

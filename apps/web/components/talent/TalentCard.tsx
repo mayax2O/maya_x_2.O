@@ -15,7 +15,7 @@ export function TalentCard({ talent }: { talent: Talent }) {
   return (
     <Link
       href={`/talent/${talent.slug}`}
-      className="group block overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-ink/5 transition hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-deep"
+      className="group block overflow-hidden rounded-lg bg-porcelain shadow-sm ring-1 ring-ink/5 transition hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-deep"
     >
       <MediaFrame
         src={talent.coverImage.url}

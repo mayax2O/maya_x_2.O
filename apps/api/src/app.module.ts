@@ -15,6 +15,7 @@ import { RequestLoggerMiddleware } from "./common/middleware/request-logger.midd
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
+import { HeroModule } from "./hero/hero.module";
 import { LocationsModule } from "./locations/locations.module";
 import { MediaModule } from "./media/media.module";
 import { MembershipModule } from "./membership/membership.module";
@@ -54,6 +55,7 @@ import { UsersModule } from "./users/users.module";
     MembershipModule,
     PaymentsModule,
     DashboardModule,
+    HeroModule,
   ],
   controllers: [AppController],
   providers: [

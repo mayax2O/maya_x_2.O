@@ -40,7 +40,7 @@ export function Filters({
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-lg bg-white p-5 ring-1 ring-ink/5">
+    <div className="flex flex-col gap-6 rounded-lg bg-porcelain p-5 ring-1 ring-ink/5">
       {/* Section: Category filter */}
       <div>
         <h2 className="text-[13px] font-semibold uppercase tracking-widest text-slate">
@@ -90,7 +90,7 @@ export function Filters({
           id="filter-city"
           value={searchParams.get("city") ?? ""}
           onChange={(event) => updateParam("city", event.target.value)}
-          className="mt-3 w-full rounded-md border border-slate/30 bg-white px-3 py-2 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="mt-3 w-full rounded-md border border-slate/30 bg-porcelain px-3 py-2 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         >
           <option value="">All cities</option>
           {cities.map((city) => (
@@ -150,7 +150,7 @@ export function Filters({
           id="filter-sort"
           value={searchParams.get("sort") ?? "featured"}
           onChange={(event) => updateParam("sort", event.target.value)}
-          className="mt-3 w-full rounded-md border border-slate/30 bg-white px-3 py-2 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="mt-3 w-full rounded-md border border-slate/30 bg-porcelain px-3 py-2 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         >
           {SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>

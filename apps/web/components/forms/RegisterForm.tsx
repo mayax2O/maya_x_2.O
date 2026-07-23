@@ -98,7 +98,7 @@ export function RegisterForm() {
           required
           value={values.fullName}
           onChange={(event) => update("fullName", event.target.value)}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 
@@ -115,7 +115,7 @@ export function RegisterForm() {
           required
           value={values.email}
           onChange={(event) => update("email", event.target.value)}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 
@@ -133,7 +133,7 @@ export function RegisterForm() {
           value={values.phone}
           onChange={(event) => update("phone", event.target.value)}
           placeholder="+91 98765 43210"
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 
@@ -151,7 +151,7 @@ export function RegisterForm() {
           minLength={8}
           value={values.password}
           onChange={(event) => update("password", event.target.value)}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 
@@ -169,7 +169,7 @@ export function RegisterForm() {
           minLength={8}
           value={values.confirmPassword}
           onChange={(event) => update("confirmPassword", event.target.value)}
-          className="rounded-md border border-slate/30 px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
+          className="rounded-md border border-slate/30 bg-porcelain px-3 py-2.5 text-[14.5px] text-ink focus:border-brass-deep focus:outline-none"
         />
       </div>
 

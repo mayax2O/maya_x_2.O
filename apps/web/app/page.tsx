@@ -8,6 +8,7 @@ import { Testimonials } from "../components/home/Testimonials";
 import { MembershipTeaser } from "../components/membership/MembershipTeaser";
 import { TalentCard } from "../components/talent/TalentCard";
 import { getFaqs } from "../lib/data/faqs";
+import { getHeroSettings } from "../lib/data/hero";
 import { getFeaturedTalents } from "../lib/data/talents";
 import { getTestimonials } from "../lib/data/testimonials";
 
@@ -17,17 +18,20 @@ export const metadata: Metadata = {
     "Discover verified, agency-managed professional talent for events across India — event hosts, classical performers, brand ambassadors, and live musicians, founded in Kolkata.",
 };
 
+// Hero's background is admin-controlled (real API data, unlike the rest of
+// this page's mock content) — force-dynamic so a change shows up on the
+// next request instead of only after the next static rebuild/deploy.
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
-  const [featuredTalents, testimonials, faqs] = await Promise.all([
-    getFeaturedTalents(4),
-    getTestimonials(3),
-    getFaqs(),
-  ]);
+  const [featuredTalents, testimonials, faqs, heroSettings] = await Promise.all(
+    [getFeaturedTalents(4), getTestimonials(3), getFaqs(), getHeroSettings()],
+  );
 
   return (
     <>
       {/* Section: Hero */}
-      <Hero />
+      <Hero mode={heroSettings.mode} media={heroSettings.media} />
 
       {/* Section: Featured Talent grid */}
       <section aria-labelledby="featured-heading" className="py-16 sm:py-20">

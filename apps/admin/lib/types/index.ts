@@ -8,3 +8,4 @@ export * from "./membership";
 export * from "./payment";
 export * from "./dashboard";
 export * from "./common";
+export * from "./hero";

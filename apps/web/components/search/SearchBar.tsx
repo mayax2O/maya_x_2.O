@@ -27,7 +27,7 @@ export function SearchBar({
       role="search"
       onSubmit={handleSubmit}
       className={[
-        "flex w-full items-center gap-2 rounded-lg bg-white p-2 shadow-sm ring-1 ring-ink/10",
+        "flex w-full items-center gap-2 rounded-lg bg-porcelain p-2 shadow-sm ring-1 ring-ink/10",
         className,
       ]
         .filter(Boolean)

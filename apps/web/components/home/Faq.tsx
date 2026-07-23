@@ -9,7 +9,7 @@ export function Faq({ items }: { items: FaqItem[] }) {
   const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
 
   return (
-    <div className="divide-y divide-ink/10 rounded-lg bg-white ring-1 ring-ink/5">
+    <div className="divide-y divide-ink/10 rounded-lg bg-porcelain ring-1 ring-ink/5">
       {items.map((item) => {
         const isOpen = openId === item.id;
         const panelId = `faq-panel-${item.id}`;
