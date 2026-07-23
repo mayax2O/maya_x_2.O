@@ -9,6 +9,23 @@ frontends (public web + agency admin), shared packages.
 | `apps/web`   | Public site | Next.js   | 3000       |
 | `apps/admin` | Admin panel | Next.js   | 3001       |
 
+## Live deployment
+
+MAYA_X 2.0 is deployed to production:
+
+| Component      | Platform | Status                                              |
+| -------------- | -------- | --------------------------------------------------- |
+| Public website | Vercel   | Production — `https://hokolgal.fun` (custom domain) |
+| Admin panel    | Vercel   | Production                                          |
+| Backend API    | Railway  | Production (Docker build)                           |
+| Database       | Supabase | PostgreSQL, pooled + direct connections             |
+
+SSL/HTTPS is enabled on all live endpoints. See
+[`PROJECT_STATUS.md`](./PROJECT_STATUS.md) for the current live status of
+every subsystem (auth, booking, membership, payments, media library,
+testing, security) and [`CHANGELOG.md`](./CHANGELOG.md) for version
+history.
+
 ## Local development
 
 Local dev is cloud-only: there is no Docker, no local PostgreSQL, and no
@@ -151,6 +168,9 @@ Full step-by-step instructions: [`DEPLOYMENT.md`](./DEPLOYMENT.md#3-vercel-appsw
   to run `apps/api`'s tests and migrations in the CI job — it has no
   relationship to local development, which always talks to your Supabase
   project directly.
+- After every completed milestone, [`PROJECT_STATUS.md`](./PROJECT_STATUS.md),
+  [`CHANGELOG.md`](./CHANGELOG.md), and this README are updated together so
+  they stay in sync.
 
 ## Known issues
 
