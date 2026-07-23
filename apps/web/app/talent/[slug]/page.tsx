@@ -10,6 +10,28 @@ import { Gallery } from "../../../components/talent/Gallery";
 import { TalentCard } from "../../../components/talent/TalentCard";
 import { formatPrice } from "../../../lib/format";
 import { getRelatedTalents, getTalentBySlug } from "../../../lib/data/talents";
+import type { Talent } from "../../../lib/types";
+
+type TalentDetails = Talent["details"];
+
+const DETAIL_FIELDS: {
+  key: keyof TalentDetails;
+  label: string;
+  format?: (value: string | number) => string;
+}[] = [
+  { key: "nationality", label: "Nationality" },
+  { key: "heightCm", label: "Height", format: (value) => `${value} cm` },
+  { key: "bodyType", label: "Body type" },
+  { key: "measurements", label: "Measurements" },
+  { key: "dressSize", label: "Dress size" },
+  { key: "hairColour", label: "Hair colour" },
+  { key: "eyeColour", label: "Eye colour" },
+  { key: "generalAvailability", label: "Availability" },
+];
+
+function hasDetails(details: TalentDetails): boolean {
+  return DETAIL_FIELDS.some(({ key }) => details[key]);
+}
 
 // Talent profiles are real API data (admin-managed gallery/pricing/etc.),
 // not static mock content — force-dynamic so an admin's changes show up on
@@ -130,6 +152,30 @@ export default async function TalentProfilePage({
           </div>
         </div>
       </div>
+
+      {/* Section: Basic Details */}
+      {hasDetails(talent.details) ? (
+        <section aria-labelledby="details-heading" className="mt-14">
+          <h2
+            id="details-heading"
+            className="font-display text-2xl font-semibold text-ink"
+          >
+            Details
+          </h2>
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg bg-porcelain-soft p-5 sm:grid-cols-3">
+            {DETAIL_FIELDS.map(({ key, label, format }) =>
+              talent.details[key] ? (
+                <div key={key}>
+                  <dt className="text-[13px] text-slate">{label}</dt>
+                  <dd className="mt-0.5 text-[14.5px] font-medium text-ink">
+                    {format ? format(talent.details[key]) : talent.details[key]}
+                  </dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
+        </section>
+      ) : null}
 
       {/* Section: Talent Gallery */}
       <section aria-labelledby="gallery-heading" className="mt-14">

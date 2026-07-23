@@ -27,6 +27,14 @@ interface ApiTalentResponse {
   bio: string | null;
   city: { id: string; name: string; state: string };
   languages: string[];
+  heightCm: number | null;
+  bodyType: string | null;
+  nationality: string | null;
+  measurements: string | null;
+  dressSize: string | null;
+  hairColour: string | null;
+  eyeColour: string | null;
+  generalAvailability: string | null;
   pricing: {
     currency: string;
     basePrice: number;
@@ -71,6 +79,16 @@ function toWebTalent(api: ApiTalentResponse): Talent {
     reviewCount: 0,
     availability: api.availability,
     featured: api.isFeatured,
+    details: {
+      nationality: api.nationality,
+      measurements: api.measurements,
+      heightCm: api.heightCm,
+      bodyType: api.bodyType,
+      dressSize: api.dressSize,
+      hairColour: api.hairColour,
+      eyeColour: api.eyeColour,
+      generalAvailability: api.generalAvailability,
+    },
   };
 }
 

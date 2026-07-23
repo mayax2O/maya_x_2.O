@@ -27,6 +27,12 @@ export interface TalentResponse {
   languages: string[];
   heightCm: number | null;
   bodyType: string | null;
+  nationality: string | null;
+  measurements: string | null;
+  dressSize: string | null;
+  hairColour: string | null;
+  eyeColour: string | null;
+  generalAvailability: string | null;
   pricing: {
     currency: string;
     basePrice: number;
@@ -81,6 +87,12 @@ export function toTalentResponse(
     languages: talent.languages,
     heightCm: talent.heightCm,
     bodyType: talent.bodyType,
+    nationality: talent.nationality,
+    measurements: talent.measurements,
+    dressSize: talent.dressSize,
+    hairColour: talent.hairColour,
+    eyeColour: talent.eyeColour,
+    generalAvailability: talent.generalAvailability,
     pricing: {
       currency: talent.currency,
       basePrice: Number(talent.basePrice),

@@ -58,6 +58,12 @@ function talentToFormValues(talent: Talent): TalentFormValues {
     languages: talent.languages,
     heightCm: talent.heightCm ?? undefined,
     bodyType: talent.bodyType ?? "",
+    nationality: talent.nationality ?? "",
+    measurements: talent.measurements ?? "",
+    dressSize: talent.dressSize ?? "",
+    hairColour: talent.hairColour ?? "",
+    eyeColour: talent.eyeColour ?? "",
+    generalAvailability: talent.generalAvailability ?? "",
     currency: talent.pricing.currency,
     basePrice: talent.pricing.basePrice,
     hourlyRate: talent.pricing.hourlyRate ?? undefined,
@@ -339,46 +345,6 @@ export function TalentForm({
               className={inputClass}
             />
           </Field>
-
-          <Field
-            label="Languages (comma-separated)"
-            htmlFor="talent-languages"
-            className="sm:col-span-2"
-          >
-            <input
-              id="talent-languages"
-              value={languagesText}
-              onChange={(event) => setLanguagesText(event.target.value)}
-              placeholder="English, Bengali, Hindi"
-              className={inputClass}
-            />
-          </Field>
-
-          <Field label="Height (cm)" htmlFor="talent-height">
-            <input
-              id="talent-height"
-              type="number"
-              min={50}
-              max={250}
-              value={values.heightCm ?? ""}
-              onChange={(event) =>
-                update(
-                  "heightCm",
-                  event.target.value ? Number(event.target.value) : undefined,
-                )
-              }
-              className={inputClass}
-            />
-          </Field>
-
-          <Field label="Body type" htmlFor="talent-body-type">
-            <input
-              id="talent-body-type"
-              value={values.bodyType ?? ""}
-              onChange={(event) => update("bodyType", event.target.value)}
-              className={inputClass}
-            />
-          </Field>
         </div>
 
         {/* Section: Profile image — the gallery item shown on the Talent
@@ -463,6 +429,115 @@ export function TalentForm({
               </option>
             ))}
           </select>
+        </Field>
+      </section>
+
+      <hr className="border-white/10" />
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
+          Basic Details &amp; Measurements
+        </h2>
+
+        <Field
+          label="Languages (comma-separated)"
+          htmlFor="talent-languages"
+          className="sm:col-span-2"
+        >
+          <input
+            id="talent-languages"
+            value={languagesText}
+            onChange={(event) => setLanguagesText(event.target.value)}
+            placeholder="English, Bengali, Hindi"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Nationality" htmlFor="talent-nationality">
+          <input
+            id="talent-nationality"
+            value={values.nationality ?? ""}
+            onChange={(event) => update("nationality", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Height (cm)" htmlFor="talent-height">
+          <input
+            id="talent-height"
+            type="number"
+            min={50}
+            max={250}
+            value={values.heightCm ?? ""}
+            onChange={(event) =>
+              update(
+                "heightCm",
+                event.target.value ? Number(event.target.value) : undefined,
+              )
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Body type" htmlFor="talent-body-type">
+          <input
+            id="talent-body-type"
+            value={values.bodyType ?? ""}
+            onChange={(event) => update("bodyType", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Measurements" htmlFor="talent-measurements">
+          <input
+            id="talent-measurements"
+            placeholder="e.g. 34-28-35"
+            value={values.measurements ?? ""}
+            onChange={(event) => update("measurements", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Dress size" htmlFor="talent-dress-size">
+          <input
+            id="talent-dress-size"
+            value={values.dressSize ?? ""}
+            onChange={(event) => update("dressSize", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Hair colour" htmlFor="talent-hair-colour">
+          <input
+            id="talent-hair-colour"
+            value={values.hairColour ?? ""}
+            onChange={(event) => update("hairColour", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Eye colour" htmlFor="talent-eye-colour">
+          <input
+            id="talent-eye-colour"
+            value={values.eyeColour ?? ""}
+            onChange={(event) => update("eyeColour", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="General availability"
+          htmlFor="talent-general-availability"
+        >
+          <input
+            id="talent-general-availability"
+            placeholder="e.g. Full-time, Flexible"
+            value={values.generalAvailability ?? ""}
+            onChange={(event) =>
+              update("generalAvailability", event.target.value)
+            }
+            className={inputClass}
+          />
         </Field>
       </section>
 

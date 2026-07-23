@@ -257,6 +257,15 @@ model Talent {
   heightCm   Int?     @map("height_cm")
   bodyType   String?  @map("body_type")
 
+  // Casting-sheet attributes (fashion/modeling industry standard), shown on
+  // the talent's public profile alongside the other Basic Details fields.
+  nationality         String? @map("nationality")
+  measurements        String? @map("measurements")
+  dressSize           String? @map("dress_size")
+  hairColour          String? @map("hair_colour")
+  eyeColour           String? @map("eye_colour")
+  generalAvailability String? @map("general_availability")
+
   currency           String   @default("INR")
   basePrice          Decimal  @map("base_price") @db.Decimal(10, 2)
   hourlyRate         Decimal? @map("hourly_rate") @db.Decimal(10, 2)

@@ -24,6 +24,12 @@ export interface Talent {
   languages: string[];
   heightCm: number | null;
   bodyType: string | null;
+  nationality: string | null;
+  measurements: string | null;
+  dressSize: string | null;
+  hairColour: string | null;
+  eyeColour: string | null;
+  generalAvailability: string | null;
   pricing: {
     currency: string;
     basePrice: number;
@@ -55,6 +61,12 @@ export interface TalentFormValues {
   languages?: string[];
   heightCm?: number;
   bodyType?: string;
+  nationality?: string;
+  measurements?: string;
+  dressSize?: string;
+  hairColour?: string;
+  eyeColour?: string;
+  generalAvailability?: string;
   currency?: string;
   basePrice: number;
   hourlyRate?: number;

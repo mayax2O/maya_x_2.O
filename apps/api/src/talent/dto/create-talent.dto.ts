@@ -87,6 +87,36 @@ export class CreateTalentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(60)
+  nationality?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  measurements?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  dressSize?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  hairColour?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  eyeColour?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  generalAvailability?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(8)
   currency?: string;
 

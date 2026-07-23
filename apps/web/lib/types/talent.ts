@@ -41,6 +41,16 @@ export interface Talent {
   reviewCount: number;
   availability: TalentAvailability;
   featured: boolean;
+  details: {
+    nationality: string | null;
+    measurements: string | null;
+    heightCm: number | null;
+    bodyType: string | null;
+    dressSize: string | null;
+    hairColour: string | null;
+    eyeColour: string | null;
+    generalAvailability: string | null;
+  };
 }
 
 export interface TalentFilters {
