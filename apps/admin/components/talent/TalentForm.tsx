@@ -5,7 +5,12 @@ import type { FormEvent } from "react";
 
 import { ApiError } from "../../lib/api/client";
 import { listLocations } from "../../lib/data/locations";
-import { createTalent, updateTalent } from "../../lib/data/talent";
+import {
+  addTalentMedia,
+  createTalent,
+  setPrimaryTalentMedia,
+  updateTalent,
+} from "../../lib/data/talent";
 import {
   listAllActiveCategories,
   listAllActiveCities,
@@ -13,10 +18,14 @@ import {
 import type {
   City,
   Location,
+  MediaAsset,
   Talent,
   TalentCategory,
   TalentFormValues,
+  TalentMedia,
 } from "../../lib/types";
+import { MediaPickerModal } from "../media/MediaPickerModal";
+import { MediaThumbnail } from "../media/MediaThumbnail";
 import { useToast } from "../ui/Toast";
 
 const AVAILABILITY_OPTIONS: {
@@ -78,9 +87,17 @@ const EMPTY_VALUES: TalentFormValues = {
 export function TalentForm({
   talent,
   onSaved,
+  media = [],
+  onMediaChange,
 }: {
   talent?: Talent;
   onSaved: (talent: Talent) => void;
+  /** Current gallery, so the profile-image widget can show/replace the
+   * primary image without a separate fetch. Omitted (and the widget
+   * hidden) when creating a brand-new talent, since there's no id yet
+   * to attach media to. */
+  media?: TalentMedia[];
+  onMediaChange?: (media: TalentMedia[]) => void;
 }) {
   const { showToast } = useToast();
   const [values, setValues] = useState<TalentFormValues>(
@@ -94,6 +111,7 @@ export function TalentForm({
   );
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
   const [formError, setFormError] = useState<string | null>(null);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
   useEffect(() => {
     listAllActiveCities()
@@ -121,6 +139,77 @@ export function TalentForm({
       cancelled = true;
     };
   }, [values.cityId]);
+
+  // The city/location dropdowns only list *active* rows (they're pickers
+  // for creating/editing, not a full directory) — but a talent already
+  // assigned to a since-deactivated city/location must still show it as
+  // selected, or the select silently falls back to blank/first-option and
+  // looks like "the city isn't loading." Merge the talent's current value
+  // in if the active-only list doesn't already contain it.
+  const cityOptions =
+    talent && !cities.some((city) => city.id === talent.city.id)
+      ? [
+          ...cities,
+          {
+            id: talent.city.id,
+            name: talent.city.name,
+            state: talent.city.state,
+            isActive: false,
+            displayOrder: 0,
+            createdAt: "",
+            updatedAt: "",
+          },
+        ]
+      : cities;
+
+  const locationOptions =
+    talent?.location && !locations.some((l) => l.id === talent.location?.id)
+      ? [
+          ...locations,
+          {
+            id: talent.location.id,
+            name: talent.location.name,
+            cityId: talent.city.id,
+            city: talent.city,
+            isActive: false,
+            displayOrder: 0,
+            createdAt: "",
+            updatedAt: "",
+          },
+        ]
+      : locations;
+
+  const primaryImage = media.find((item) => item.isPrimary) ?? media[0];
+
+  async function handleProfileImagePicked(asset: MediaAsset) {
+    if (!talent) return;
+    setImagePickerOpen(false);
+    try {
+      const created = await addTalentMedia(talent.id, {
+        mediaAssetId: asset.id,
+      });
+      let next: TalentMedia[];
+      if (created.isPrimary) {
+        // Gallery was empty — the new upload is already primary.
+        next = [...media, created];
+      } else {
+        await setPrimaryTalentMedia(talent.id, created.id);
+        next = [
+          ...media.map((item) => ({ ...item, isPrimary: false })),
+          { ...created, isPrimary: true },
+        ];
+      }
+      onMediaChange?.(next);
+      showToast("Profile image updated.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof ApiError
+          ? error.message
+          : "Failed to update profile image.",
+        "error",
+      );
+    }
+  }
 
   function update<K extends keyof TalentFormValues>(
     field: K,
@@ -183,112 +272,149 @@ export function TalentForm({
         </p>
       ) : null}
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-6 lg:grid-cols-[1fr_200px]">
         <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
           Basic information
         </h2>
 
-        <Field label="Display name" htmlFor="talent-name">
-          <input
-            id="talent-name"
-            required
-            value={values.displayName}
-            onChange={(event) => update("displayName", event.target.value)}
-            className={inputClass}
-          />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Display name" htmlFor="talent-name">
+            <input
+              id="talent-name"
+              required
+              value={values.displayName}
+              onChange={(event) => update("displayName", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
 
-        <Field
-          label="Slug (auto-generated if left blank)"
-          htmlFor="talent-slug"
-        >
-          <input
-            id="talent-slug"
-            value={values.slug ?? ""}
-            onChange={(event) => update("slug", event.target.value)}
-            className={inputClass}
-          />
-        </Field>
+          <Field
+            label="Slug (auto-generated if left blank)"
+            htmlFor="talent-slug"
+          >
+            <input
+              id="talent-slug"
+              value={values.slug ?? ""}
+              onChange={(event) => update("slug", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
 
-        <Field label="Tagline / short description" htmlFor="talent-tagline">
-          <input
-            id="talent-tagline"
-            value={values.tagline ?? ""}
-            onChange={(event) => update("tagline", event.target.value)}
-            className={inputClass}
-          />
-        </Field>
+          <Field label="Tagline / short description" htmlFor="talent-tagline">
+            <input
+              id="talent-tagline"
+              value={values.tagline ?? ""}
+              onChange={(event) => update("tagline", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
 
-        <Field label="Age" htmlFor="talent-age">
-          <input
-            id="talent-age"
-            type="number"
-            min={1}
-            max={100}
-            value={values.age ?? ""}
-            onChange={(event) =>
-              update(
-                "age",
-                event.target.value ? Number(event.target.value) : undefined,
-              )
-            }
-            className={inputClass}
-          />
-        </Field>
+          <Field label="Age" htmlFor="talent-age">
+            <input
+              id="talent-age"
+              type="number"
+              min={1}
+              max={100}
+              value={values.age ?? ""}
+              onChange={(event) =>
+                update(
+                  "age",
+                  event.target.value ? Number(event.target.value) : undefined,
+                )
+              }
+              className={inputClass}
+            />
+          </Field>
 
-        <Field
-          label="Full description"
-          htmlFor="talent-bio"
-          className="sm:col-span-2"
-        >
-          <textarea
-            id="talent-bio"
-            rows={4}
-            value={values.bio ?? ""}
-            onChange={(event) => update("bio", event.target.value)}
-            className={inputClass}
-          />
-        </Field>
+          <Field
+            label="Full description"
+            htmlFor="talent-bio"
+            className="sm:col-span-2"
+          >
+            <textarea
+              id="talent-bio"
+              rows={4}
+              value={values.bio ?? ""}
+              onChange={(event) => update("bio", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
 
-        <Field
-          label="Languages (comma-separated)"
-          htmlFor="talent-languages"
-          className="sm:col-span-2"
-        >
-          <input
-            id="talent-languages"
-            value={languagesText}
-            onChange={(event) => setLanguagesText(event.target.value)}
-            placeholder="English, Bengali, Hindi"
-            className={inputClass}
-          />
-        </Field>
+          <Field
+            label="Languages (comma-separated)"
+            htmlFor="talent-languages"
+            className="sm:col-span-2"
+          >
+            <input
+              id="talent-languages"
+              value={languagesText}
+              onChange={(event) => setLanguagesText(event.target.value)}
+              placeholder="English, Bengali, Hindi"
+              className={inputClass}
+            />
+          </Field>
 
-        <Field label="Height (cm)" htmlFor="talent-height">
-          <input
-            id="talent-height"
-            type="number"
-            min={50}
-            max={250}
-            value={values.heightCm ?? ""}
-            onChange={(event) =>
-              update(
-                "heightCm",
-                event.target.value ? Number(event.target.value) : undefined,
-              )
-            }
-            className={inputClass}
-          />
-        </Field>
+          <Field label="Height (cm)" htmlFor="talent-height">
+            <input
+              id="talent-height"
+              type="number"
+              min={50}
+              max={250}
+              value={values.heightCm ?? ""}
+              onChange={(event) =>
+                update(
+                  "heightCm",
+                  event.target.value ? Number(event.target.value) : undefined,
+                )
+              }
+              className={inputClass}
+            />
+          </Field>
 
-        <Field label="Body type" htmlFor="talent-body-type">
-          <input
-            id="talent-body-type"
-            value={values.bodyType ?? ""}
-            onChange={(event) => update("bodyType", event.target.value)}
-            className={inputClass}
-          />
-        </Field>
+          <Field label="Body type" htmlFor="talent-body-type">
+            <input
+              id="talent-body-type"
+              value={values.bodyType ?? ""}
+              onChange={(event) => update("bodyType", event.target.value)}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+
+        {/* Section: Profile image — the gallery item shown on the Talent
+            Card and Profile Preview (i.e. the gallery's primary image),
+            surfaced here for quick access instead of only in Gallery. */}
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] font-medium text-porcelain/70">
+            Profile image
+          </p>
+          <div className="aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-ink">
+            {primaryImage ? (
+              <MediaThumbnail
+                src={primaryImage.optimizedUrl}
+                alt={primaryImage.alt}
+                className="h-full w-full"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-center text-[12px] text-porcelain/40">
+                No image yet
+              </div>
+            )}
+          </div>
+          {talent ? (
+            <button
+              type="button"
+              onClick={() => setImagePickerOpen(true)}
+              className="rounded-md border border-white/15 px-3 py-2 text-[13px] text-porcelain/80 hover:bg-white/5"
+            >
+              {primaryImage ? "Change image" : "Add image"}
+            </button>
+          ) : (
+            <p className="text-[12px] text-porcelain/50">
+              Save the talent first to add a profile image.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -310,9 +436,10 @@ export function TalentForm({
             <option value="" disabled>
               Select a city
             </option>
-            {cities.map((city) => (
+            {cityOptions.map((city) => (
               <option key={city.id} value={city.id}>
                 {city.name}, {city.state}
+                {city.isActive ? "" : " (inactive)"}
               </option>
             ))}
           </select>
@@ -329,9 +456,10 @@ export function TalentForm({
             className={inputClass}
           >
             <option value="">No specific location</option>
-            {locations.map((location) => (
+            {locationOptions.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.name}
+                {location.isActive ? "" : " (inactive)"}
               </option>
             ))}
           </select>
@@ -551,6 +679,14 @@ export function TalentForm({
             ? "Save changes"
             : "Create talent"}
       </button>
+
+      {talent ? (
+        <MediaPickerModal
+          isOpen={imagePickerOpen}
+          onClose={() => setImagePickerOpen(false)}
+          onSelect={handleProfileImagePicked}
+        />
+      ) : null}
     </form>
   );
 }

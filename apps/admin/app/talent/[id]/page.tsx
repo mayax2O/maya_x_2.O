@@ -68,6 +68,26 @@ function EditTalentContent() {
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-8">
           <div className="rounded-lg border border-white/10 bg-ink-soft p-6">
+            <TalentForm
+              talent={talent}
+              onSaved={setTalent}
+              media={talent.media}
+              onMediaChange={(media) =>
+                setTalent((prev) => (prev ? { ...prev, media } : prev))
+              }
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-8">
+          <div>
+            <h2 className="mb-3 font-display text-lg font-semibold text-porcelain">
+              Profile preview
+            </h2>
+            <TalentProfilePreview talent={talent} />
+          </div>
+
+          <div className="rounded-lg border border-white/10 bg-ink-soft p-6">
             <h2 className="mb-4 font-display text-lg font-semibold text-porcelain">
               Gallery
             </h2>
@@ -79,17 +99,6 @@ function EditTalentContent() {
               }
             />
           </div>
-
-          <div className="rounded-lg border border-white/10 bg-ink-soft p-6">
-            <TalentForm talent={talent} onSaved={setTalent} />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-3 font-display text-lg font-semibold text-porcelain">
-            Profile preview
-          </h2>
-          <TalentProfilePreview talent={talent} />
         </div>
       </div>
     </div>
