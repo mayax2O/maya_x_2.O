@@ -1,11 +1,14 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 import { AlponaMotif } from "../motifs/AlponaMotif";
 
 /**
- * Stand-in renderer for talent portraits/gallery media until real
- * Cloudinary assets exist. Deliberately takes the same props a real image
- * component would (`src`, `alt`) so swapping the implementation for
- * `next/image` later is a one-file change — no call site (TalentCard,
- * Gallery, profile hero, ...) needs to be touched.
+ * Renders a real image when `src` is a usable URL (real Cloudinary assets
+ * exist as of the Talent Catalog wiring); falls back to a deterministic
+ * brass/ink gradient placeholder when there's no image yet, or the image
+ * fails to load (e.g. a stale/broken URL).
  */
 
 const ASPECT_CLASSES = {
@@ -45,22 +48,58 @@ export function MediaFrame({
   aspect = "portrait",
   className,
 }: MediaFrameProps) {
-  const variant = GRADIENT_VARIANTS[hashToIndex(src, GRADIENT_VARIANTS.length)];
+  const [failed, setFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // An <img> that already 404'd during the initial (pre-hydration) HTML
+  // paint won't fire a fresh `error` event once React attaches onError —
+  // the browser doesn't re-request an already-failed resource. Check the
+  // element's real load state once on mount to catch that case too.
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth === 0) {
+      setFailed(true);
+    }
+  }, []);
+
+  if (!src || failed) {
+    const variant =
+      GRADIENT_VARIANTS[hashToIndex(src || alt, GRADIENT_VARIANTS.length)];
+    return (
+      <div
+        role="img"
+        aria-label={alt}
+        className={[
+          "relative flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br text-brass-tint/70",
+          ASPECT_CLASSES[aspect],
+          variant,
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <AlponaMotif className="absolute inset-x-4 bottom-4 h-6 w-auto opacity-40" />
+      </div>
+    );
+  }
 
   return (
     <div
-      role="img"
-      aria-label={alt}
       className={[
-        "relative flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br text-brass-tint/70",
+        "relative overflow-hidden rounded-lg",
         ASPECT_CLASSES[aspect],
-        variant,
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <AlponaMotif className="absolute inset-x-4 bottom-4 h-6 w-auto opacity-40" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary Cloudinary URLs; no next.config remotePatterns set up for this yet. */}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        onError={() => setFailed(true)}
+        className="h-full w-full object-cover"
+      />
     </div>
   );
 }

@@ -24,6 +24,7 @@ import {
 import { slugify } from "../common/slug.util";
 import type { CreateTalentDto } from "./dto/create-talent.dto";
 import type { CreateTalentMediaDto } from "./dto/create-talent-media.dto";
+import type { ListPublicTalentCatalogQueryDto } from "./dto/list-public-talent-catalog.query.dto";
 import type { ListTalentQueryDto } from "./dto/list-talent.query.dto";
 import type { ReorderTalentMediaDto } from "./dto/reorder-talent-media.dto";
 import type { UpdateTalentDto } from "./dto/update-talent.dto";
@@ -179,6 +180,84 @@ export class TalentService {
   async findOne(id: string): Promise<TalentResponse> {
     const talent = await this.findActiveTalentOrThrow(id);
     return toTalentResponse(talent, this.buildOptimizedUrl);
+  }
+
+  // --- Public Talent Catalog (GET /public/talent-catalog) — unauthenticated
+  // browse experience for apps/web. Always scoped to isActive/not-deleted;
+  // never exposes verificationStatus/createdBy or any admin-only field
+  // beyond what TalentResponse already returns (nothing sensitive).
+
+  async findAllPublic(
+    query: ListPublicTalentCatalogQueryDto,
+  ): Promise<PaginatedResult<TalentResponse>> {
+    const page = query.page ?? 1;
+    const perPage = query.perPage ?? 20;
+
+    const where: Prisma.TalentWhereInput = {
+      deletedAt: null,
+      isActive: true,
+      ...(query.city ? { city: { name: query.city } } : {}),
+      ...(query.availability ? { availability: query.availability } : {}),
+      ...(query.categorySlug
+        ? { categories: { some: { category: { slug: query.categorySlug } } } }
+        : {}),
+      ...(query.q
+        ? {
+            OR: [
+              { displayName: { contains: query.q, mode: "insensitive" } },
+              { tagline: { contains: query.q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    const orderBy: Prisma.TalentOrderByWithRelationInput =
+      query.sort === "price-asc"
+        ? { basePrice: "asc" }
+        : query.sort === "price-desc"
+          ? { basePrice: "desc" }
+          : { isFeatured: "desc" };
+
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.talent.findMany({
+        where,
+        include: TALENT_INCLUDE,
+        orderBy,
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+      this.prisma.talent.count({ where }),
+    ]);
+
+    return {
+      items: rows.map((talent) =>
+        toTalentResponse(talent, this.buildOptimizedUrl),
+      ),
+      total,
+    };
+  }
+
+  async findBySlugPublic(slug: string): Promise<TalentResponse> {
+    const talent = await this.prisma.talent.findFirst({
+      where: { slug, deletedAt: null, isActive: true },
+      include: TALENT_INCLUDE,
+    });
+    if (!talent) {
+      throw new NotFoundException({
+        code: "TALENT_NOT_FOUND",
+        message: "Talent not found.",
+      });
+    }
+    return toTalentResponse(talent, this.buildOptimizedUrl);
+  }
+
+  async listPublicCities(): Promise<string[]> {
+    const rows = await this.prisma.talent.findMany({
+      where: { isActive: true, deletedAt: null },
+      select: { city: { select: { name: true } } },
+      distinct: ["cityId"],
+    });
+    return Array.from(new Set(rows.map((row) => row.city.name))).sort();
   }
 
   async update(

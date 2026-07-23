@@ -9,16 +9,12 @@ import { AvailabilityBadge } from "../../../components/talent/AvailabilityBadge"
 import { Gallery } from "../../../components/talent/Gallery";
 import { TalentCard } from "../../../components/talent/TalentCard";
 import { formatPrice } from "../../../lib/format";
-import {
-  getRelatedTalents,
-  getTalentBySlug,
-  getTalentSlugs,
-} from "../../../lib/data/talents";
+import { getRelatedTalents, getTalentBySlug } from "../../../lib/data/talents";
 
-export async function generateStaticParams() {
-  const slugs = await getTalentSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+// Talent profiles are real API data (admin-managed gallery/pricing/etc.),
+// not static mock content — force-dynamic so an admin's changes show up on
+// the next request instead of only after a rebuild/redeploy.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -77,18 +73,22 @@ export default async function TalentProfilePage({
               </h1>
               <p className="mt-1 text-[16px] text-slate">{talent.tagline}</p>
             </div>
-            <div className="flex items-center gap-1 text-[15px] font-medium text-ink">
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-4 w-4 text-brass-deep"
-                aria-hidden="true"
-              >
-                <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
-              </svg>
-              {talent.rating.toFixed(1)}
-              <span className="text-slate">({talent.reviewCount} reviews)</span>
-            </div>
+            {talent.reviewCount > 0 ? (
+              <div className="flex items-center gap-1 text-[15px] font-medium text-ink">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-4 w-4 text-brass-deep"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
+                </svg>
+                {talent.rating.toFixed(1)}
+                <span className="text-slate">
+                  ({talent.reviewCount} reviews)
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">

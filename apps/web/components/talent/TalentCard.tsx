@@ -31,16 +31,18 @@ export function TalentCard({ talent }: { talent: Talent }) {
             </h3>
             <p className="text-[13.5px] text-slate">{talent.tagline}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-1 text-[13.5px] font-medium text-ink">
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-3.5 w-3.5 text-brass-deep"
-            >
-              <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
-            </svg>
-            {talent.rating.toFixed(1)}
-          </div>
+          {talent.reviewCount > 0 ? (
+            <div className="flex shrink-0 items-center gap-1 text-[13.5px] font-medium text-ink">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-3.5 w-3.5 text-brass-deep"
+              >
+                <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
+              </svg>
+              {talent.rating.toFixed(1)}
+            </div>
+          ) : null}
         </div>
 
         <p className="text-[13px] text-slate">{talent.city}</p>

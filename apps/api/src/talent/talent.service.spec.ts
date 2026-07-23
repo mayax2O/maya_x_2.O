@@ -408,4 +408,72 @@ describe("TalentService", () => {
       expect(result.map((item) => item.id)).toEqual(["media-2", "media-1"]);
     });
   });
+
+  describe("findAllPublic", () => {
+    it("always scopes to active, not-deleted talent regardless of filters", async () => {
+      prisma.$transaction.mockResolvedValue([[makeTalentRow()], 1]);
+
+      await service.findAllPublic({ page: 1, perPage: 20 });
+
+      const [findManyArgs] = prisma.talent.findMany.mock.calls.at(-1) ?? [
+        undefined,
+      ];
+      expect(findManyArgs.where).toMatchObject({
+        deletedAt: null,
+        isActive: true,
+      });
+    });
+
+    it("filters by city name (not cityId)", async () => {
+      prisma.$transaction.mockResolvedValue([[makeTalentRow()], 1]);
+
+      await service.findAllPublic({ city: "Kolkata" });
+
+      const [findManyArgs] = prisma.talent.findMany.mock.calls.at(-1) ?? [
+        undefined,
+      ];
+      expect(findManyArgs.where.city).toEqual({ name: "Kolkata" });
+    });
+  });
+
+  describe("findBySlugPublic", () => {
+    it("returns the talent when active and not deleted", async () => {
+      prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
+
+      const result = await service.findBySlugPublic("ananya-rao");
+
+      expect(result.slug).toBe("ananya-rao");
+      expect(prisma.talent.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "ananya-rao", deletedAt: null, isActive: true },
+        }),
+      );
+    });
+
+    it("throws NotFoundException when no match", async () => {
+      prisma.talent.findFirst.mockResolvedValue(null);
+
+      await expect(service.findBySlugPublic("missing")).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe("listPublicCities", () => {
+    it("returns distinct, sorted city names among active talent", async () => {
+      prisma.talent.findMany.mockResolvedValue([
+        { city: { name: "Mumbai" } },
+        { city: { name: "Kolkata" } },
+      ]);
+
+      const result = await service.listPublicCities();
+
+      expect(result).toEqual(["Kolkata", "Mumbai"]);
+      expect(prisma.talent.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { isActive: true, deletedAt: null },
+        }),
+      );
+    });
+  });
 });

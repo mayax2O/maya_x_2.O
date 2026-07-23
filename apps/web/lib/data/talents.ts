@@ -1,99 +1,159 @@
-import talentsJson from "../mock/talents.json";
+import { apiFetch, apiFetchList, ApiError } from "../api/client";
 import type { Talent, TalentFilters } from "../types";
 
 /**
- * Mock data-access layer for the Talent Catalog. Every function here is
- * `async` and returns the same shape a real API call will — swap the body
- * for a `fetch("/api/v1/talents")` once the backend exists; no caller
- * (page or component) needs to change.
+ * Real API-backed data layer for the Talent Catalog (GET /public/talent-
+ * catalog) — replaces the M2 mock JSON. Function signatures are unchanged
+ * so no page/component needed to change, only this file's implementation.
+ * `rating`/`reviewCount` have no real backend equivalent yet (never built
+ * past the mock-data stage), so they default to 0 — TalentCard and the
+ * profile page hide the rating badge when reviewCount is 0.
  */
 
-const talents = talentsJson as Talent[];
+interface ApiTalentMedia {
+  id: string;
+  url: string;
+  alt: string;
+  assetType: string;
+  isPrimary: boolean;
+  displayOrder: number;
+}
+
+interface ApiTalentResponse {
+  id: string;
+  slug: string;
+  displayName: string;
+  tagline: string | null;
+  bio: string | null;
+  city: { id: string; name: string; state: string };
+  languages: string[];
+  pricing: {
+    currency: string;
+    basePrice: number;
+  };
+  availability: Talent["availability"];
+  isFeatured: boolean;
+  categories: { id: string; name: string; slug: string }[];
+  media: ApiTalentMedia[];
+}
+
+function toWebTalent(api: ApiTalentResponse): Talent {
+  const gallery = api.media.map((item) => ({
+    id: item.id,
+    url: item.url,
+    assetType: (item.assetType === "video" ? "video" : "image") as
+      "image" | "video",
+    alt: item.alt,
+  }));
+  const primaryIndex = api.media.findIndex((item) => item.isPrimary);
+  const coverImage = gallery[primaryIndex] ??
+    gallery[0] ?? {
+      id: "placeholder",
+      url: "",
+      assetType: "image" as const,
+      alt: api.displayName,
+    };
+
+  return {
+    id: api.id,
+    slug: api.slug,
+    displayName: api.displayName,
+    tagline: api.tagline ?? "",
+    bio: api.bio ?? "",
+    city: api.city.name,
+    categories: api.categories,
+    coverImage,
+    gallery,
+    languages: api.languages,
+    startingPrice: api.pricing.basePrice,
+    currency: api.pricing.currency,
+    rating: 0,
+    reviewCount: 0,
+    availability: api.availability,
+    featured: api.isFeatured,
+  };
+}
+
+const SORT_TO_API: Record<
+  NonNullable<TalentFilters["sort"]>,
+  "featured" | "price-asc" | "price-desc"
+> = {
+  featured: "featured",
+  rating: "featured",
+  "price-asc": "price-asc",
+  "price-desc": "price-desc",
+};
 
 export async function getTalents(
   filters: TalentFilters = {},
 ): Promise<Talent[]> {
-  let result = [...talents];
+  const params = new URLSearchParams();
+  if (filters.query) params.set("q", filters.query);
+  if (filters.categorySlug) params.set("categorySlug", filters.categorySlug);
+  if (filters.city) params.set("city", filters.city);
+  if (filters.availability) params.set("availability", filters.availability);
+  params.set("sort", SORT_TO_API[filters.sort ?? "featured"]);
+  params.set("perPage", "100");
 
-  if (filters.query) {
-    const query = filters.query.toLowerCase();
-    result = result.filter(
-      (talent) =>
-        talent.displayName.toLowerCase().includes(query) ||
-        talent.tagline.toLowerCase().includes(query) ||
-        talent.city.toLowerCase().includes(query),
-    );
-  }
-
-  if (filters.categorySlug) {
-    result = result.filter((talent) =>
-      talent.categories.some(
-        (category) => category.slug === filters.categorySlug,
-      ),
-    );
-  }
-
-  if (filters.city) {
-    result = result.filter((talent) => talent.city === filters.city);
-  }
-
-  if (filters.availability) {
-    result = result.filter(
-      (talent) => talent.availability === filters.availability,
-    );
-  }
-
-  switch (filters.sort) {
-    case "price-asc":
-      result.sort((a, b) => a.startingPrice - b.startingPrice);
-      break;
-    case "price-desc":
-      result.sort((a, b) => b.startingPrice - a.startingPrice);
-      break;
-    case "rating":
-      result.sort((a, b) => b.rating - a.rating);
-      break;
-    case "featured":
-    default:
-      result.sort((a, b) => Number(b.featured) - Number(a.featured));
-      break;
-  }
-
-  return result;
+  const { items } = await apiFetchList<ApiTalentResponse>(
+    `/public/talent-catalog?${params.toString()}`,
+  );
+  return items.map(toWebTalent);
 }
 
 export async function getTalentBySlug(
   slug: string,
 ): Promise<Talent | undefined> {
-  return talents.find((talent) => talent.slug === slug);
+  try {
+    const talent = await apiFetch<ApiTalentResponse>(
+      `/public/talent-catalog/${slug}`,
+    );
+    return toWebTalent(talent);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return undefined;
+    throw error;
+  }
 }
 
 export async function getFeaturedTalents(limit = 4): Promise<Talent[]> {
-  return talents.filter((talent) => talent.featured).slice(0, limit);
+  const { items } = await apiFetchList<ApiTalentResponse>(
+    "/public/talent-catalog?sort=featured&perPage=50",
+  );
+  return items
+    .filter((item) => item.isFeatured)
+    .slice(0, limit)
+    .map(toWebTalent);
 }
 
 export async function getTalentSlugs(): Promise<string[]> {
-  return talents.map((talent) => talent.slug);
+  try {
+    const { items } = await apiFetchList<ApiTalentResponse>(
+      "/public/talent-catalog?perPage=200",
+    );
+    return items.map((item) => item.slug);
+  } catch {
+    // Build-time generateStaticParams shouldn't fail the build if the API
+    // is unreachable — pages just render on-demand instead of prebuilt.
+    return [];
+  }
 }
 
 export async function getRelatedTalents(
   talent: Talent,
   limit = 3,
 ): Promise<Talent[]> {
-  const categorySlugs = new Set(
-    talent.categories.map((category) => category.slug),
+  const categorySlug = talent.categories[0]?.slug;
+  if (!categorySlug) return [];
+
+  const { items } = await apiFetchList<ApiTalentResponse>(
+    `/public/talent-catalog?categorySlug=${encodeURIComponent(categorySlug)}&perPage=10`,
   );
-  return talents
-    .filter(
-      (candidate) =>
-        candidate.id !== talent.id &&
-        candidate.categories.some((category) =>
-          categorySlugs.has(category.slug),
-        ),
-    )
-    .slice(0, limit);
+  return items
+    .filter((item) => item.id !== talent.id)
+    .slice(0, limit)
+    .map(toWebTalent);
 }
 
 export async function getCities(): Promise<string[]> {
-  return Array.from(new Set(talents.map((talent) => talent.city))).sort();
+  return apiFetch<string[]>("/public/talent-catalog/cities");
 }
