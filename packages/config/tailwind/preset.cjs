@@ -13,11 +13,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#12141c",
-        "ink-soft": "#1c1f29",
-        "ink-softer": "#262a37",
-        porcelain: "#f3f4f6",
-        "porcelain-soft": "#e8e9ed",
+        // CSS-variable-driven (values per theme in each app's globals.css)
+        // so the Light/Dark/System toggle flips every existing bg-ink /
+        // text-porcelain / etc. usage at once, with no per-component
+        // changes. The handful of sections deliberately meant to stay a
+        // fixed dark accent regardless of theme (Hero, Footer, CTA bands,
+        // modal backdrops) intentionally use literal `bg-[#12141c]`-style
+        // arbitrary values instead of these tokens — see each file.
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        "ink-soft": "rgb(var(--color-ink-soft) / <alpha-value>)",
+        "ink-softer": "rgb(var(--color-ink-softer) / <alpha-value>)",
+        porcelain: "rgb(var(--color-porcelain) / <alpha-value>)",
+        "porcelain-soft": "rgb(var(--color-porcelain-soft) / <alpha-value>)",
         brass: {
           DEFAULT: "#b8894a",
           deep: "#8f6934",

@@ -3,14 +3,35 @@
 @tailwind utilities;
 
 html {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 /*
- * The admin panel is always dark (docs/06-design-system §10: "a persistent
- * left rail... signaling 'you are in an operational tool'") — not a
- * light/dark toggle, a deliberate fixed professional theme.
+ * ink/porcelain are theme-aware (values flip below) so the Light/Dark/
+ * System toggle re-themes the whole app with no per-component changes —
+ * unlike apps/web, admin has no deliberate fixed-dark accent sections, so
+ * every bg-ink/bg-ink-soft/text-porcelain usage can flip safely. Default
+ * (pre-JS, matches this app's original fixed appearance) is dark —
+ * ThemeProvider's inline no-flash script sets data-theme synchronously
+ * before paint once a stored preference exists.
  */
+:root,
+[data-theme="dark"] {
+  --color-ink: 18 20 28;
+  --color-ink-soft: 28 31 41;
+  --color-ink-softer: 38 42 55;
+  --color-porcelain: 243 244 246;
+  --color-porcelain-soft: 232 233 237;
+}
+
+[data-theme="light"] {
+  --color-ink: 243 244 246;
+  --color-ink-soft: 232 233 237;
+  --color-ink-softer: 220 221 227;
+  --color-porcelain: 18 20 28;
+  --color-porcelain-soft: 28 31 41;
+}
+
 body {
   @apply bg-ink text-porcelain font-body antialiased;
 }

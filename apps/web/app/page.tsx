@@ -26,8 +26,10 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Section: Hero */}
       <Hero />
 
+      {/* Section: Featured Talent grid */}
       <section aria-labelledby="featured-heading" className="py-16 sm:py-20">
         <Container>
           <div className="flex items-end justify-between gap-4">
@@ -68,6 +70,7 @@ export default async function HomePage() {
         </Container>
       </section>
 
+      {/* Section: Membership teaser */}
       <section
         aria-labelledby="membership-heading"
         className="bg-porcelain-soft py-16 sm:py-20"
@@ -92,6 +95,7 @@ export default async function HomePage() {
         </Container>
       </section>
 
+      {/* Section: Testimonials */}
       <section
         aria-labelledby="testimonials-heading"
         className="py-16 sm:py-20"
@@ -109,6 +113,7 @@ export default async function HomePage() {
         </Container>
       </section>
 
+      {/* Section: FAQ */}
       <section
         aria-labelledby="faq-heading"
         className="bg-porcelain-soft py-16 sm:py-20"
@@ -126,12 +131,15 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      <section className="bg-ink py-16 text-porcelain sm:py-20">
+      {/* Section: Closing CTA — deliberately fixed dark in every theme
+          (a bookend accent, matching Hero/Footer), so it uses literal hex
+          values instead of the theme-aware ink/porcelain tokens. */}
+      <section className="bg-[#12141c] py-16 text-[#f3f4f6] sm:py-20">
         <Container className="flex flex-col items-center gap-5 text-center">
           <h2 className="font-display text-3xl font-semibold">
             Ready to plan your event?
           </h2>
-          <p className="max-w-lg text-[15px] text-porcelain/70">
+          <p className="max-w-lg text-[15px] text-[#f3f4f6]/70">
             Tell us what you need and our team will recommend the right talent
             within one business day.
           </p>

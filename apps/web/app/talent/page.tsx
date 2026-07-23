@@ -43,6 +43,7 @@ export default async function TalentListingPage({
 
   return (
     <Container className="py-12 sm:py-16">
+      {/* Section: Page heading */}
       <div className="max-w-2xl">
         <p className="text-[13px] font-semibold uppercase tracking-widest text-brass-deep">
           Talent Catalog
@@ -52,11 +53,13 @@ export default async function TalentListingPage({
         </h1>
       </div>
 
+      {/* Section: Mobile search bar */}
       <div className="mt-6 lg:hidden">
         <SearchBar initialQuery={params.q} />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[280px_1fr]">
+        {/* Section: Filters sidebar (desktop) */}
         <aside className="hidden lg:block">
           <div className="mb-4">
             <SearchBar initialQuery={params.q} />
@@ -64,10 +67,12 @@ export default async function TalentListingPage({
           <Filters categories={categories} cities={cities} />
         </aside>
 
+        {/* Section: Filters (mobile) */}
         <div className="lg:hidden">
           <Filters categories={categories} cities={cities} />
         </div>
 
+        {/* Section: Talent Cards Grid */}
         <div>
           <p className="mb-4 text-[14px] text-slate">
             {talents.length} {talents.length === 1 ? "talent" : "talents"} found

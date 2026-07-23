@@ -40,9 +40,11 @@ export function BookingModal({ talent }: { talent: Talent }) {
         Request Booking
       </Button>
 
+      {/* Section: Booking modal overlay — backdrop is a fixed dark scrim in
+          every theme (standard modal-overlay convention), not theme-aware. */}
       {isOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#12141c]/70 p-4"
           onClick={close}
         >
           <div

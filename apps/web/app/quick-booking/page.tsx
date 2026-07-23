@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Submit a booking request and our team will recommend the right talent for your event.",
 };
 
+// Section: Quick Booking form
 export default function QuickBookingPage() {
   return (
     <Container className="flex justify-center py-16 sm:py-24">

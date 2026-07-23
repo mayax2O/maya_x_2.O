@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <Container className="py-12 sm:py-16">
+      {/* Section: Page heading */}
       <div className="max-w-2xl">
         <p className="text-[13px] font-semibold uppercase tracking-widest text-brass-deep">
           Contact
@@ -27,10 +28,12 @@ export default function ContactPage() {
       </div>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
+        {/* Section: Contact form */}
         <div>
           <ContactForm />
         </div>
 
+        {/* Section: Office details */}
         <div>
           <MediaFrame
             src="/mock/contact/office.jpg"

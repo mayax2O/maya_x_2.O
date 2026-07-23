@@ -26,18 +26,21 @@ const FOOTER_COLUMNS: {
   },
 ];
 
+// Section: Footer — deliberately fixed dark in every theme (a bookend
+// accent, matching Hero), so it uses literal hex values instead of the
+// theme-aware ink/porcelain tokens.
 export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-ink/10 bg-ink text-porcelain/80">
+    <footer className="border-t border-[#12141c]/10 bg-[#12141c] text-[#f3f4f6]/80">
       <Container className="py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
-            <p className="font-display text-2xl font-semibold text-porcelain">
+            <p className="font-display text-2xl font-semibold text-[#f3f4f6]">
               MAYA<span className="italic text-brass">X</span>
             </p>
-            <p className="mt-4 max-w-sm text-[14.5px] leading-relaxed text-porcelain/60">
+            <p className="mt-4 max-w-sm text-[14.5px] leading-relaxed text-[#f3f4f6]/60">
               Founded in Kolkata, MAYA_X curates and manages verified
               professional talent for events across India — every booking
               mediated personally by our agency team.
@@ -47,7 +50,7 @@ export function Footer() {
 
           {FOOTER_COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <h3 className="text-[13px] font-semibold uppercase tracking-widest text-porcelain/50">
+              <h3 className="text-[13px] font-semibold uppercase tracking-widest text-[#f3f4f6]/50">
                 {column.title}
               </h3>
               <ul className="mt-4 flex flex-col gap-3">
@@ -55,7 +58,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-[14.5px] text-porcelain/70 hover:text-porcelain"
+                      className="text-[14.5px] text-[#f3f4f6]/70 hover:text-[#f3f4f6]"
                     >
                       {link.label}
                     </Link>
@@ -66,7 +69,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-porcelain/10 pt-6 text-[13px] text-porcelain/50 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-[#f3f4f6]/10 pt-6 text-[13px] text-[#f3f4f6]/50 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {year} MAYA_X. All rights reserved.</p>
           <p>
             Kolkata &middot; Mumbai &middot; Delhi &middot; Bengaluru &middot;

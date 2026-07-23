@@ -9,7 +9,10 @@ const config: Config = {
     "./components/**/*.{ts,tsx}",
     "../../packages/ui/src/**/*.{ts,tsx}",
   ],
-  darkMode: "media",
+  // Manual toggle (Light/Dark/System), not the OS-only "media" strategy —
+  // ThemeProvider sets data-theme="dark"|"light" on <html> after resolving
+  // the user's stored preference (which may itself be "system").
+  darkMode: ["selector", '[data-theme="dark"]'],
 };
 
 export default config;

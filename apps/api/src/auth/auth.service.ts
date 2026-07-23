@@ -11,6 +11,7 @@ import { JwtService } from "@nestjs/jwt";
 import type { EnvConfig } from "../config/env.validation";
 import { PrismaService } from "../database/prisma.service";
 import { toAuthUserResponse, type AuthUserResponse } from "./auth.response";
+import type { ChangePasswordDto } from "./dto/change-password.dto";
 import type { LoginDto } from "./dto/login.dto";
 import type { RegisterDto } from "./dto/register.dto";
 import type {
@@ -243,6 +244,43 @@ export class AuthService {
       ]),
     );
     return toAuthUserResponse(admin, "admin", roles);
+  }
+
+  // Self-service password change — requires the current password, unlike
+  // PATCH /admins/:id (which lets an admin reset another admin's password
+  // on admin-role authority alone, no current-password check needed there).
+  // Scoped to Admin principals only; Users don't have this UI yet.
+  async changePassword(
+    payload: AccessTokenPayload,
+    dto: ChangePasswordDto,
+  ): Promise<void> {
+    if (payload.type !== "admin") {
+      throw new UnauthorizedException(INVALID_CREDENTIALS_ERROR);
+    }
+
+    const admin = await this.prisma.admin.findFirst({
+      where: { id: payload.sub, deletedAt: null },
+    });
+    if (!admin) {
+      throw new UnauthorizedException(INVALID_CREDENTIALS_ERROR);
+    }
+
+    const isValid = await verifyPassword(
+      admin.passwordHash,
+      dto.currentPassword,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException({
+        code: "CURRENT_PASSWORD_INCORRECT",
+        message: "Current password is incorrect.",
+      });
+    }
+
+    const passwordHash = await hashPassword(dto.newPassword);
+    await this.prisma.admin.update({
+      where: { id: admin.id },
+      data: { passwordHash },
+    });
   }
 
   private async currentRoles(

@@ -43,7 +43,10 @@ const STATS = [
 export default function AboutPage() {
   return (
     <>
-      <section className="bg-ink text-porcelain">
+      {/* Section: Our story — deliberately fixed dark in every theme
+          (a bookend accent, matching Hero/Footer), so it uses literal hex
+          values instead of the theme-aware ink/porcelain tokens. */}
+      <section className="bg-[#12141c] text-[#f3f4f6]">
         <Container className="flex flex-col gap-6 py-16 sm:py-20">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass-tint/80">
             Our story
@@ -51,7 +54,7 @@ export default function AboutPage() {
           <h1 className="max-w-2xl font-display text-3xl font-semibold sm:text-4xl">
             Born in Kolkata, built for every stage in India.
           </h1>
-          <p className="max-w-2xl text-[15.5px] leading-relaxed text-porcelain/70">
+          <p className="max-w-2xl text-[15.5px] leading-relaxed text-[#f3f4f6]/70">
             MAYA_X began in Kolkata&apos;s own festival season — the weeks
             around Durga Puja, when every event, pandal, and stage in the city
             needs verified talent at once. We built the agency discipline that
@@ -61,6 +64,8 @@ export default function AboutPage() {
           <AlponaMotif className="h-8 w-56 text-brass/60" />
         </Container>
       </section>
+
+      {/* Section: Values grid */}
 
       <section aria-labelledby="values-heading" className="py-16 sm:py-20">
         <Container>

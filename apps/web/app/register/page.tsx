@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Create a MAYA_X account to book talent and manage your membership.",
 };
 
+// Section: Registration form
 export default function RegisterPage() {
   return (
     <Container className="flex justify-center py-16 sm:py-24">

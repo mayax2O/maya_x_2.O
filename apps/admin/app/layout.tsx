@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "../lib/auth/AuthContext";
 import { ToastProvider } from "../components/ui/Toast";
+import { THEME_INIT_SCRIPT, ThemeProvider } from "../lib/theme/ThemeProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -27,9 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </AuthProvider>
+        {/* No-flash theme init — must run before hydration, see ThemeProvider.tsx */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

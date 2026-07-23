@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { useAuth } from "../../lib/auth/AuthContext";
+import { ThemeToggle } from "../ui/ThemeToggle";
 import { Container } from "./Container";
 
 const NAV_LINKS = [
@@ -23,6 +24,7 @@ export function Navbar() {
     status === "authenticated" ? (user?.fullName ?? "Account") : "Log in";
 
   return (
+    // Top Menu Bar
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-porcelain/95 backdrop-blur">
       <Container className="flex h-16 items-center justify-between sm:h-20">
         <Link
@@ -54,6 +56,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Link
             href={accountHref}
             className="text-[15px] font-medium text-ink/80 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass-deep"
@@ -68,29 +71,32 @@ export function Navbar() {
           </Link>
         </div>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-ink md:hidden"
-          aria-expanded={isMenuOpen}
-          aria-controls="mobile-nav"
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          onClick={() => setIsMenuOpen((open) => !open)}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            className="h-6 w-6"
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-ink"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav"
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            onClick={() => setIsMenuOpen((open) => !open)}
           >
-            {isMenuOpen ? (
-              <path d="M6 6l12 12M18 6L6 18" />
-            ) : (
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              className="h-6 w-6"
+            >
+              {isMenuOpen ? (
+                <path d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
       </Container>
 
       {isMenuOpen ? (

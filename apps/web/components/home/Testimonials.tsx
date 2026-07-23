@@ -1,5 +1,6 @@
 import type { Testimonial } from "../../lib/types";
 
+// Component: Testimonials grid — client quotes shown on the home page.
 export function Testimonials({
   testimonials,
 }: {

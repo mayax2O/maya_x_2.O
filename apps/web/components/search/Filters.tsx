@@ -17,6 +17,8 @@ const SORT_OPTIONS = [
   { value: "price-desc", label: "Price: high to low" },
 ];
 
+/** Component: Talent listing filters — category, city, availability, sort;
+ * writes selections straight into the URL's query string. */
 export function Filters({
   categories,
   cities,
@@ -39,6 +41,7 @@ export function Filters({
 
   return (
     <div className="flex flex-col gap-6 rounded-lg bg-white p-5 ring-1 ring-ink/5">
+      {/* Section: Category filter */}
       <div>
         <h2 className="text-[13px] font-semibold uppercase tracking-widest text-slate">
           Category
@@ -75,6 +78,7 @@ export function Filters({
         </div>
       </div>
 
+      {/* Section: City filter */}
       <div>
         <label
           htmlFor="filter-city"
@@ -97,6 +101,7 @@ export function Filters({
         </select>
       </div>
 
+      {/* Section: Availability filter */}
       <div>
         <h2 className="text-[13px] font-semibold uppercase tracking-widest text-slate">
           Availability
@@ -133,6 +138,7 @@ export function Filters({
         </div>
       </div>
 
+      {/* Section: Sort dropdown */}
       <div>
         <label
           htmlFor="filter-sort"

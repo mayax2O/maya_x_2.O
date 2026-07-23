@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+// Component: Talent search bar — used in Hero and atop the Talent listing page.
 export function SearchBar({
   initialQuery = "",
   className,

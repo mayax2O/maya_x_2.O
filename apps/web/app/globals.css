@@ -6,6 +6,35 @@ html {
   color-scheme: light dark;
 }
 
+/*
+ * ink/porcelain are theme-aware (values flip below) so the Light/Dark/
+ * System toggle re-themes the whole site with no per-component changes.
+ * Default (pre-JS, matches this site's original fixed appearance) is
+ * light — ThemeProvider's inline no-flash script sets data-theme
+ * synchronously before paint once a stored preference exists.
+ *
+ * A handful of sections (Hero, Footer, the about/home CTA bands, the
+ * highlighted Membership plan, modal backdrops) are a deliberate fixed
+ * dark accent in every theme — those use literal `bg-[#12141c]`-style
+ * arbitrary values instead of these tokens, so they don't invert.
+ */
+:root,
+[data-theme="light"] {
+  --color-ink: 18 20 28;
+  --color-ink-soft: 28 31 41;
+  --color-ink-softer: 38 42 55;
+  --color-porcelain: 243 244 246;
+  --color-porcelain-soft: 232 233 237;
+}
+
+[data-theme="dark"] {
+  --color-ink: 243 244 246;
+  --color-ink-soft: 232 233 237;
+  --color-ink-softer: 220 221 227;
+  --color-porcelain: 18 20 28;
+  --color-porcelain-soft: 28 31 41;
+}
+
 body {
   @apply bg-porcelain text-ink font-body antialiased;
 }

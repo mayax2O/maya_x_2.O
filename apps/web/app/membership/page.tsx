@@ -16,6 +16,7 @@ export default async function MembershipPage() {
 
   return (
     <>
+      {/* Section: Plan comparison */}
       <Container className="py-12 sm:py-16">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-[13px] font-semibold uppercase tracking-widest text-brass-deep">
@@ -36,6 +37,7 @@ export default async function MembershipPage() {
         </div>
       </Container>
 
+      {/* Section: Membership FAQ */}
       {faqs.length > 0 ? (
         <section
           aria-labelledby="membership-faq-heading"

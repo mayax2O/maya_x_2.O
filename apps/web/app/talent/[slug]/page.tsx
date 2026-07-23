@@ -50,6 +50,7 @@ export default async function TalentProfilePage({
 
   return (
     <Container className="py-12 sm:py-16">
+      {/* Section: Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mb-6 text-[13.5px] text-slate">
         <Link href="/talent" className="hover:text-ink">
           Talent
@@ -58,6 +59,7 @@ export default async function TalentProfilePage({
         <span className="text-ink">{talent.displayName}</span>
       </nav>
 
+      {/* Section: Profile header (cover image + details + booking CTA) */}
       <div className="grid gap-10 lg:grid-cols-[380px_1fr]">
         <div>
           <MediaFrame
@@ -129,6 +131,7 @@ export default async function TalentProfilePage({
         </div>
       </div>
 
+      {/* Section: Talent Gallery */}
       <section aria-labelledby="gallery-heading" className="mt-14">
         <h2
           id="gallery-heading"
@@ -141,6 +144,7 @@ export default async function TalentProfilePage({
         </div>
       </section>
 
+      {/* Section: Related Talent Cards */}
       {relatedTalents.length > 0 ? (
         <section aria-labelledby="related-heading" className="mt-14">
           <h2

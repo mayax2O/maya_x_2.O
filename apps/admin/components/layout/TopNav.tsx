@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "../ui/ThemeToggle";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { NotificationsMenu } from "./NotificationsMenu";
 import { ProfileMenu } from "./ProfileMenu";
@@ -76,6 +77,7 @@ export function TopNav({
         </kbd>
       </button>
 
+      <ThemeToggle />
       <NotificationsMenu />
       <ProfileMenu />
     </header>

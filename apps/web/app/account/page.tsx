@@ -38,6 +38,7 @@ function AccountContent() {
           Log out
         </Button>
 
+        {/* Section: Membership status */}
         <div className="mt-12">
           <h2 className="font-display text-xl font-semibold text-ink">
             Membership
@@ -47,6 +48,7 @@ function AccountContent() {
           </div>
         </div>
 
+        {/* Section: Booking history */}
         <div className="mt-12">
           <h2 className="font-display text-xl font-semibold text-ink">
             My bookings

@@ -102,6 +102,7 @@ function ConfirmationContent() {
   );
 }
 
+// Section: Booking confirmation
 export default function BookingConfirmationPage() {
   return (
     <Container className="py-16 sm:py-24">

@@ -11,7 +11,10 @@ const config: Config = {
     // its class names must be scanned here too, or Tailwind purges them.
     "../../packages/ui/src/**/*.{ts,tsx}",
   ],
-  darkMode: "media",
+  // Manual toggle (Light/Dark/System), not the OS-only "media" strategy —
+  // ThemeProvider sets data-theme="dark"|"light" on <html> after resolving
+  // the user's stored preference (which may itself be "system").
+  darkMode: ["selector", '[data-theme="dark"]'],
 };
 
 export default config;

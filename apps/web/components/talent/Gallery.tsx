@@ -27,12 +27,14 @@ export function Gallery({ items }: { items: TalentMedia[] }) {
         ))}
       </ul>
 
+      {/* Section: Lightbox overlay — backdrop is a fixed dark scrim in
+          every theme (standard modal-overlay convention), not theme-aware. */}
       {active ? (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={active.alt}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#12141c]/80 p-6"
           onClick={() => setActiveIndex(null)}
           onKeyDown={(event) => {
             if (event.key === "Escape") setActiveIndex(null);

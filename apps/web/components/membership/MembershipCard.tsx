@@ -8,13 +8,17 @@ const CYCLE_LABEL: Record<MembershipPlan["billingCycle"], string> = {
   one_time: "one-time",
 };
 
+// Section: Membership plan card — the `highlighted` variant is a
+// deliberate fixed-dark accent in every theme (matching Hero/Footer), so
+// it uses literal hex values instead of the theme-aware ink/porcelain
+// tokens; the regular variant stays theme-aware.
 export function MembershipCard({ plan }: { plan: MembershipPlan }) {
   return (
     <div
       className={[
         "flex flex-col rounded-lg p-6",
         plan.highlighted
-          ? "bg-ink text-porcelain ring-2 ring-brass-deep"
+          ? "bg-[#12141c] text-[#f3f4f6] ring-2 ring-brass-deep"
           : "bg-white text-ink ring-1 ring-ink/5",
       ].join(" ")}
     >
@@ -32,7 +36,7 @@ export function MembershipCard({ plan }: { plan: MembershipPlan }) {
           <span
             className={[
               "text-sm font-normal",
-              plan.highlighted ? "text-porcelain/60" : "text-slate",
+              plan.highlighted ? "text-[#f3f4f6]/60" : "text-slate",
             ].join(" ")}
           >
             {" "}
@@ -60,7 +64,7 @@ export function MembershipCard({ plan }: { plan: MembershipPlan }) {
               <path d="M5 12l5 5L20 7" />
             </svg>
             <span
-              className={plan.highlighted ? "text-porcelain/85" : "text-ink/80"}
+              className={plan.highlighted ? "text-[#f3f4f6]/85" : "text-ink/80"}
             >
               {benefit}
             </span>

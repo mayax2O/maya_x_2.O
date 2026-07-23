@@ -35,7 +35,7 @@ function createPrismaMock() {
   const prisma = {
     user: { findFirst: jest.fn() },
     userCredential: { create: jest.fn(), update: jest.fn() },
-    admin: { findFirst: jest.fn() },
+    admin: { findFirst: jest.fn(), update: jest.fn() },
     refreshToken: {
       create: jest.fn(),
       findUnique: jest.fn(),
@@ -350,6 +350,55 @@ describe("AuthService", () => {
 
       await expect(
         service.me({ sub: "gone", type: "user", roles: ["user"] }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+  });
+
+  describe("changePassword", () => {
+    const adminPayload = {
+      sub: "a1",
+      type: "admin" as const,
+      roles: ["admin"],
+    };
+
+    it("updates the password hash when the current password is correct", async () => {
+      prisma.admin.findFirst.mockResolvedValue({
+        id: "a1",
+        passwordHash: await hashPassword("OldPass1"),
+      });
+
+      await service.changePassword(adminPayload, {
+        currentPassword: "OldPass1",
+        newPassword: "NewPass1",
+      });
+
+      expect(prisma.admin.update).toHaveBeenCalledWith({
+        where: { id: "a1" },
+        data: { passwordHash: expect.any(String) },
+      });
+    });
+
+    it("rejects an incorrect current password", async () => {
+      prisma.admin.findFirst.mockResolvedValue({
+        id: "a1",
+        passwordHash: await hashPassword("OldPass1"),
+      });
+
+      await expect(
+        service.changePassword(adminPayload, {
+          currentPassword: "WrongPass1",
+          newPassword: "NewPass1",
+        }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(prisma.admin.update).not.toHaveBeenCalled();
+    });
+
+    it("rejects non-admin principals", async () => {
+      await expect(
+        service.changePassword(
+          { sub: "u1", type: "user", roles: ["user"] },
+          { currentPassword: "OldPass1", newPassword: "NewPass1" },
+        ),
       ).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });

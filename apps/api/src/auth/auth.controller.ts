@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -19,6 +20,7 @@ import { DomainHttpExceptionFilter } from "../common/filters/domain-http-excepti
 import { AuthService } from "./auth.service";
 import type { AuthUserResponse } from "./auth.response";
 import { CurrentUser } from "./decorators/current-user.decorator";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
@@ -123,5 +125,15 @@ export class AuthController {
   ): Promise<DataEnvelope<AuthUserResponse>> {
     const data = await this.authService.me(user);
     return { data };
+  }
+
+  @Patch("change-password")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @CurrentUser() user: AccessTokenPayload,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    await this.authService.changePassword(user, dto);
   }
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { FaqItem } from "../../lib/types";
 
+// Component: FAQ accordion — one item open at a time.
 export function Faq({ items }: { items: FaqItem[] }) {
   const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
 

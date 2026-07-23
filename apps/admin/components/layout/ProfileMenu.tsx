@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../../lib/auth/AuthContext";
+import { ChangePasswordModal } from "./ChangePasswordModal";
 
 export function ProfileMenu() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,13 +71,29 @@ export function ProfileMenu() {
           <button
             type="button"
             role="menuitem"
-            onClick={handleLogout}
+            onClick={() => {
+              setIsOpen(false);
+              setIsChangePasswordOpen(true);
+            }}
             className="flex w-full items-center px-4 py-2.5 text-left text-[13.5px] text-porcelain/80 hover:bg-white/5 hover:text-porcelain"
+          >
+            Change password
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleLogout}
+            className="flex w-full items-center border-t border-white/10 px-4 py-2.5 text-left text-[13.5px] text-porcelain/80 hover:bg-white/5 hover:text-porcelain"
           >
             Log out
           </button>
         </div>
       ) : null}
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Log in to your MAYA_X account to manage bookings and membership.",
 };
 
+// Section: Login form
 export default function LoginPage() {
   return (
     <Container className="flex justify-center py-16 sm:py-24">
