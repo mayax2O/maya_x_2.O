@@ -14,6 +14,7 @@ import {
 import {
   listAllActiveCategories,
   listAllActiveCities,
+  listAllActiveSubCategories,
 } from "../../lib/data/lookups";
 import type {
   City,
@@ -23,7 +24,9 @@ import type {
   TalentCategory,
   TalentFormValues,
   TalentMedia,
+  TalentSubCategory,
 } from "../../lib/types";
+import { ChipMultiSelect } from "../ui/ChipMultiSelect";
 import { MediaPickerModal } from "../media/MediaPickerModal";
 import { MediaThumbnail } from "../media/MediaThumbnail";
 import { useToast } from "../ui/Toast";
@@ -63,6 +66,47 @@ const VERIFICATION_OPTIONS: {
   { value: "rejected", label: "Rejected" },
 ];
 
+const LANGUAGE_OPTIONS = ["English", "Hindi", "Bengali", "Russian", "Spanish"];
+
+const BODY_TYPE_OPTIONS = ["Slim", "Curvy", "Glamour", "Skinny"];
+
+const HAIR_COLOUR_OPTIONS = ["Black", "Blond", "White", "Grey"];
+
+const HAIR_LENGTH_OPTIONS = ["Short", "Medium", "Long", "Bob Cut"];
+
+const GENERAL_AVAILABILITY_OPTIONS = ["Full Time", "Part Time", "Flexible"];
+
+const FEET_OPTIONS = [3, 4, 5, 6, 7];
+const INCHES_OPTIONS = Array.from({ length: 12 }, (_, i) => i);
+
+function cmToFeetInches(cm: number | undefined): {
+  feet: number | "";
+  inches: number | "";
+} {
+  if (!cm) return { feet: "", inches: "" };
+  const totalInches = Math.round(cm / 2.54);
+  return { feet: Math.floor(totalInches / 12), inches: totalInches % 12 };
+}
+
+function feetInchesToCm(
+  feet: number | "",
+  inches: number | "",
+): number | undefined {
+  if (feet === "" && inches === "") return undefined;
+  const totalInches =
+    (feet === "" ? 0 : feet) * 12 + (inches === "" ? 0 : inches);
+  return Math.round(totalInches * 2.54);
+}
+
+function withCurrentValue(
+  options: string[],
+  currentValue: string | undefined,
+): string[] {
+  return currentValue && !options.includes(currentValue)
+    ? [currentValue, ...options]
+    : options;
+}
+
 function talentToFormValues(talent: Talent): TalentFormValues {
   return {
     displayName: talent.displayName,
@@ -74,13 +118,25 @@ function talentToFormValues(talent: Talent): TalentFormValues {
     locationId: talent.location?.id,
     languages: talent.languages,
     heightCm: talent.heightCm ?? undefined,
+    weightKg: talent.weightKg ?? undefined,
     bodyType: talent.bodyType ?? "",
+    preferredCityIds: talent.preferredCityIds,
+    availableOutside: talent.availableOutside,
     nationality: talent.nationality ?? "",
     measurements: talent.measurements ?? "",
+    chest: talent.chest ?? "",
+    waist: talent.waist ?? "",
+    hip: talent.hip ?? "",
     dressSize: talent.dressSize ?? "",
     hairColour: talent.hairColour ?? "",
+    hairLength: talent.hairLength ?? "",
     eyeColour: talent.eyeColour ?? "",
     generalAvailability: talent.generalAvailability ?? "",
+    mobile: talent.mobile ?? "",
+    mobile2: talent.mobile2 ?? "",
+    whatsapp: talent.whatsapp ?? "",
+    telegram: talent.telegram ?? "",
+    otherContact: talent.otherContact ?? "",
     currency: talent.pricing.currency,
     basePrice: talent.pricing.basePrice,
     hourlyRate: talent.pricing.hourlyRate ?? undefined,
@@ -94,6 +150,7 @@ function talentToFormValues(talent: Talent): TalentFormValues {
     isActive: talent.isActive,
     displayOrder: talent.displayOrder,
     categoryIds: talent.categories.map((category) => category.id),
+    subCategoryIds: talent.subCategories.map((subCategory) => subCategory.id),
   };
 }
 
@@ -128,9 +185,10 @@ export function TalentForm({
   );
   const [cities, setCities] = useState<City[]>([]);
   const [categories, setCategories] = useState<TalentCategory[]>([]);
+  const [subCategories, setSubCategories] = useState<TalentSubCategory[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [languagesText, setLanguagesText] = useState(
-    (talent?.languages ?? []).join(", "),
+  const [heightFeetInches, setHeightFeetInches] = useState(() =>
+    cmToFeetInches(talent?.heightCm ?? undefined),
   );
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
   const [formError, setFormError] = useState<string | null>(null);
@@ -143,6 +201,9 @@ export function TalentForm({
     listAllActiveCategories()
       .then(setCategories)
       .catch(() => setCategories([]));
+    listAllActiveSubCategories()
+      .then(setSubCategories)
+      .catch(() => setSubCategories([]));
   }, []);
 
   useEffect(() => {
@@ -210,6 +271,23 @@ export function TalentForm({
       ? [values.nationality, ...NATIONALITY_OPTIONS]
       : NATIONALITY_OPTIONS;
 
+  // Same defensive pattern for the fields newly converted from free text to
+  // a fixed dropdown — an existing talent's saved value may not be one of
+  // the predefined options.
+  const bodyTypeOptions = withCurrentValue(BODY_TYPE_OPTIONS, values.bodyType);
+  const hairColourOptions = withCurrentValue(
+    HAIR_COLOUR_OPTIONS,
+    values.hairColour,
+  );
+  const hairLengthOptions = withCurrentValue(
+    HAIR_LENGTH_OPTIONS,
+    values.hairLength,
+  );
+  const generalAvailabilityOptions = withCurrentValue(
+    GENERAL_AVAILABILITY_OPTIONS,
+    values.generalAvailability,
+  );
+
   const primaryImage = media.find((item) => item.isPrimary) ?? media[0];
 
   async function handleProfileImagePicked(asset: MediaAsset) {
@@ -249,14 +327,81 @@ export function TalentForm({
     setValues((prev) => ({ ...prev, [field]: value }));
   }
 
-  function toggleCategory(categoryId: string) {
+  function addCategory(categoryId: string) {
     setValues((prev) => {
       const current = prev.categoryIds ?? [];
-      const next = current.includes(categoryId)
-        ? current.filter((id) => id !== categoryId)
-        : [...current, categoryId];
-      return { ...prev, categoryIds: next };
+      if (current.includes(categoryId)) return prev;
+      return { ...prev, categoryIds: [...current, categoryId] };
     });
+  }
+
+  function removeCategory(categoryId: string) {
+    setValues((prev) => ({
+      ...prev,
+      categoryIds: (prev.categoryIds ?? []).filter((id) => id !== categoryId),
+      // Drop any selected sub-categories that belonged to the category
+      // being removed — a sub-category shouldn't outlive its parent.
+      subCategoryIds: (prev.subCategoryIds ?? []).filter(
+        (id) =>
+          subCategories.find((sc) => sc.id === id)?.categoryId !== categoryId,
+      ),
+    }));
+  }
+
+  function addSubCategory(subCategoryId: string) {
+    setValues((prev) => {
+      const current = prev.subCategoryIds ?? [];
+      if (current.includes(subCategoryId)) return prev;
+      return { ...prev, subCategoryIds: [...current, subCategoryId] };
+    });
+  }
+
+  function removeSubCategory(subCategoryId: string) {
+    setValues((prev) => ({
+      ...prev,
+      subCategoryIds: (prev.subCategoryIds ?? []).filter(
+        (id) => id !== subCategoryId,
+      ),
+    }));
+  }
+
+  function addLanguage(language: string) {
+    if (!language) return;
+    setValues((prev) => {
+      const current = prev.languages ?? [];
+      if (current.includes(language)) return prev;
+      return { ...prev, languages: [...current, language] };
+    });
+  }
+
+  function removeLanguage(language: string) {
+    setValues((prev) => ({
+      ...prev,
+      languages: (prev.languages ?? []).filter((l) => l !== language),
+    }));
+  }
+
+  function addPreferredCity(cityId: string) {
+    setValues((prev) => {
+      const current = prev.preferredCityIds ?? [];
+      if (current.includes(cityId)) return prev;
+      return { ...prev, preferredCityIds: [...current, cityId] };
+    });
+  }
+
+  function removePreferredCity(cityId: string) {
+    setValues((prev) => ({
+      ...prev,
+      preferredCityIds: (prev.preferredCityIds ?? []).filter(
+        (id) => id !== cityId,
+      ),
+    }));
+  }
+
+  function updateHeight(next: Partial<typeof heightFeetInches>) {
+    const merged = { ...heightFeetInches, ...next };
+    setHeightFeetInches(merged);
+    update("heightCm", feetInchesToCm(merged.feet, merged.inches));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -264,13 +409,7 @@ export function TalentForm({
     setFormError(null);
     setStatus("submitting");
 
-    const payload: TalentFormValues = {
-      ...values,
-      languages: languagesText
-        .split(",")
-        .map((language) => language.trim())
-        .filter(Boolean),
-    };
+    const payload: TalentFormValues = { ...values };
 
     try {
       const saved = talent
@@ -455,6 +594,49 @@ export function TalentForm({
             ))}
           </select>
         </Field>
+
+        <Field label="Preferred areas" htmlFor="talent-preferred-areas">
+          <ChipMultiSelect
+            id="talent-preferred-areas"
+            options={cityOptions.map((city) => ({
+              value: city.id,
+              label: `${city.name}, ${city.state}`,
+            }))}
+            selected={values.preferredCityIds ?? []}
+            onAdd={addPreferredCity}
+            onRemove={removePreferredCity}
+            placeholder="Add a preferred area"
+            emptyMessage="No cities available"
+          />
+        </Field>
+
+        <Field label="Available for outside" htmlFor="talent-available-outside">
+          <div
+            id="talent-available-outside"
+            className="flex items-center gap-6 py-2.5"
+          >
+            <label className="flex items-center gap-2 text-[13.5px] text-porcelain/80">
+              <input
+                type="radio"
+                name="available-outside"
+                checked={values.availableOutside === true}
+                onChange={() => update("availableOutside", true)}
+                className="h-4 w-4 accent-brass-deep"
+              />
+              Yes
+            </label>
+            <label className="flex items-center gap-2 text-[13.5px] text-porcelain/80">
+              <input
+                type="radio"
+                name="available-outside"
+                checked={!values.availableOutside}
+                onChange={() => update("availableOutside", false)}
+                className="h-4 w-4 accent-brass-deep"
+              />
+              No
+            </label>
+          </div>
+        </Field>
       </section>
 
       <hr className="border-white/10" />
@@ -465,17 +647,47 @@ export function TalentForm({
         </h2>
 
         <Field
-          label="Languages (comma-separated)"
+          label="Languages"
           htmlFor="talent-languages"
           className="sm:col-span-2"
         >
-          <input
-            id="talent-languages"
-            value={languagesText}
-            onChange={(event) => setLanguagesText(event.target.value)}
-            placeholder="English, Bengali, Hindi"
-            className={inputClass}
-          />
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
+              {(values.languages ?? []).map((language) => (
+                <span
+                  key={language}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brass bg-brass-deep/20 px-3 py-1 text-[12.5px] text-brass"
+                >
+                  {language}
+                  <button
+                    type="button"
+                    onClick={() => removeLanguage(language)}
+                    aria-label={`Remove ${language}`}
+                    className="text-brass/70 hover:text-brass"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <select
+              id="talent-languages"
+              value=""
+              onChange={(event) => addLanguage(event.target.value)}
+              className={inputClass}
+            >
+              <option value="" disabled>
+                Add a language
+              </option>
+              {LANGUAGE_OPTIONS.filter(
+                (language) => !(values.languages ?? []).includes(language),
+              ).map((language) => (
+                <option key={language} value={language}>
+                  {language}
+                </option>
+              ))}
+            </select>
+          </div>
         </Field>
 
         <Field label="Nationality" htmlFor="talent-nationality">
@@ -494,16 +706,55 @@ export function TalentForm({
           </select>
         </Field>
 
-        <Field label="Height (cm)" htmlFor="talent-height">
+        <Field label="Height (feet, inches)" htmlFor="talent-height-feet">
+          <div className="flex items-center gap-2">
+            <select
+              id="talent-height-feet"
+              value={heightFeetInches.feet}
+              onChange={(event) =>
+                updateHeight({
+                  feet: event.target.value ? Number(event.target.value) : "",
+                })
+              }
+              className={inputClass}
+            >
+              <option value="">ft</option>
+              {FEET_OPTIONS.map((feet) => (
+                <option key={feet} value={feet}>
+                  {feet}′
+                </option>
+              ))}
+            </select>
+            <select
+              id="talent-height-inches"
+              value={heightFeetInches.inches}
+              onChange={(event) =>
+                updateHeight({
+                  inches: event.target.value ? Number(event.target.value) : "",
+                })
+              }
+              className={inputClass}
+            >
+              <option value="">in</option>
+              {INCHES_OPTIONS.map((inches) => (
+                <option key={inches} value={inches}>
+                  {inches}″
+                </option>
+              ))}
+            </select>
+          </div>
+        </Field>
+
+        <Field label="Weight (kg)" htmlFor="talent-weight">
           <input
-            id="talent-height"
+            id="talent-weight"
             type="number"
-            min={50}
-            max={250}
-            value={values.heightCm ?? ""}
+            min={20}
+            max={300}
+            value={values.weightKg ?? ""}
             onChange={(event) =>
               update(
-                "heightCm",
+                "weightKg",
                 event.target.value ? Number(event.target.value) : undefined,
               )
             }
@@ -512,22 +763,19 @@ export function TalentForm({
         </Field>
 
         <Field label="Body type" htmlFor="talent-body-type">
-          <input
+          <select
             id="talent-body-type"
             value={values.bodyType ?? ""}
             onChange={(event) => update("bodyType", event.target.value)}
             className={inputClass}
-          />
-        </Field>
-
-        <Field label="Measurements" htmlFor="talent-measurements">
-          <input
-            id="talent-measurements"
-            placeholder="e.g. 34-28-35"
-            value={values.measurements ?? ""}
-            onChange={(event) => update("measurements", event.target.value)}
-            className={inputClass}
-          />
+          >
+            <option value="">Select body type</option>
+            {bodyTypeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Dress size" htmlFor="talent-dress-size">
@@ -539,13 +787,63 @@ export function TalentForm({
           />
         </Field>
 
-        <Field label="Hair colour" htmlFor="talent-hair-colour">
+        <Field label="Chest" htmlFor="talent-chest">
           <input
+            id="talent-chest"
+            value={values.chest ?? ""}
+            onChange={(event) => update("chest", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Waist" htmlFor="talent-waist">
+          <input
+            id="talent-waist"
+            value={values.waist ?? ""}
+            onChange={(event) => update("waist", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Hip" htmlFor="talent-hip">
+          <input
+            id="talent-hip"
+            value={values.hip ?? ""}
+            onChange={(event) => update("hip", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Hair colour" htmlFor="talent-hair-colour">
+          <select
             id="talent-hair-colour"
             value={values.hairColour ?? ""}
             onChange={(event) => update("hairColour", event.target.value)}
             className={inputClass}
-          />
+          >
+            <option value="">Select hair colour</option>
+            {hairColourOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Hair length" htmlFor="talent-hair-length">
+          <select
+            id="talent-hair-length"
+            value={values.hairLength ?? ""}
+            onChange={(event) => update("hairLength", event.target.value)}
+            className={inputClass}
+          >
+            <option value="">Select hair length</option>
+            {hairLengthOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Eye colour" htmlFor="talent-eye-colour">
@@ -561,15 +859,21 @@ export function TalentForm({
           label="General availability"
           htmlFor="talent-general-availability"
         >
-          <input
+          <select
             id="talent-general-availability"
-            placeholder="e.g. Full-time, Flexible"
             value={values.generalAvailability ?? ""}
             onChange={(event) =>
               update("generalAvailability", event.target.value)
             }
             className={inputClass}
-          />
+          >
+            <option value="">Select availability</option>
+            {generalAvailabilityOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </Field>
       </section>
 
@@ -669,34 +973,109 @@ export function TalentForm({
         </Field>
       </section>
 
-      <section>
-        <h2 className="font-display text-lg font-semibold text-porcelain">
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
           Categories
         </h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {categories.map((category) => {
-            const isChecked = (values.categoryIds ?? []).includes(category.id);
-            return (
-              <label
-                key={category.id}
-                className={[
-                  "cursor-pointer rounded-full border px-3 py-1.5 text-[13px] transition",
-                  isChecked
-                    ? "border-brass bg-brass-deep/20 text-brass"
-                    : "border-white/15 text-porcelain/70 hover:border-white/30",
-                ].join(" ")}
-              >
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={() => toggleCategory(category.id)}
-                  className="sr-only"
-                />
-                {category.name}
-              </label>
-            );
-          })}
-        </div>
+
+        <Field label="Categories" htmlFor="talent-categories">
+          <ChipMultiSelect
+            id="talent-categories"
+            options={categories.map((category) => ({
+              value: category.id,
+              label: category.name,
+            }))}
+            selected={values.categoryIds ?? []}
+            onAdd={addCategory}
+            onRemove={removeCategory}
+            placeholder="Add a category"
+            emptyMessage="No categories available"
+          />
+        </Field>
+
+        <Field label="Sub-categories" htmlFor="talent-subcategories">
+          <ChipMultiSelect
+            id="talent-subcategories"
+            options={subCategories
+              .filter((subCategory) =>
+                (values.categoryIds ?? []).includes(subCategory.categoryId),
+              )
+              .map((subCategory) => ({
+                value: subCategory.id,
+                label:
+                  (values.categoryIds ?? []).length > 1
+                    ? `${subCategory.name} (${
+                        categories.find((c) => c.id === subCategory.categoryId)
+                          ?.name ?? ""
+                      })`
+                    : subCategory.name,
+              }))}
+            selected={values.subCategoryIds ?? []}
+            onAdd={addSubCategory}
+            onRemove={removeSubCategory}
+            placeholder="Add a sub-category"
+            emptyMessage={
+              (values.categoryIds ?? []).length === 0
+                ? "Select a category first"
+                : "No sub-categories for the selected categories"
+            }
+          />
+        </Field>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <h2 className="col-span-full font-display text-lg font-semibold text-porcelain">
+          Connections
+        </h2>
+
+        <Field label="Mobile" htmlFor="talent-mobile">
+          <input
+            id="talent-mobile"
+            value={values.mobile ?? ""}
+            onChange={(event) => update("mobile", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Mobile 2" htmlFor="talent-mobile-2">
+          <input
+            id="talent-mobile-2"
+            value={values.mobile2 ?? ""}
+            onChange={(event) => update("mobile2", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="WhatsApp" htmlFor="talent-whatsapp">
+          <input
+            id="talent-whatsapp"
+            value={values.whatsapp ?? ""}
+            onChange={(event) => update("whatsapp", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Telegram" htmlFor="talent-telegram">
+          <input
+            id="talent-telegram"
+            value={values.telegram ?? ""}
+            onChange={(event) => update("telegram", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Others"
+          htmlFor="talent-other-contact"
+          className="sm:col-span-2"
+        >
+          <input
+            id="talent-other-contact"
+            value={values.otherContact ?? ""}
+            onChange={(event) => update("otherContact", event.target.value)}
+            className={inputClass}
+          />
+        </Field>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">

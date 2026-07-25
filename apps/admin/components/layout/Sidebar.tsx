@@ -94,6 +94,22 @@ const NAV_SECTIONS: NavSection[] = [
           </svg>
         ),
       },
+      {
+        href: "/subcategories",
+        label: "Sub-categories",
+        icon: (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            className="h-5 w-5"
+          >
+            <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
+            <circle cx="12" cy="12" r="2.2" />
+          </svg>
+        ),
+      },
     ],
   },
   {

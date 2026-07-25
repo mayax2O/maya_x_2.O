@@ -6,12 +6,15 @@ import type {
   TalentCategory,
   TalentCategoryMap,
   TalentMedia,
+  TalentSubCategory,
+  TalentSubCategoryMap,
 } from "@prisma/client";
 
 export type TalentWithRelations = Talent & {
   city: City;
   location: Location | null;
   categories: (TalentCategoryMap & { category: TalentCategory })[];
+  subCategories: (TalentSubCategoryMap & { subCategory: TalentSubCategory })[];
   media: (TalentMedia & { mediaAsset: MediaAsset })[];
 };
 
@@ -26,13 +29,25 @@ export interface TalentResponse {
   location: { id: string; name: string } | null;
   languages: string[];
   heightCm: number | null;
+  weightKg: number | null;
   bodyType: string | null;
+  preferredCityIds: string[];
+  availableOutside: boolean;
   nationality: string | null;
   measurements: string | null;
+  chest: string | null;
+  waist: string | null;
+  hip: string | null;
   dressSize: string | null;
   hairColour: string | null;
+  hairLength: string | null;
   eyeColour: string | null;
   generalAvailability: string | null;
+  mobile: string | null;
+  mobile2: string | null;
+  whatsapp: string | null;
+  telegram: string | null;
+  otherContact: string | null;
   pricing: {
     currency: string;
     basePrice: number;
@@ -48,6 +63,12 @@ export interface TalentResponse {
   isActive: boolean;
   displayOrder: number;
   categories: { id: string; name: string; slug: string }[];
+  subCategories: {
+    id: string;
+    categoryId: string;
+    name: string;
+    slug: string;
+  }[];
   media: {
     id: string;
     mediaAssetId: string;
@@ -86,13 +107,25 @@ export function toTalentResponse(
       : null,
     languages: talent.languages,
     heightCm: talent.heightCm,
+    weightKg: talent.weightKg,
     bodyType: talent.bodyType,
+    preferredCityIds: talent.preferredCityIds,
+    availableOutside: talent.availableOutside,
     nationality: talent.nationality,
     measurements: talent.measurements,
+    chest: talent.chest,
+    waist: talent.waist,
+    hip: talent.hip,
     dressSize: talent.dressSize,
     hairColour: talent.hairColour,
+    hairLength: talent.hairLength,
     eyeColour: talent.eyeColour,
     generalAvailability: talent.generalAvailability,
+    mobile: talent.mobile,
+    mobile2: talent.mobile2,
+    whatsapp: talent.whatsapp,
+    telegram: talent.telegram,
+    otherContact: talent.otherContact,
     pricing: {
       currency: talent.currency,
       basePrice: Number(talent.basePrice),
@@ -113,6 +146,12 @@ export function toTalentResponse(
       id: map.category.id,
       name: map.category.name,
       slug: map.category.slug,
+    })),
+    subCategories: talent.subCategories.map((map) => ({
+      id: map.subCategory.id,
+      categoryId: map.subCategory.categoryId,
+      name: map.subCategory.name,
+      slug: map.subCategory.slug,
     })),
     media: talent.media
       .slice()

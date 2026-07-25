@@ -8,6 +8,7 @@ const LABELS: Record<string, string> = {
   cities: "Cities",
   locations: "Locations",
   categories: "Categories",
+  subcategories: "Sub-categories",
   new: "New",
 };
 

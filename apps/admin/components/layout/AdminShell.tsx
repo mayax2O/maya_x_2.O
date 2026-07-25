@@ -129,6 +129,11 @@ function AdminShellContent({ children }: { children: ReactNode }) {
       action: () => router.push("/categories"),
     },
     {
+      id: "nav-subcategories",
+      label: "Go to Sub-categories",
+      action: () => router.push("/subcategories"),
+    },
+    {
       id: "nav-membership",
       label: "Go to Membership",
       action: () => router.push("/membership"),

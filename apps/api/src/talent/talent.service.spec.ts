@@ -61,6 +61,7 @@ function makeTalentRow(overrides: Partial<Record<string, unknown>> = {}) {
     city: cityRow,
     location: null,
     categories: [],
+    subCategories: [],
     media: [],
     ...overrides,
   };

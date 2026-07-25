@@ -81,9 +81,26 @@ export class CreateTalentDto {
   heightCm?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(20)
+  @Max(300)
+  weightKg?: number;
+
+  @IsOptional()
   @IsString()
   @MaxLength(60)
   bodyType?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsUUID("4", { each: true })
+  preferredCityIds?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  availableOutside?: boolean;
 
   @IsOptional()
   @IsString()
@@ -98,6 +115,21 @@ export class CreateTalentDto {
   @IsOptional()
   @IsString()
   @MaxLength(20)
+  chest?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  waist?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  hip?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
   dressSize?: string;
 
   @IsOptional()
@@ -108,12 +140,42 @@ export class CreateTalentDto {
   @IsOptional()
   @IsString()
   @MaxLength(40)
+  hairLength?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
   eyeColour?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(60)
   generalAvailability?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  mobile?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  mobile2?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  whatsapp?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  telegram?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  otherContact?: string;
 
   @IsOptional()
   @IsString()
@@ -178,4 +240,10 @@ export class CreateTalentDto {
   @ArrayUnique()
   @IsUUID("4", { each: true })
   categoryIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsUUID("4", { each: true })
+  subCategoryIds?: string[];
 }

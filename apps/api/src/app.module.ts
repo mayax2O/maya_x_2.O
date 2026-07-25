@@ -22,6 +22,7 @@ import { MembershipModule } from "./membership/membership.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { TalentModule } from "./talent/talent.module";
 import { TalentCategoriesModule } from "./talent-categories/talent-categories.module";
+import { TalentSubCategoriesModule } from "./talent-subcategories/talent-subcategories.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -49,6 +50,7 @@ import { UsersModule } from "./users/users.module";
     CitiesModule,
     LocationsModule,
     TalentCategoriesModule,
+    TalentSubCategoriesModule,
     TalentModule,
     MediaModule,
     BookingModule,

@@ -221,7 +221,8 @@ model TalentCategory {
   isActive     Boolean @default(true) @map("is_active")
   displayOrder Int     @default(0) @map("display_order")
 
-  talents TalentCategoryMap[]
+  talents       TalentCategoryMap[]
+  subCategories TalentSubCategory[]
 
   @@map("talent_categories")
 }
@@ -236,6 +237,36 @@ model TalentCategoryMap {
 
   @@id([talentId, categoryId])
   @@map("talent_category_map")
+}
+
+/// Sub-categories (`talent_subcategories`) — a finer-grained tag nested
+/// under one parent TalentCategory (e.g. Category "Event Host" ->
+/// Sub-categories "Wedding Host", "Corporate Host"), managed from its own
+/// admin page the same way TalentCategory is.
+model TalentSubCategory {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId   String  @map("category_id") @db.Uuid
+  name         String
+  slug         String  @unique
+  isActive     Boolean @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+
+  category TalentCategory         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  talents  TalentSubCategoryMap[]
+
+  @@map("talent_subcategories")
+}
+
+/// Many-to-many join between Talent and TalentSubCategory (`talent_subcategory_map`).
+model TalentSubCategoryMap {
+  talentId      String @map("talent_id") @db.Uuid
+  subCategoryId String @map("subcategory_id") @db.Uuid
+
+  talent      Talent            @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  subCategory TalentSubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+
+  @@id([talentId, subCategoryId])
+  @@map("talent_subcategory_map")
 }
 
 /// Talent profiles (docs/04-database `talents`), extended with the
@@ -255,16 +286,37 @@ model Talent {
   locationId String?  @map("location_id") @db.Uuid
   languages  String[] @default([])
   heightCm   Int?     @map("height_cm")
+  weightKg   Int?     @map("weight_kg")
   bodyType   String?  @map("body_type")
+
+  // Outstation availability — a talent may be based in `cityId` but still
+  // willing to travel to a shortlist of other cities for bookings.
+  preferredCityIds String[] @default([]) @map("preferred_city_ids") @db.Uuid
+  availableOutside Boolean  @default(false) @map("available_outside")
 
   // Casting-sheet attributes (fashion/modeling industry standard), shown on
   // the talent's public profile alongside the other Basic Details fields.
+  // chest/waist/hip are the structured admin-form inputs; `measurements`
+  // is the legacy single "34-28-35" string apps/web's public profile page
+  // renders — kept in sync (auto-composed from chest/waist/hip) by
+  // TalentService so the public site needed no changes for this split.
   nationality         String? @map("nationality")
   measurements        String? @map("measurements")
+  chest               String? @map("chest")
+  waist               String? @map("waist")
+  hip                 String? @map("hip")
   dressSize           String? @map("dress_size")
   hairColour          String? @map("hair_colour")
+  hairLength          String? @map("hair_length")
   eyeColour           String? @map("eye_colour")
   generalAvailability String? @map("general_availability")
+
+  // Connections — direct contact channels for this talent, all optional.
+  mobile         String? @map("mobile")
+  mobile2        String? @map("mobile_2")
+  whatsapp       String? @map("whatsapp")
+  telegram       String? @map("telegram")
+  otherContact   String? @map("other_contact")
 
   currency           String   @default("INR")
   basePrice          Decimal  @map("base_price") @db.Decimal(10, 2)
@@ -286,9 +338,10 @@ model Talent {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  city            City                @relation(fields: [cityId], references: [id], onDelete: Restrict)
-  location        Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  city            City                   @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  location        Location?              @relation(fields: [locationId], references: [id], onDelete: SetNull)
   categories      TalentCategoryMap[]
+  subCategories   TalentSubCategoryMap[]
   media           TalentMedia[]
   bookingRequests BookingRequest[]
 

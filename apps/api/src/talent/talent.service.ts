@@ -42,6 +42,7 @@ const TALENT_INCLUDE = {
   city: true,
   location: true,
   categories: { include: { category: true } },
+  subCategories: { include: { subCategory: true } },
   media: { include: { mediaAsset: true } },
 } satisfies Prisma.TalentInclude;
 
@@ -51,6 +52,25 @@ const TALENT_INCLUDE = {
 // can show accurate "used in N places" counts and refuse to delete an
 // in-use asset.
 const TALENT_GALLERY_USAGE_TYPE = "talent_gallery";
+
+// The admin form collects Chest/Waist/Hip as separate inputs, but apps/web's
+// public talent profile page still renders the single legacy "measurements"
+// string (e.g. "34-28-35") — compose one from the other so that page needed
+// no changes for the split. Falls back to a directly-provided `measurements`
+// value (e.g. from the seed script) when no chest/waist/hip were supplied.
+function composeMeasurements(fields: {
+  chest?: string;
+  waist?: string;
+  hip?: string;
+  measurements?: string;
+}): string | undefined {
+  if (fields.chest || fields.waist || fields.hip) {
+    return [fields.chest, fields.waist, fields.hip]
+      .map((value) => value?.trim() || "-")
+      .join("-");
+  }
+  return fields.measurements;
+}
 
 const SORTABLE_FIELDS = new Set([
   "displayName",
@@ -69,7 +89,7 @@ export class TalentService {
   ) {}
 
   async create(dto: CreateTalentDto, adminId: string): Promise<TalentResponse> {
-    const { categoryIds, ...rest } = dto;
+    const { categoryIds, subCategoryIds, ...rest } = dto;
 
     try {
       const talent = await this.prisma.talent.create({
@@ -83,13 +103,25 @@ export class TalentService {
           locationId: rest.locationId,
           languages: rest.languages ?? [],
           heightCm: rest.heightCm,
+          weightKg: rest.weightKg,
           bodyType: rest.bodyType,
+          preferredCityIds: rest.preferredCityIds ?? [],
+          availableOutside: rest.availableOutside ?? false,
           nationality: rest.nationality,
-          measurements: rest.measurements,
+          measurements: composeMeasurements(rest),
+          chest: rest.chest,
+          waist: rest.waist,
+          hip: rest.hip,
           dressSize: rest.dressSize,
           hairColour: rest.hairColour,
+          hairLength: rest.hairLength,
           eyeColour: rest.eyeColour,
           generalAvailability: rest.generalAvailability,
+          mobile: rest.mobile,
+          mobile2: rest.mobile2,
+          whatsapp: rest.whatsapp,
+          telegram: rest.telegram,
+          otherContact: rest.otherContact,
           currency: rest.currency ?? "INR",
           basePrice: rest.basePrice,
           hourlyRate: rest.hourlyRate,
@@ -106,6 +138,13 @@ export class TalentService {
           updatedBy: adminId,
           categories: categoryIds
             ? { create: categoryIds.map((categoryId) => ({ categoryId })) }
+            : undefined,
+          subCategories: subCategoryIds
+            ? {
+                create: subCategoryIds.map((subCategoryId) => ({
+                  subCategoryId,
+                })),
+              }
             : undefined,
         },
         include: TALENT_INCLUDE,
@@ -272,7 +311,7 @@ export class TalentService {
     adminId: string,
   ): Promise<TalentResponse> {
     await this.findActiveTalentOrThrow(id);
-    const { categoryIds, ...rest } = dto;
+    const { categoryIds, subCategoryIds, ...rest } = dto;
 
     try {
       const talent = await this.prisma.$transaction(async (tx) => {
@@ -288,9 +327,27 @@ export class TalentService {
           }
         }
 
+        if (subCategoryIds) {
+          await tx.talentSubCategoryMap.deleteMany({
+            where: { talentId: id },
+          });
+          if (subCategoryIds.length > 0) {
+            await tx.talentSubCategoryMap.createMany({
+              data: subCategoryIds.map((subCategoryId) => ({
+                talentId: id,
+                subCategoryId,
+              })),
+            });
+          }
+        }
+
         return tx.talent.update({
           where: { id },
-          data: { ...rest, updatedBy: adminId },
+          data: {
+            ...rest,
+            measurements: composeMeasurements(rest),
+            updatedBy: adminId,
+          },
           include: TALENT_INCLUDE,
         });
       });

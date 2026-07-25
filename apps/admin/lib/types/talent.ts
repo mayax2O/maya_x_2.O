@@ -23,13 +23,25 @@ export interface Talent {
   location: { id: string; name: string } | null;
   languages: string[];
   heightCm: number | null;
+  weightKg: number | null;
   bodyType: string | null;
+  preferredCityIds: string[];
+  availableOutside: boolean;
   nationality: string | null;
   measurements: string | null;
+  chest: string | null;
+  waist: string | null;
+  hip: string | null;
   dressSize: string | null;
   hairColour: string | null;
+  hairLength: string | null;
   eyeColour: string | null;
   generalAvailability: string | null;
+  mobile: string | null;
+  mobile2: string | null;
+  whatsapp: string | null;
+  telegram: string | null;
+  otherContact: string | null;
   pricing: {
     currency: string;
     basePrice: number;
@@ -45,6 +57,12 @@ export interface Talent {
   isActive: boolean;
   displayOrder: number;
   categories: { id: string; name: string; slug: string }[];
+  subCategories: {
+    id: string;
+    categoryId: string;
+    name: string;
+    slug: string;
+  }[];
   media: TalentMedia[];
   createdAt: string;
   updatedAt: string;
@@ -60,13 +78,25 @@ export interface TalentFormValues {
   locationId?: string;
   languages?: string[];
   heightCm?: number;
+  weightKg?: number;
   bodyType?: string;
+  preferredCityIds?: string[];
+  availableOutside?: boolean;
   nationality?: string;
   measurements?: string;
+  chest?: string;
+  waist?: string;
+  hip?: string;
   dressSize?: string;
   hairColour?: string;
+  hairLength?: string;
   eyeColour?: string;
   generalAvailability?: string;
+  mobile?: string;
+  mobile2?: string;
+  whatsapp?: string;
+  telegram?: string;
+  otherContact?: string;
   currency?: string;
   basePrice: number;
   hourlyRate?: number;
@@ -80,6 +110,7 @@ export interface TalentFormValues {
   isActive?: boolean;
   displayOrder?: number;
   categoryIds?: string[];
+  subCategoryIds?: string[];
 }
 
 export interface TalentListFilters {
