@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* AdminShell's own flex layout (h-screen + internal overflow-y-auto on
+   <main>) is the single intended scroll region. Without this, a client-side
+   route transition can leave html/body briefly taller than the viewport,
+   producing a second, outer page scrollbar alongside main's own. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 html {
   color-scheme: light dark;
 }

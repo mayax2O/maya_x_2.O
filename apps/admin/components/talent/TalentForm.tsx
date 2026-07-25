@@ -37,6 +37,23 @@ const AVAILABILITY_OPTIONS: {
   { value: "unavailable", label: "Unavailable" },
 ];
 
+const NATIONALITY_OPTIONS = [
+  "Indian",
+  "American",
+  "British",
+  "Canadian",
+  "Australian",
+  "Russian",
+  "Chinese",
+  "Japanese",
+  "South Korean",
+  "Singaporean",
+  "Emirati",
+  "Nepali",
+  "Bangladeshi",
+  "Sri Lankan",
+];
+
 const VERIFICATION_OPTIONS: {
   value: TalentFormValues["verificationStatus"];
   label: string;
@@ -134,7 +151,7 @@ export function TalentForm({
       return;
     }
     let cancelled = false;
-    listLocations({ cityId: values.cityId, isActive: true, perPage: 200 })
+    listLocations({ cityId: values.cityId, isActive: true, perPage: 100 })
       .then((result) => {
         if (!cancelled) setLocations(result.items);
       })
@@ -184,6 +201,14 @@ export function TalentForm({
           },
         ]
       : locations;
+
+  // A talent saved before this list existed (or with a free-text value
+  // outside it) must still show its actual nationality instead of the
+  // select silently resetting to blank.
+  const nationalityOptions =
+    values.nationality && !NATIONALITY_OPTIONS.includes(values.nationality)
+      ? [values.nationality, ...NATIONALITY_OPTIONS]
+      : NATIONALITY_OPTIONS;
 
   const primaryImage = media.find((item) => item.isPrimary) ?? media[0];
 
@@ -454,12 +479,19 @@ export function TalentForm({
         </Field>
 
         <Field label="Nationality" htmlFor="talent-nationality">
-          <input
+          <select
             id="talent-nationality"
             value={values.nationality ?? ""}
             onChange={(event) => update("nationality", event.target.value)}
             className={inputClass}
-          />
+          >
+            <option value="">Select nationality</option>
+            {nationalityOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Height (cm)" htmlFor="talent-height">
