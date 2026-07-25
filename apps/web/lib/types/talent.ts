@@ -41,6 +41,13 @@ export interface Talent {
   reviewCount: number;
   availability: TalentAvailability;
   featured: boolean;
+  premium: boolean;
+  verified: boolean;
+  isNew: boolean;
+  /** Raw numbers for building tel:/wa.me links — never render as visible text. */
+  mobile: string | null;
+  whatsapp: string | null;
+  workingAreas: { id: string; name: string }[];
   details: {
     nationality: string | null;
     measurements: string | null;

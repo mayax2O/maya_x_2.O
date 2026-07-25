@@ -3,13 +3,15 @@ import type { Metadata } from "next";
 
 import { Container } from "../components/layout/Container";
 import { Faq } from "../components/home/Faq";
+import { FeaturedPromoCard } from "../components/home/FeaturedPromoCard";
 import { Hero } from "../components/home/Hero";
+import { PremiumMarquee } from "../components/home/PremiumMarquee";
 import { Testimonials } from "../components/home/Testimonials";
 import { MembershipTeaser } from "../components/membership/MembershipTeaser";
 import { TalentCard } from "../components/talent/TalentCard";
 import { getFaqs } from "../lib/data/faqs";
 import { getHeroSettings } from "../lib/data/hero";
-import { getFeaturedTalents } from "../lib/data/talents";
+import { getFeaturedTalents, getPremiumTalents } from "../lib/data/talents";
 import { getTestimonials } from "../lib/data/testimonials";
 
 export const metadata: Metadata = {
@@ -24,9 +26,14 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [featuredTalents, testimonials, faqs, heroSettings] = await Promise.all(
-    [getFeaturedTalents(4), getTestimonials(3), getFaqs(), getHeroSettings()],
-  );
+  const [featuredTalents, premiumTalents, testimonials, faqs, heroSettings] =
+    await Promise.all([
+      getFeaturedTalents(3),
+      getPremiumTalents(),
+      getTestimonials(3),
+      getFaqs(),
+      getHeroSettings(),
+    ]);
 
   return (
     <>
@@ -55,16 +62,28 @@ export default async function HomePage() {
               View all talent →
             </Link>
           </div>
-          <ul
-            className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
-            role="list"
-          >
-            {featuredTalents.map((talent) => (
-              <li key={talent.id}>
-                <TalentCard talent={talent} />
-              </li>
-            ))}
-          </ul>
+          {/* 3:2 split — the talent trio (left) is wider than the promo
+              card (right). Below `lg` they stack, and the talent row
+              becomes a full-width horizontal swipe strip instead of a
+              cramped 3-up grid. */}
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <ul
+              className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 lg:col-span-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:overflow-visible lg:pb-0"
+              role="list"
+            >
+              {featuredTalents.map((talent) => (
+                <li
+                  key={talent.id}
+                  className="w-[78%] shrink-0 snap-start sm:w-[42%] lg:w-auto"
+                >
+                  <TalentCard talent={talent} />
+                </li>
+              ))}
+            </ul>
+            <div className="lg:col-span-2">
+              <FeaturedPromoCard />
+            </div>
+          </div>
           <Link
             href="/talent"
             className="mt-6 block text-center text-[14.5px] font-semibold text-brass-deep hover:text-brass sm:hidden"
@@ -73,6 +92,51 @@ export default async function HomePage() {
           </Link>
         </Container>
       </section>
+
+      {/* Section: Premium talent — a continuously scrolling rail, sitting
+          directly below Featured. Renders nothing at all when no talent is
+          marked premium, rather than leaving an empty headed section. */}
+      {premiumTalents.length > 0 ? (
+        <section
+          aria-labelledby="premium-heading"
+          className="bg-porcelain-soft py-16 sm:py-20"
+        >
+          <Container>
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-widest text-brass-deep">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-3.5 w-3.5"
+                    aria-hidden
+                  >
+                    <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
+                  </svg>
+                  Premium
+                </p>
+                <h2
+                  id="premium-heading"
+                  className="mt-2 font-display text-3xl font-semibold text-ink"
+                >
+                  Our premium roster
+                </h2>
+              </div>
+              <Link
+                href="/talent"
+                className="hidden text-[14.5px] font-semibold text-brass-deep hover:text-brass sm:inline"
+              >
+                View all talent →
+              </Link>
+            </div>
+          </Container>
+          {/* Full-bleed: the rail runs edge to edge, so it sits outside
+              Container's horizontal padding. */}
+          <div className="mt-8">
+            <PremiumMarquee talents={premiumTalents} />
+          </div>
+        </section>
+      ) : null}
 
       {/* Section: Membership teaser */}
       <section

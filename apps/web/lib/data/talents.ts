@@ -41,8 +41,26 @@ interface ApiTalentResponse {
   };
   availability: Talent["availability"];
   isFeatured: boolean;
+  isPremium: boolean;
+  verificationStatus: string;
+  createdAt: string;
+  // Only Mobile + WhatsApp are ever returned publicly (see
+  // toPublicTalentCatalogResponse on the API) — never rendered as visible
+  // text, only used to build tel:/wa.me link targets.
+  mobile: string | null;
+  whatsapp: string | null;
+  preferredAreas: { id: string; name: string }[];
   categories: { id: string; name: string; slug: string }[];
   media: ApiTalentMedia[];
+}
+
+// A talent counts as "new" for this many days after creation — matches
+// the common storefront convention (e.g. Amazon/Flipkart "New" tags).
+const NEW_WINDOW_DAYS = 30;
+
+function isRecentlyCreated(createdAt: string): boolean {
+  const ageMs = Date.now() - new Date(createdAt).getTime();
+  return ageMs <= NEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 }
 
 function toWebTalent(api: ApiTalentResponse): Talent {
@@ -79,6 +97,12 @@ function toWebTalent(api: ApiTalentResponse): Talent {
     reviewCount: 0,
     availability: api.availability,
     featured: api.isFeatured,
+    premium: api.isPremium,
+    verified: api.verificationStatus === "verified",
+    isNew: isRecentlyCreated(api.createdAt),
+    mobile: api.mobile,
+    whatsapp: api.whatsapp,
+    workingAreas: api.preferredAreas,
     details: {
       nationality: api.nationality,
       measurements: api.measurements,
@@ -133,12 +157,28 @@ export async function getTalentBySlug(
   }
 }
 
-export async function getFeaturedTalents(limit = 4): Promise<Talent[]> {
+export async function getFeaturedTalents(limit = 3): Promise<Talent[]> {
   const { items } = await apiFetchList<ApiTalentResponse>(
     "/public/talent-catalog?sort=featured&perPage=50",
   );
   return items
     .filter((item) => item.isFeatured)
+    .slice(0, limit)
+    .map(toWebTalent);
+}
+
+/**
+ * Premium talent for the home page's scrolling rail. Unlike Featured
+ * (capped at 3 by the API), this is deliberately unlimited — the marquee
+ * loops however many there are. `limit` is only a sanity bound so one
+ * over-eager admin can't turn the rail into a thousand-card DOM.
+ */
+export async function getPremiumTalents(limit = 20): Promise<Talent[]> {
+  const { items } = await apiFetchList<ApiTalentResponse>(
+    "/public/talent-catalog?sort=featured&perPage=100",
+  );
+  return items
+    .filter((item) => item.isPremium)
     .slice(0, limit)
     .map(toWebTalent);
 }

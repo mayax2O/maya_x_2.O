@@ -38,3 +38,51 @@ html {
 body {
   @apply bg-porcelain text-ink font-body antialiased;
 }
+
+/*
+ * Premium talent marquee (home page). The track renders its cards twice,
+ * so translating exactly -50% lands on the start of the second copy —
+ * the loop restarts with no visible jump. Pauses on hover/focus so the
+ * rail can actually be read and clicked, and stops entirely for users who
+ * ask for reduced motion (it then degrades to a normal scrollable strip).
+ */
+@keyframes maya-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.maya-marquee-track {
+  animation: maya-marquee var(--marquee-duration, 40s) linear infinite;
+  width: max-content;
+}
+
+.maya-marquee:hover .maya-marquee-track,
+.maya-marquee:focus-within .maya-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .maya-marquee-track {
+    animation: none;
+  }
+}
+
+/*
+ * Hides the scrollbar chrome on a horizontally-scrollable container while
+ * leaving it fully scrollable (mouse-wheel, drag, touch, keyboard) — used
+ * on the Premium marquee (which auto-scrolls, so the bar is just visual
+ * noise) and the mobile Featured swipe strip (native touch scroll doesn't
+ * need a persistent bar either).
+ */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -33,7 +33,9 @@ import {
   type TalentMediaResponse,
 } from "./talent-media.response";
 import {
+  toPublicTalentCatalogResponse,
   toTalentResponse,
+  type PublicTalentCatalogResponse,
   type TalentResponse,
   type TalentWithRelations,
 } from "./talent.response";
@@ -52,6 +54,13 @@ const TALENT_INCLUDE = {
 // can show accurate "used in N places" counts and refuse to delete an
 // in-use asset.
 const TALENT_GALLERY_USAGE_TYPE = "talent_gallery";
+
+// The public home page renders Featured talent as one fixed row of three,
+// so the roster is capped here rather than silently truncated at render
+// time — an admin who ticks a fourth gets told why instead of wondering
+// where it went. Premium is deliberately uncapped: its home-page row is a
+// continuously scrolling marquee that takes any number.
+export const MAX_FEATURED_TALENTS = 3;
 
 // The admin form collects Chest/Waist/Hip as separate inputs, but apps/web's
 // public talent profile page still renders the single legacy "measurements"
@@ -90,6 +99,8 @@ export class TalentService {
 
   async create(dto: CreateTalentDto, adminId: string): Promise<TalentResponse> {
     const { categoryIds, subCategoryIds, ...rest } = dto;
+
+    if (rest.isFeatured) await this.assertFeaturedSlotAvailable();
 
     try {
       const talent = await this.prisma.talent.create({
@@ -228,13 +239,14 @@ export class TalentService {
   }
 
   // --- Public Talent Catalog (GET /public/talent-catalog) — unauthenticated
-  // browse experience for apps/web. Always scoped to isActive/not-deleted;
-  // never exposes verificationStatus/createdBy or any admin-only field
-  // beyond what TalentResponse already returns (nothing sensitive).
+  // browse experience for apps/web. Always scoped to isActive/not-deleted,
+  // and returns the stripped PublicTalentCatalogResponse shape (see
+  // toPublicTalentCatalogResponse) rather than the admin TalentResponse — no
+  // Mobile 2/Telegram/Others, and preferredCityIds resolved to real names.
 
   async findAllPublic(
     query: ListPublicTalentCatalogQueryDto,
-  ): Promise<PaginatedResult<TalentResponse>> {
+  ): Promise<PaginatedResult<PublicTalentCatalogResponse>> {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? 20;
 
@@ -274,15 +286,23 @@ export class TalentService {
       this.prisma.talent.count({ where }),
     ]);
 
+    const cityNameById = await this.resolveCityNames(
+      rows.flatMap((row) => row.preferredCityIds),
+    );
+
     return {
       items: rows.map((talent) =>
-        toTalentResponse(talent, this.buildOptimizedUrl),
+        toPublicTalentCatalogResponse(
+          talent,
+          this.buildOptimizedUrl,
+          cityNameById,
+        ),
       ),
       total,
     };
   }
 
-  async findBySlugPublic(slug: string): Promise<TalentResponse> {
+  async findBySlugPublic(slug: string): Promise<PublicTalentCatalogResponse> {
     const talent = await this.prisma.talent.findFirst({
       where: { slug, deletedAt: null, isActive: true },
       include: TALENT_INCLUDE,
@@ -293,7 +313,26 @@ export class TalentService {
         message: "Talent not found.",
       });
     }
-    return toTalentResponse(talent, this.buildOptimizedUrl);
+    const cityNameById = await this.resolveCityNames(talent.preferredCityIds);
+    return toPublicTalentCatalogResponse(
+      talent,
+      this.buildOptimizedUrl,
+      cityNameById,
+    );
+  }
+
+  /** Batch-resolves Preferred Area city ids to names for the public response. */
+  private async resolveCityNames(
+    cityIds: string[],
+  ): Promise<Map<string, string>> {
+    const uniqueIds = Array.from(new Set(cityIds));
+    if (uniqueIds.length === 0) return new Map();
+
+    const cities = await this.prisma.city.findMany({
+      where: { id: { in: uniqueIds } },
+      select: { id: true, name: true },
+    });
+    return new Map(cities.map((city) => [city.id, city.name]));
   }
 
   async listPublicCities(): Promise<string[]> {
@@ -312,6 +351,8 @@ export class TalentService {
   ): Promise<TalentResponse> {
     await this.findActiveTalentOrThrow(id);
     const { categoryIds, subCategoryIds, ...rest } = dto;
+
+    if (rest.isFeatured) await this.assertFeaturedSlotAvailable(id);
 
     try {
       const talent = await this.prisma.$transaction(async (tx) => {
@@ -564,6 +605,27 @@ export class TalentService {
     asset.publicId
       ? this.cloudinary.buildOptimizedUrl(asset.publicId)
       : asset.url;
+
+  /**
+   * Rejects featuring more talent than the home page's Featured row can
+   * show. `excludeId` is the talent being updated, so re-saving one that
+   * is already featured doesn't count itself and trip the limit.
+   */
+  private async assertFeaturedSlotAvailable(excludeId?: string): Promise<void> {
+    const featuredCount = await this.prisma.talent.count({
+      where: {
+        isFeatured: true,
+        deletedAt: null,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+    });
+    if (featuredCount >= MAX_FEATURED_TALENTS) {
+      throw new ConflictException({
+        code: "FEATURED_LIMIT_REACHED",
+        message: `Only ${MAX_FEATURED_TALENTS} talents can be featured at a time. Unfeature another talent first.`,
+      });
+    }
+  }
 
   private async findActiveTalentOrThrow(
     id: string,

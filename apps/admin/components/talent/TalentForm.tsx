@@ -8,6 +8,7 @@ import { listLocations } from "../../lib/data/locations";
 import {
   addTalentMedia,
   createTalent,
+  listTalent,
   setPrimaryTalentMedia,
   updateTalent,
 } from "../../lib/data/talent";
@@ -75,6 +76,12 @@ const HAIR_COLOUR_OPTIONS = ["Black", "Blond", "White", "Grey"];
 const HAIR_LENGTH_OPTIONS = ["Short", "Medium", "Long", "Bob Cut"];
 
 const GENERAL_AVAILABILITY_OPTIONS = ["Full Time", "Part Time", "Flexible"];
+
+// Mirrors MAX_FEATURED_TALENTS in the API's TalentService — the home page's
+// Featured row is a fixed trio. The API is the real enforcer (it rejects a
+// 4th); this constant only drives the hint and the disabled state, so an
+// admin sees the limit before submitting rather than after.
+const MAX_FEATURED = 3;
 
 const FEET_OPTIONS = [3, 4, 5, 6, 7];
 const INCHES_OPTIONS = Array.from({ length: 12 }, (_, i) => i);
@@ -193,6 +200,10 @@ export function TalentForm({
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
   const [formError, setFormError] = useState<string | null>(null);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  // Other talents currently marked Featured, excluding this one — used to
+  // show "N of 3 slots used" and disable the checkbox before the admin
+  // even submits. The API is still the real enforcer of the limit.
+  const [otherFeaturedCount, setOtherFeaturedCount] = useState(0);
 
   useEffect(() => {
     listAllActiveCities()
@@ -204,6 +215,18 @@ export function TalentForm({
     listAllActiveSubCategories()
       .then(setSubCategories)
       .catch(() => setSubCategories([]));
+    listTalent({ isFeatured: true, perPage: 100 })
+      .then((result) =>
+        setOtherFeaturedCount(
+          result.items.filter((item) => item.id !== talent?.id).length,
+        ),
+      )
+      .catch(() => setOtherFeaturedCount(0));
+    // talent is a route-level prop that's fixed for this component's whole
+    // lifetime (Add vs Edit are separate mounts) — re-running this on
+    // every render it's referenced in would just re-fetch the same
+    // lookups needlessly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -1146,12 +1169,31 @@ export function TalentForm({
             checked={values.isPremium ?? false}
             onChange={(checked) => update("isPremium", checked)}
           />
-          <Checkbox
-            label="Featured"
-            checked={values.isFeatured ?? false}
-            onChange={(checked) => update("isFeatured", checked)}
-          />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              label="Featured"
+              checked={values.isFeatured ?? false}
+              disabled={
+                !values.isFeatured && otherFeaturedCount >= MAX_FEATURED
+              }
+              onChange={(checked) => update("isFeatured", checked)}
+            />
+            <span className="text-[12.5px] text-porcelain/50">
+              (
+              {Math.min(
+                otherFeaturedCount + (values.isFeatured ? 1 : 0),
+                MAX_FEATURED,
+              )}{" "}
+              of {MAX_FEATURED} slots used)
+            </span>
+          </div>
         </div>
+        {!values.isFeatured && otherFeaturedCount >= MAX_FEATURED ? (
+          <p className="text-[12.5px] text-porcelain/50 sm:col-span-2">
+            All {MAX_FEATURED} featured slots are taken — unfeature another
+            talent first to feature this one.
+          </p>
+        ) : null}
       </section>
 
       <button
@@ -1210,18 +1252,26 @@ function Checkbox({
   label,
   checked,
   onChange,
+  disabled,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
-    <label className="flex items-center gap-2 text-[13.5px] text-porcelain/80">
+    <label
+      className={[
+        "flex items-center gap-2 text-[13.5px]",
+        disabled ? "cursor-not-allowed text-porcelain/40" : "text-porcelain/80",
+      ].join(" ")}
+    >
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 accent-brass-deep"
+        className="h-4 w-4 accent-brass-deep disabled:cursor-not-allowed"
       />
       {label}
     </label>

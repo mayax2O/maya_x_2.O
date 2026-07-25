@@ -3,7 +3,7 @@ import { Controller, Get, Param, Query, UseFilters } from "@nestjs/common";
 import { DomainHttpExceptionFilter } from "../common/filters/domain-http-exception.filter";
 import { ListPublicTalentCatalogQueryDto } from "./dto/list-public-talent-catalog.query.dto";
 import { TalentService } from "./talent.service";
-import type { TalentResponse } from "./talent.response";
+import type { PublicTalentCatalogResponse } from "./talent.response";
 
 interface DataEnvelope<T> {
   data: T;
@@ -28,7 +28,7 @@ export class PublicTalentCatalogController {
   @Get()
   async findAll(
     @Query() query: ListPublicTalentCatalogQueryDto,
-  ): Promise<ListEnvelope<TalentResponse>> {
+  ): Promise<ListEnvelope<PublicTalentCatalogResponse>> {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? 20;
     const { items, total } = await this.talentService.findAllPublic(query);
@@ -44,7 +44,7 @@ export class PublicTalentCatalogController {
   @Get(":slug")
   async findBySlug(
     @Param("slug") slug: string,
-  ): Promise<DataEnvelope<TalentResponse>> {
+  ): Promise<DataEnvelope<PublicTalentCatalogResponse>> {
     const data = await this.talentService.findBySlugPublic(slug);
     return { data };
   }

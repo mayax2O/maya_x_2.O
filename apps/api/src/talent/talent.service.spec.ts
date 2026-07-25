@@ -63,6 +63,7 @@ function makeTalentRow(overrides: Partial<Record<string, unknown>> = {}) {
     categories: [],
     subCategories: [],
     media: [],
+    preferredCityIds: [],
     ...overrides,
   };
 }
@@ -91,6 +92,7 @@ describe("TalentService", () => {
     };
     mediaAsset: { findFirst: jest.Mock };
     mediaUsage: { create: jest.Mock; deleteMany: jest.Mock };
+    city: { findMany: jest.Mock };
     $transaction: jest.Mock;
   };
 
@@ -117,6 +119,7 @@ describe("TalentService", () => {
       },
       mediaAsset: { findFirst: jest.fn() },
       mediaUsage: { create: jest.fn(), deleteMany: jest.fn() },
+      city: { findMany: jest.fn().mockResolvedValue([]) },
       $transaction: jest.fn(),
     };
     // Default: interactive-transaction form hands back `prisma` as `tx`;
@@ -192,6 +195,53 @@ describe("TalentService", () => {
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
+
+    it("rejects featuring a 4th talent once 3 are already featured", async () => {
+      prisma.talent.count.mockResolvedValue(3);
+
+      await expect(
+        service.create(
+          {
+            displayName: "Ananya Rao",
+            cityId: "city-1",
+            basePrice: 25000,
+            isFeatured: true,
+          },
+          "admin-1",
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(prisma.talent.create).not.toHaveBeenCalled();
+    });
+
+    it("allows featuring when fewer than 3 are already featured", async () => {
+      prisma.talent.count.mockResolvedValue(2);
+      prisma.talent.create.mockResolvedValue(
+        makeTalentRow({ isFeatured: true }),
+      );
+
+      await service.create(
+        {
+          displayName: "Ananya Rao",
+          cityId: "city-1",
+          basePrice: 25000,
+          isFeatured: true,
+        },
+        "admin-1",
+      );
+
+      expect(prisma.talent.create).toHaveBeenCalled();
+    });
+
+    it("doesn't check the featured limit when isFeatured isn't set", async () => {
+      prisma.talent.create.mockResolvedValue(makeTalentRow());
+
+      await service.create(
+        { displayName: "Ananya Rao", cityId: "city-1", basePrice: 25000 },
+        "admin-1",
+      );
+
+      expect(prisma.talent.count).not.toHaveBeenCalled();
+    });
   });
 
   describe("findAll", () => {
@@ -235,6 +285,37 @@ describe("TalentService", () => {
       expect(prisma.talentCategoryMap.createMany).toHaveBeenCalledWith({
         data: [{ talentId: "talent-1", categoryId: "cat-3" }],
       });
+    });
+
+    it("rejects featuring a talent when 3 others are already featured", async () => {
+      prisma.talent.findFirst.mockResolvedValue(makeTalentRow());
+      prisma.talent.count.mockResolvedValue(3);
+
+      await expect(
+        service.update("talent-1", { isFeatured: true }, "admin-1"),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(prisma.talent.update).not.toHaveBeenCalled();
+    });
+
+    it("excludes the talent being updated from its own featured count", async () => {
+      // Re-saving a talent that is already one of the 3 featured must not
+      // trip the limit by counting itself.
+      prisma.talent.findFirst.mockResolvedValue(
+        makeTalentRow({ isFeatured: true }),
+      );
+      prisma.talent.count.mockResolvedValue(2);
+      prisma.talent.update.mockResolvedValue(
+        makeTalentRow({ isFeatured: true }),
+      );
+
+      await service.update("talent-1", { isFeatured: true }, "admin-1");
+
+      expect(prisma.talent.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: { not: "talent-1" } }),
+        }),
+      );
+      expect(prisma.talent.update).toHaveBeenCalled();
     });
 
     it("soft-deletes by setting deletedAt", async () => {
@@ -435,6 +516,52 @@ describe("TalentService", () => {
       ];
       expect(findManyArgs.where.city).toEqual({ name: "Kolkata" });
     });
+
+    it("strips Mobile 2/Telegram/Others and resolves preferred areas to real city names", async () => {
+      prisma.$transaction.mockResolvedValue([
+        [
+          makeTalentRow({
+            mobile: "9876543210",
+            mobile2: "9123456780",
+            whatsapp: "9876543210",
+            telegram: "@handle",
+            otherContact: "Instagram: @handle",
+            preferredCityIds: ["city-2", "city-3"],
+          }),
+        ],
+        1,
+      ]);
+      prisma.city.findMany.mockResolvedValue([
+        { id: "city-2", name: "Mumbai" },
+        { id: "city-3", name: "Delhi" },
+      ]);
+
+      const { items } = await service.findAllPublic({});
+
+      expect(items[0]).not.toHaveProperty("mobile2");
+      expect(items[0]).not.toHaveProperty("telegram");
+      expect(items[0]).not.toHaveProperty("otherContact");
+      expect(items[0]).not.toHaveProperty("preferredCityIds");
+      expect(items[0]?.mobile).toBe("9876543210");
+      expect(items[0]?.whatsapp).toBe("9876543210");
+      expect(items[0]?.preferredAreas).toEqual([
+        { id: "city-2", name: "Mumbai" },
+        { id: "city-3", name: "Delhi" },
+      ]);
+      expect(prisma.city.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ["city-2", "city-3"] } },
+        }),
+      );
+    });
+
+    it("skips the city lookup entirely when nothing has preferred areas", async () => {
+      prisma.$transaction.mockResolvedValue([[makeTalentRow()], 1]);
+
+      await service.findAllPublic({});
+
+      expect(prisma.city.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe("findBySlugPublic", () => {
@@ -457,6 +584,27 @@ describe("TalentService", () => {
       await expect(service.findBySlugPublic("missing")).rejects.toBeInstanceOf(
         NotFoundException,
       );
+    });
+
+    it("strips Mobile 2/Telegram/Others and resolves preferred areas", async () => {
+      prisma.talent.findFirst.mockResolvedValue(
+        makeTalentRow({
+          mobile2: "9123456780",
+          telegram: "@handle",
+          otherContact: "Instagram: @handle",
+          preferredCityIds: ["city-2"],
+        }),
+      );
+      prisma.city.findMany.mockResolvedValue([
+        { id: "city-2", name: "Mumbai" },
+      ]);
+
+      const result = await service.findBySlugPublic("ananya-rao");
+
+      expect(result).not.toHaveProperty("mobile2");
+      expect(result).not.toHaveProperty("telegram");
+      expect(result).not.toHaveProperty("otherContact");
+      expect(result.preferredAreas).toEqual([{ id: "city-2", name: "Mumbai" }]);
     });
   });
 

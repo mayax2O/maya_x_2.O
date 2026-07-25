@@ -4,11 +4,14 @@ import { notFound } from "next/navigation";
 
 import { BookingModal } from "../../../components/booking/BookingModal";
 import { Container } from "../../../components/layout/Container";
-import { MediaFrame } from "../../../components/media/MediaFrame";
 import { AvailabilityBadge } from "../../../components/talent/AvailabilityBadge";
+import { ContactIcons } from "../../../components/talent/ContactIcons";
 import { Gallery } from "../../../components/talent/Gallery";
-import { TalentCard } from "../../../components/talent/TalentCard";
-import { formatPrice } from "../../../lib/format";
+import {
+  TalentCard,
+  TalentCoverArt,
+} from "../../../components/talent/TalentCard";
+import { getCurrencySymbol } from "../../../lib/format";
 import { getRelatedTalents, getTalentBySlug } from "../../../lib/data/talents";
 import type { Talent } from "../../../lib/types";
 
@@ -77,14 +80,13 @@ export default async function TalentProfilePage({
         <span className="text-ink">{talent.displayName}</span>
       </nav>
 
-      {/* Section: Profile header (cover image + details + booking CTA) */}
+      {/* Section: Profile header — cover art (left) + name/working areas/
+          language/details/price (right), matching the agreed reference
+          layout. Price is deliberately masked ("xxxxx"): real numbers
+          only travel through the booking flow, not as public page text. */}
       <div className="grid gap-10 lg:grid-cols-[380px_1fr]">
         <div>
-          <MediaFrame
-            src={talent.coverImage.url}
-            alt={talent.coverImage.alt}
-            aspect="portrait"
-          />
+          <TalentCoverArt talent={talent} />
         </div>
 
         <div>
@@ -95,31 +97,25 @@ export default async function TalentProfilePage({
               </h1>
               <p className="mt-1 text-[16px] text-slate">{talent.tagline}</p>
             </div>
-            {talent.reviewCount > 0 ? (
-              <div className="flex items-center gap-1 text-[15px] font-medium text-ink">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-4 w-4 text-brass-deep"
-                  aria-hidden="true"
-                >
-                  <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
-                </svg>
-                {talent.rating.toFixed(1)}
-                <span className="text-slate">
-                  ({talent.reviewCount} reviews)
-                </span>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <AvailabilityBadge availability={talent.availability} />
-            <span className="text-[14px] text-slate">{talent.city}</span>
-            <span className="text-[14px] text-slate">·</span>
-            <span className="text-[14px] text-slate">
-              {talent.languages.join(", ")}
-            </span>
+            <div className="flex items-center gap-3">
+              {talent.reviewCount > 0 ? (
+                <div className="flex items-center gap-1 text-[15px] font-medium text-ink">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-4 w-4 text-brass-deep"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.7 6.5 19.6l1.4-6.1-4.7-4.2 6.2-.6z" />
+                  </svg>
+                  {talent.rating.toFixed(1)}
+                  <span className="text-slate">
+                    ({talent.reviewCount} reviews)
+                  </span>
+                </div>
+              ) : null}
+              <ContactIcons mobile={talent.mobile} whatsapp={talent.whatsapp} />
+            </div>
           </div>
 
           <ul
@@ -137,45 +133,58 @@ export default async function TalentProfilePage({
             ))}
           </ul>
 
-          <p className="mt-6 max-w-prose text-[15.5px] leading-relaxed text-ink/85">
+          <dl className="mt-5 flex flex-col gap-1.5 text-[14.5px] text-ink/85">
+            {talent.workingAreas.length > 0 ? (
+              <div className="flex gap-1.5">
+                <dt className="font-medium text-ink">Working Areas:</dt>
+                <dd>
+                  {talent.workingAreas.map((area) => area.name).join(", ")}
+                </dd>
+              </div>
+            ) : null}
+            {talent.languages.length > 0 ? (
+              <div className="flex gap-1.5">
+                <dt className="font-medium text-ink">Language:</dt>
+                <dd>{talent.languages.join(", ")}</dd>
+              </div>
+            ) : null}
+          </dl>
+
+          <p className="mt-5 max-w-prose text-[15.5px] leading-relaxed text-ink/85">
             {talent.bio}
           </p>
 
+          {hasDetails(talent.details) ? (
+            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg bg-porcelain-soft p-5 sm:grid-cols-3">
+              {DETAIL_FIELDS.map(({ key, label, format }) =>
+                talent.details[key] ? (
+                  <div key={key}>
+                    <dt className="text-[13px] text-slate">{label}</dt>
+                    <dd className="mt-0.5 text-[14.5px] font-medium text-ink">
+                      {format
+                        ? format(talent.details[key])
+                        : talent.details[key]}
+                    </dd>
+                  </div>
+                ) : null,
+              )}
+            </dl>
+          ) : null}
+
           <div className="mt-8 flex flex-col gap-4 rounded-lg bg-porcelain-soft p-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[15px] text-ink">
-              Starting from{" "}
-              <span className="font-display text-xl font-semibold">
-                {formatPrice(talent.startingPrice, talent.currency)}
-              </span>
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <AvailabilityBadge availability={talent.availability} />
+              <p className="text-[15px] text-ink">
+                Starting from{" "}
+                <span className="font-display text-xl font-semibold">
+                  {getCurrencySymbol(talent.currency)}xxxxx
+                </span>
+              </p>
+            </div>
             <BookingModal talent={talent} />
           </div>
         </div>
       </div>
-
-      {/* Section: Basic Details */}
-      {hasDetails(talent.details) ? (
-        <section aria-labelledby="details-heading" className="mt-14">
-          <h2
-            id="details-heading"
-            className="font-display text-2xl font-semibold text-ink"
-          >
-            Details
-          </h2>
-          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg bg-porcelain-soft p-5 sm:grid-cols-3">
-            {DETAIL_FIELDS.map(({ key, label, format }) =>
-              talent.details[key] ? (
-                <div key={key}>
-                  <dt className="text-[13px] text-slate">{label}</dt>
-                  <dd className="mt-0.5 text-[14.5px] font-medium text-ink">
-                    {format ? format(talent.details[key]) : talent.details[key]}
-                  </dd>
-                </div>
-              ) : null,
-            )}
-          </dl>
-        </section>
-      ) : null}
 
       {/* Section: Talent Gallery */}
       <section aria-labelledby="gallery-heading" className="mt-14">

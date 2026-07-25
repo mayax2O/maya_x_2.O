@@ -170,3 +170,43 @@ export function toTalentResponse(
     updatedAt: talent.updatedAt,
   };
 }
+
+// --- Public-facing shape (GET /public/talent-catalog, /public/talent-
+// catalog/:slug) — strips the Connections fields nobody outside the
+// agency should see raw (mobile2/telegram/otherContact; `mobile` and
+// `whatsapp` stay, since the public profile needs them to build tel:/
+// wa.me links), and resolves `preferredCityIds` (bare UUIDs, meaningless
+// to a browser) into real city names for the "Working Areas" display.
+
+export type PublicTalentCatalogResponse = Omit<
+  TalentResponse,
+  "mobile2" | "telegram" | "otherContact" | "preferredCityIds"
+> & {
+  preferredAreas: { id: string; name: string }[];
+};
+
+export function toPublicTalentCatalogResponse(
+  talent: TalentWithRelations,
+  buildOptimizedUrl: (asset: {
+    publicId: string | null;
+    url: string;
+  }) => string,
+  cityNameById: Map<string, string>,
+): PublicTalentCatalogResponse {
+  const {
+    mobile2: _mobile2,
+    telegram: _telegram,
+    otherContact: _otherContact,
+    preferredCityIds,
+    ...rest
+  } = toTalentResponse(talent, buildOptimizedUrl);
+
+  return {
+    ...rest,
+    preferredAreas: preferredCityIds
+      .map((id) => ({ id, name: cityNameById.get(id) }))
+      .filter((area): area is { id: string; name: string } =>
+        Boolean(area.name),
+      ),
+  };
+}
